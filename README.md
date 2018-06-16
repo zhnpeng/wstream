@@ -1,2 +1,2 @@
 # wstream
-infinity streaming processing written by golang
+infinity streaming processing written in golang
