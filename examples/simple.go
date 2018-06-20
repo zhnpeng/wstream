@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/wandouz/wstream/stream"
 	"strconv"
 )
@@ -20,18 +19,15 @@ func mapFunc2(in interface{}) interface{} {
 
 func main() {
 	input := make(chan interface{})
-	datastream := stream.NewChannelStream(input)
-	// Map(mapFunc)
-	// datastream.Map(mapFunc1).Printf("S1: ")
-	// datastream.Map(mapFunc2).Printf("S2: ")
+	datastream := stream.NewChannelStream(input).
+	Map(mapFunc)
+	datastream.Map(mapFunc1).Printf("S1: ")
+	datastream.Map(mapFunc2).Printf("S2: ")
 	go func() {
 		for i := 0; i < 10; i++ {
 			input <- i
 		}
 		close(input)
 	}()
-	for _, operator := range datastream.Graph.Vertexes {
-		fmt.Println(operator)
-	}
 	datastream.Run()
 }

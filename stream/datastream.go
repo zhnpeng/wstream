@@ -14,8 +14,8 @@ type Emitter struct {
 	Channels []EventChan
 }
 
-func NewEmitter() Emitter {
-	return Emitter{Channels: make([]EventChan, 0)}
+func NewEmitter() *Emitter {
+	return &Emitter{Channels: make([]EventChan, 0)}
 }
 
 func (e *Emitter) RegisterChan(ch EventChan) {
@@ -29,14 +29,15 @@ func (e *Emitter) Emit(item Event) {
 }
 
 type Task interface {
-	Run(item Event, emitter Emitter, wg *sync.WaitGroup)
+	Run(item Event, emitter *Emitter, wg *sync.WaitGroup)
 }
 
 type Operator interface {
 	Run(wg *sync.WaitGroup)
 	GetInputs() []EventChan
-	AddInputs(inputs... EventChan)
+	AddInputs(inputs ...EventChan)
 	GetOutgoingChans() [][]EventChan
+	SetOutgoingChans([][]EventChan)
 	GetOutgoingOperators() *OperatorSet
 	SetTask(t Task)
 }
@@ -45,10 +46,10 @@ type BasicOperator struct {
 	Inputs            []EventChan // Is's kind of shards
 	OutgoingChans     [][]EventChan
 	OutgoingOperators *OperatorSet // Outgoing is for building flow topology
-	Task Task
+	Task              Task
 }
 
-func (b *BasicOperator) AddInputs(inputs... EventChan) {
+func (b *BasicOperator) AddInputs(inputs ...EventChan) {
 	b.Inputs = append(b.Inputs, inputs...)
 }
 
@@ -62,6 +63,10 @@ func (b *BasicOperator) GetInputs() []EventChan {
 
 func (b *BasicOperator) GetOutgoingChans() [][]EventChan {
 	return b.OutgoingChans
+}
+
+func (b *BasicOperator) SetOutgoingChans(outgoingChans [][]EventChan) {
+	b.OutgoingChans = outgoingChans
 }
 
 func (b *BasicOperator) SetTask(t Task) {
@@ -84,6 +89,7 @@ func NewOneToOneOperator(graph *StreamGraph, parentOperator Operator) *OneToOneO
 		outgoingChans,
 		parentOutputs,
 	)
+	parentOperator.SetOutgoingChans(outgoingChans)
 
 	// Create new operator
 	newOperator := &OneToOneOperator{
@@ -113,21 +119,23 @@ func NewOneToOneOperator(graph *StreamGraph, parentOperator Operator) *OneToOneO
 
 func (o *OneToOneOperator) Dispose(index int) {
 	for _, outputChans := range o.OutgoingChans {
-		close(outputChans[index])
+		if len(outputChans) > index {
+			close(outputChans[index])
+		}
 	}
 }
 
 func (o *OneToOneOperator) Run(wg *sync.WaitGroup) {
-	Emitters := make(map[int]Emitter)
+	emitters := make(map[int]*Emitter)
 	for index := range o.Inputs {
 		// Create an empty Emitter for each Input
 		// to make sure the task of the last operator
 		// in the stream will execute task.Run
-		Emitters[index] = NewEmitter()
+		emitters[index] = NewEmitter()
 	}
 	for _, outputChans := range o.OutgoingChans {
 		for j, output := range outputChans {
-			if c, ok := Emitters[j]; !ok { // TODO: need double check
+			if c, ok := emitters[j]; ok {
 				c.RegisterChan(output)
 			}
 		}
@@ -138,14 +146,12 @@ func (o *OneToOneOperator) Run(wg *sync.WaitGroup) {
 			defer wg.Done()
 			for {
 				item, ok := <-input
-				fmt.Println(item)
 				if !ok {
 					// dispose output chans
 					o.Dispose(index)
 					break
 				}
-				fmt.Println(item)
-				o.Task.Run(item, Emitters[index], wg)
+				o.Task.Run(item, emitters[index], wg)
 			}
 		}()
 	}
@@ -174,39 +180,51 @@ type Stream struct {
 func (s *Stream) Run() {
 	for _, set := range s.Graph.Vertexes {
 		for _, operator := range set.Operators {
-			fmt.Println(operator)
 			operator.Run(s.WaitGroup)
 		}
 	}
 	s.WaitGroup.Wait()
 }
 
-func (s *Stream) AddSources(inputs ...EventChan) {
-	s.Operator.AddInputs(inputs...)
-}
-
 type DataStream struct {
 	Stream
 }
 
-func NewDataStream(wg *sync.WaitGroup) *DataStream {
-	operator := &OneToOneOperator {
+func (d *DataStream) AddSource(inputs... EventChan) {
+	d.Operator.AddInputs(inputs...)
+}
+
+func NewDataStream(wg *sync.WaitGroup, inputs... EventChan) *DataStream {
+	outputChans := make([]EventChan, 0)
+	for range inputs {
+		outputChans = append(outputChans, make(EventChan))
+	}
+	operator := &OneToOneOperator{
 		BasicOperator: BasicOperator{
-			Inputs: make([]EventChan, 0),
-			OutgoingChans: make([][]EventChan, 0),
+			Inputs:        inputs,
+			OutgoingChans: [][]EventChan{outputChans},
 		},
 	}
-	initOperatorSet := &OperatorSet {
-		Parent: nil,
-		Operators: []Operator{operator},
+	// first operator's outgoing operator set
+	initOperatorSet := &OperatorSet{
+		Parent:    operator,
+		Operators: make([]Operator, 0),
 	}
 	operator.OutgoingOperators = initOperatorSet
-	return &DataStream {
+	// head vertex
+	headOperatorSet := &OperatorSet{
+		Parent:    nil,
+		Operators: []Operator{operator},
+	}
+	return &DataStream{
 		Stream{
 			Graph: &StreamGraph{
-				Vertexes: []*OperatorSet{initOperatorSet},
+				Vertexes: []*OperatorSet{
+					headOperatorSet,
+					initOperatorSet,
+				},
 			},
-			Operator: operator,
+			Operator:  operator,
 			WaitGroup: wg,
 		},
 	}
@@ -230,7 +248,7 @@ type MapTask struct {
 	Function func(in Event) Event
 }
 
-func (t *MapTask) Run(item Event, out Emitter, wg *sync.WaitGroup) {
+func (t *MapTask) Run(item Event, out *Emitter, wg *sync.WaitGroup) {
 	v := t.Function(item)
 	out.Emit(v)
 }
@@ -256,7 +274,7 @@ type PrintfTask struct {
 	Function func(i Event) Event
 }
 
-func (t *PrintfTask) Run(item Event, out Emitter, wg *sync.WaitGroup) {
+func (t *PrintfTask) Run(item Event, out *Emitter, wg *sync.WaitGroup) {
 	v := t.Function(item)
 	out.Emit(v)
 }
