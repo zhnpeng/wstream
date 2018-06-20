@@ -197,8 +197,8 @@ func NewDataStream(wg *sync.WaitGroup) *DataStream {
 		},
 	}
 	initOperatorSet := &OperatorSet {
-		Parent: operator,
-		Operators: make([]Operator, 0),
+		Parent: nil,
+		Operators: []Operator{operator},
 	}
 	operator.OutgoingOperators = initOperatorSet
 	return &DataStream {
