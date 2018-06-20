@@ -190,6 +190,17 @@ type DataStream struct {
 	Stream
 }
 
+/*
+AddSource : add source to datastream
+Because outputchans will be add when adding next operator
+So you can add extern source anywhere you want
+Example:
+ds := NewDataStream(args...)
+ds.AddSource(input1)
+ds.Map(args1...)
+ds.AddSource(input2, input3)
+ds.Map(args2...)
+*/
 func (d *DataStream) AddSource(inputs... EventChan) {
 	d.Operator.AddInputs(inputs...)
 }
