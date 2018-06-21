@@ -101,7 +101,7 @@ func (o *OneToOneOperator) Run(wg *sync.WaitGroup) {
 					o.Dispose(id)
 					break
 				}
-				o.Task.Run(item, emitters[id], wg)
+				o.Task.Run(item, emitters[id])
 			}
 		}(index, input)
 	}

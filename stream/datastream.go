@@ -94,14 +94,4 @@ func (s *DataStream) Copy() *DataStream {
 	}
 }
 
-func (s *DataStream) FlatMap() *DataStream {
-	return nil
-}
 
-func (s *DataStream) Filter() *DataStream {
-	return nil
-}
-
-func (s *DataStream) KeyBy() *KeyedStream {
-	return nil
-}

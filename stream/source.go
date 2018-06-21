@@ -8,7 +8,7 @@ type ChannelSourceTask struct {
 	Function func(in Event) Event
 }
 
-func (t *ChannelSourceTask) Run(item Event, out *Emitter, wg *sync.WaitGroup) {
+func (t *ChannelSourceTask) Run(item Event, out *Emitter) {
 	out.Emit(item)
 }
 
