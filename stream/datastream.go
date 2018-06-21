@@ -34,11 +34,11 @@ type Task interface {
 
 type Operator interface {
 	Run(wg *sync.WaitGroup)
-	GetInputs() []EventChan
 	AddInputs(inputs ...EventChan)
-	GetOutgoingChans() [][]EventChan
-	SetOutgoingChans([][]EventChan)
-	GetOutgoingOperators() *OperatorSet
+	//connectOperator is called by parent operator to connect down stream operator
+	//this interface should implemted by a terminal Operator such as OneToOneOperator
+	//because output channels is decided by parent terminal Operator instead of new Operator
+	connectOperator(opt Operator) (outputChans []EventChan)
 	SetTask(t Task)
 }
 
@@ -53,22 +53,6 @@ func (b *BasicOperator) AddInputs(inputs ...EventChan) {
 	b.Inputs = append(b.Inputs, inputs...)
 }
 
-func (b *BasicOperator) GetOutgoingOperators() *OperatorSet {
-	return b.OutgoingOperators
-}
-
-func (b *BasicOperator) GetInputs() []EventChan {
-	return b.Inputs
-}
-
-func (b *BasicOperator) GetOutgoingChans() [][]EventChan {
-	return b.OutgoingChans
-}
-
-func (b *BasicOperator) SetOutgoingChans(outgoingChans [][]EventChan) {
-	b.OutgoingChans = outgoingChans
-}
-
 func (b *BasicOperator) SetTask(t Task) {
 	b.Task = t
 }
@@ -77,39 +61,33 @@ type OneToOneOperator struct {
 	BasicOperator
 }
 
-func NewOneToOneOperator(graph *StreamGraph, parentOperator Operator) *OneToOneOperator {
-	// Setup Output channels
-	parentOutputs := make([]EventChan, 0)
-	for i := 0; i < len(parentOperator.GetInputs()); i++ {
-		// make the same num of channel as parentOperator's input channels
-		parentOutputs = append(parentOutputs, make(EventChan))
+func (o *OneToOneOperator) connectOperator(opt Operator) (outputChans []EventChan) {
+	for range o.Inputs {
+		outputChans = append(outputChans, make(EventChan))
 	}
-	outgoingChans := parentOperator.GetOutgoingChans()
-	outgoingChans = append(
-		outgoingChans,
-		parentOutputs,
-	)
-	parentOperator.SetOutgoingChans(outgoingChans)
+	o.OutgoingChans = append(o.OutgoingChans, outputChans)
+	o.OutgoingOperators.Operators = append(o.OutgoingOperators.Operators, opt)
+	return outputChans
+}
 
+func NewOneToOneOperator(graph *StreamGraph, parentOperator Operator) *OneToOneOperator {
 	// Create new operator
 	newOperator := &OneToOneOperator{
 		BasicOperator: BasicOperator{
-			Inputs:        parentOutputs,
 			OutgoingChans: make([][]EventChan, 0),
 		},
 	}
+
+	// connect upstream operator to new down stream operator
+	parentOutputChans := parentOperator.connectOperator(newOperator)
+	// add upstream output Chans to new operator as input Chans
+	newOperator.Inputs = parentOutputChans
+
 	// Add out edge into new operator
 	newOperator.OutgoingOperators = &OperatorSet{
 		Operators: make([]Operator, 0),
 		Parent:    newOperator,
 	}
-
-	// link new operator its parent
-	outgoingOperators := parentOperator.GetOutgoingOperators()
-	outgoingOperators.Operators = append(
-		outgoingOperators.Operators,
-		newOperator,
-	)
 
 	// Add new operator to graph
 	graph.Vertexes = append(graph.Vertexes, newOperator.OutgoingOperators)
