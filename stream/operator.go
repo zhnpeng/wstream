@@ -9,13 +9,13 @@ type Operator interface {
 	AddInputs(inputs ...EventChan)
 	//connectOperator is called by parent operator to connect down stream operator
 	//this interface should implemted by a terminal Operator such as OneToOneOperator
-	//because output channels is decided by parent terminal Operator instead of new Operator
 	connectOperator(opt Operator) (outputChans []EventChan)
 	SetTask(t Task)
 }
 
 type BasicOperator struct {
-	Inputs            []EventChan // Is's kind of shards
+	// TODO: refine shards, inputs is now kind of shards
+	Inputs            []EventChan
 	OutgoingChans     [][]EventChan
 	OutgoingOperators *OperatorSet // Outgoing is for building flow topology
 	Task              Task
