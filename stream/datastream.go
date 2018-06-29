@@ -4,10 +4,7 @@ import (
 	"sync"
 )
 
-type OperatorSet struct {
-	Operators []Operator
-	Parent    Operator
-}
+
 
 type StreamGraph struct {
 	// TODO: make it turly DAG, cause it's a tree now.

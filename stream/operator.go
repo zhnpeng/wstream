@@ -13,6 +13,10 @@ type Operator interface {
 	SetTask(t Task)
 }
 
+type OperatorSet struct {
+	Operators []Operator
+	Parent    Operator
+}
 
 type BasicOperator struct {
 	// TODO: refine shards, inputs is now kind of shards

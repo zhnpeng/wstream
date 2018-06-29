@@ -1,7 +1,27 @@
 package stream
 
+import (
+	"time"
+)
+
 // TODO: refine EventChan and Event
-type Event = interface{}
+
+type EventType int
+
+const (
+	TupleEvent = iota
+	MapEvent
+)
+
+type Event = interface {
+	Type() EventType
+	Time() time.Time
+	Keys() []interface{}
+	UseKeys(indexes ...interface{}) error
+	Get(index interface{}) interface{}
+	GetMany(indexes ...interface{}) []interface{}
+	Set(index, value interface{}) error
+}
 
 type EventChan chan Event
 
