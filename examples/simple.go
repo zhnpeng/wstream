@@ -2,31 +2,36 @@ package main
 
 import (
 	"strconv"
+	"time"
 
 	"github.com/wandouz/wstream/stream"
 )
 
-func mapFunc(in interface{}) interface{} {
-	return in
+func mapFunc(value stream.Value) stream.Value {
+	return value
 }
 
-func mapFunc1(in interface{}) interface{} {
-	return "++ " + strconv.Itoa(in.(int))
+func mapFunc1(value stream.Value) stream.Value {
+	tmp := "++ " + strconv.Itoa(value.Get(0).(int))
+	newV := stream.NewTupleValue(tmp)
+	return newV
 }
 
-func mapFunc2(in interface{}) interface{} {
-	return "-- " + strconv.Itoa(in.(int))
+func mapFunc2(value stream.Value) stream.Value {
+	tmp := "-- " + strconv.Itoa(value.Get(0).(int))
+	newV := stream.NewTupleValue(tmp)
+	return newV
 }
 
-func filterFunc(i interface{}) bool {
-	if v, ok := i.(int); ok {
-		return v != 8
+func filterFunc(value stream.Value) bool {
+	if i, ok := value.Get(0).(int); ok {
+		return i != 8
 	}
 	return true
 }
 
 func main() {
-	input := make(chan interface{})
+	input := make(chan stream.Item)
 	datastream := stream.NewChannelStream(input).
 		Map(mapFunc).
 		Filter(filterFunc)
@@ -35,7 +40,8 @@ func main() {
 	datastream.Map(mapFunc2).Printf("S2: ")
 	go func() {
 		for i := 0; i < 10; i++ {
-			input <- i
+			v := stream.NewTupleValue(i)
+			input <- stream.NewRecord(time.Now(), v)
 		}
 		close(input)
 	}()

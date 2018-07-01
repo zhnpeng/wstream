@@ -8,11 +8,11 @@ type BroadcastOperator struct {
 	BasicOperator
 }
 
-func (o *BroadcastOperator) connectOperator(opt Operator) (outputChans []EventChan) {
+func (o *BroadcastOperator) connectOperator(opt Operator) (outputChans []ItemChan) {
 	for range o.Inputs {
 		// BroadcastOperator's output channels has the same number of its inputs
 		// TODO: number of output may not be equal to inputs
-		outputChans = append(outputChans, make(EventChan))
+		outputChans = append(outputChans, make(ItemChan))
 	}
 	o.OutgoingChans = append(o.OutgoingChans, outputChans)
 	o.OutgoingOperators.Operators = append(o.OutgoingOperators.Operators, opt)
@@ -23,7 +23,7 @@ func NewBroadcastOperator(graph *StreamGraph, parentOperator Operator) *Broadcas
 	// Create new operator
 	newOperator := &BroadcastOperator{
 		BasicOperator: BasicOperator{
-			OutgoingChans: make([][]EventChan, 0),
+			OutgoingChans: make([][]ItemChan, 0),
 		},
 	}
 
@@ -72,7 +72,7 @@ func (o *BroadcastOperator) Run(wg *sync.WaitGroup) {
 	}
 	for index, input := range o.Inputs {
 		wg.Add(1)
-		go func(id int, inChan EventChan) {
+		go func(id int, inChan ItemChan) {
 			defer wg.Done()
 			for {
 				item, ok := <-inChan

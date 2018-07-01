@@ -4,8 +4,6 @@ import (
 	"sync"
 )
 
-
-
 type StreamGraph struct {
 	// TODO: make it turly DAG, cause it's a tree now.
 	Vertexes []*OperatorSet
@@ -41,19 +39,19 @@ ds.Map(args1...)
 ds.AddSource(input2, input3)
 ds.Map(args2...)
 */
-func (d *DataStream) AddSource(inputs ...EventChan) {
+func (d *DataStream) AddSource(inputs ...ItemChan) {
 	d.Operator.AddInputs(inputs...)
 }
 
-func NewDataStream(wg *sync.WaitGroup, inputs ...EventChan) *DataStream {
-	outputChans := make([]EventChan, 0)
+func NewDataStream(wg *sync.WaitGroup, inputs ...ItemChan) *DataStream {
+	outputChans := make([]ItemChan, 0)
 	for range inputs {
-		outputChans = append(outputChans, make(EventChan))
+		outputChans = append(outputChans, make(ItemChan))
 	}
 	operator := &OneToOneOperator{
 		BasicOperator: BasicOperator{
 			Inputs:        inputs,
-			OutgoingChans: [][]EventChan{outputChans},
+			OutgoingChans: [][]ItemChan{outputChans},
 		},
 	}
 	// first operator's outgoing operator set

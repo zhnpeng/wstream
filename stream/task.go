@@ -1,5 +1,5 @@
 package stream
 
 type Task interface {
-	Run(item Event, emitter *Emitter)
+	Run(item Item, emitter *Emitter)
 }

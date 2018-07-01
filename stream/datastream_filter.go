@@ -2,15 +2,21 @@ package stream
 
 
 type (
-	FilterFunc func(item Event) bool
+	FilterFunc func(value Value) bool
 )
 
 type FilterTask struct {
 	Function FilterFunc
 }
 
-func (t *FilterTask) Run(item Event, out *Emitter) {
-	if t.Function(item) {
+func (t *FilterTask) Run(item Item, out *Emitter) {
+	if item.Type() == TypeRecord {
+		record := item.AsRecord()
+		value := record.GetValue()
+		if t.Function(value.Copy()) {
+			out.Emit(item)
+		}
+	} else {
 		out.Emit(item)
 	}
 }

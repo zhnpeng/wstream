@@ -1,15 +1,21 @@
 package stream
 
 type (
-	FlatMapFunc func(item Event, out *Emitter)
+	FlatMapFunc func(value Value, out *RecordCollector)
 )
 
 type FlatMapTask struct {
 	Function FlatMapFunc
 }
 
-func (t *FlatMapTask) Run(item Event, out *Emitter) {
-	t.Function(item, out)
+func (t *FlatMapTask) Run(item Item, out *Emitter) {
+	if item.Type() == TypeRecord {
+		record := item.AsRecord()
+		collector := NewRecordCollector(record, out)
+		t.Function(record.GetValue(), collector)
+	} else {
+		out.Emit(item)
+	}
 }
 
 func (s *DataStream) FlatMap(flatMapFunc FlatMapFunc) *DataStream {

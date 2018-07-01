@@ -5,14 +5,14 @@ import (
 )
 
 type ChannelSourceTask struct {
-	Function func(in Event) Event
+	Function func(in Item) Item
 }
 
-func (t *ChannelSourceTask) Run(item Event, out *Emitter) {
+func (t *ChannelSourceTask) Run(item Item, out *Emitter) {
 	out.Emit(item)
 }
 
-func NewChannelStream(input chan interface{}) *DataStream {
+func NewChannelStream(input ItemChan) *DataStream {
 	var wg sync.WaitGroup
 	ret := NewDataStream(&wg)
 	ret.AddSource(input)

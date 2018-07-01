@@ -8,9 +8,9 @@ type AllToOneOperator struct {
 	BasicOperator
 }
 
-func (o *AllToOneOperator) connectOperator(opt Operator) (outputChans []EventChan) {
+func (o *AllToOneOperator) connectOperator(opt Operator) (outputChans []ItemChan) {
 	// only has one outputChan
-	outputChans = append(outputChans, make(EventChan))
+	outputChans = append(outputChans, make(ItemChan))
 	o.OutgoingChans = append(o.OutgoingChans, outputChans)
 	o.OutgoingOperators.Operators = append(o.OutgoingOperators.Operators, opt)
 	return outputChans
@@ -20,7 +20,7 @@ func NewAllToOneOperator(graph *StreamGraph, parentOperator Operator) *AllToOneO
 	// Create new operator
 	newOperator := &AllToOneOperator{
 		BasicOperator: BasicOperator{
-			OutgoingChans: make([][]EventChan, 0),
+			OutgoingChans: make([][]ItemChan, 0),
 		},
 	}
 
@@ -69,7 +69,7 @@ func (o *AllToOneOperator) Run(wg *sync.WaitGroup) {
 	}
 	for index, input := range o.Inputs {
 		wg.Add(1)
-		go func(id int, inChan EventChan) {
+		go func(id int, inChan ItemChan) {
 			defer wg.Done()
 			for {
 				item, ok := <-inChan

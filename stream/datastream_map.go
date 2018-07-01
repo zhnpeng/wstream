@@ -1,16 +1,21 @@
 package stream
 
 type (
-	MapFunc func(item Event) (Out Event)
+	MapFunc func(item Value) (Out Value)
 )
 
 type MapTask struct {
 	Function MapFunc
 }
 
-func (t *MapTask) Run(item Event, out *Emitter) {
-	v := t.Function(item)
-	out.Emit(v)
+func (t *MapTask) Run(item Item, out *Emitter) {
+	if item.Type() == TypeRecord {
+		record := item.AsRecord()
+		v := t.Function(record.GetValue())
+		out.Emit(record.Copy(v))
+	} else {
+		out.Emit(item)
+	}
 }
 
 func (s *DataStream) Map(mapFunc MapFunc) *DataStream {

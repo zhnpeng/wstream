@@ -5,12 +5,12 @@ import (
 )
 
 type PrintfTask struct {
-	Function func(i Event) Event
+	Function func(i Item) Item
 }
 
-func (t *PrintfTask) Run(item Event, out *Emitter) {
-	v := t.Function(item)
-	out.Emit(v)
+func (t *PrintfTask) Run(item Item, out *Emitter) {
+	t.Function(item)
+	out.Emit(item)
 }
 
 func (s *DataStream) Printf(format string) *DataStream {
@@ -20,8 +20,10 @@ func (s *DataStream) Printf(format string) *DataStream {
 	ret.Operator = operator
 
 	task := &PrintfTask{
-		Function: func(i Event) Event {
-			fmt.Printf(format+"%+v\n", i)
+		Function: func(i Item) Item {
+			if i.Type() == TypeRecord {
+				fmt.Printf(format+"%s\n", i.AsRecord().GetValue().AsString())
+			}
 			return i
 		},
 	}
