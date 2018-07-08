@@ -88,5 +88,3 @@ func (s *DataStream) Copy() *DataStream {
 		},
 	}
 }
-
-
