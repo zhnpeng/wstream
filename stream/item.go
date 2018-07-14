@@ -1,5 +1,6 @@
 package stream
 
+//go:generate msgp -o item_codec.go
 
 type ItemType int
 
