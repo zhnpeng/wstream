@@ -29,11 +29,6 @@ func (z *MapRecord) DecodeMsg(dc *msgp.Reader) (err error) {
 			if err != nil {
 				return
 			}
-		case "V":
-			err = z.V.DecodeMsg(dc)
-			if err != nil {
-				return
-			}
 		default:
 			err = dc.Skip()
 			if err != nil {
@@ -45,10 +40,10 @@ func (z *MapRecord) DecodeMsg(dc *msgp.Reader) (err error) {
 }
 
 // EncodeMsg implements msgp.Encodable
-func (z *MapRecord) EncodeMsg(en *msgp.Writer) (err error) {
-	// map header, size 2
+func (z MapRecord) EncodeMsg(en *msgp.Writer) (err error) {
+	// map header, size 1
 	// write "T"
-	err = en.Append(0x82, 0xa1, 0x54)
+	err = en.Append(0x81, 0xa1, 0x54)
 	if err != nil {
 		return
 	}
@@ -56,31 +51,16 @@ func (z *MapRecord) EncodeMsg(en *msgp.Writer) (err error) {
 	if err != nil {
 		return
 	}
-	// write "V"
-	err = en.Append(0xa1, 0x56)
-	if err != nil {
-		return
-	}
-	err = z.V.EncodeMsg(en)
-	if err != nil {
-		return
-	}
 	return
 }
 
 // MarshalMsg implements msgp.Marshaler
-func (z *MapRecord) MarshalMsg(b []byte) (o []byte, err error) {
+func (z MapRecord) MarshalMsg(b []byte) (o []byte, err error) {
 	o = msgp.Require(b, z.Msgsize())
-	// map header, size 2
+	// map header, size 1
 	// string "T"
-	o = append(o, 0x82, 0xa1, 0x54)
+	o = append(o, 0x81, 0xa1, 0x54)
 	o = msgp.AppendTime(o, z.T)
-	// string "V"
-	o = append(o, 0xa1, 0x56)
-	o, err = z.V.MarshalMsg(o)
-	if err != nil {
-		return
-	}
 	return
 }
 
@@ -105,11 +85,6 @@ func (z *MapRecord) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			if err != nil {
 				return
 			}
-		case "V":
-			bts, err = z.V.UnmarshalMsg(bts)
-			if err != nil {
-				return
-			}
 		default:
 			bts, err = msgp.Skip(bts)
 			if err != nil {
@@ -122,7 +97,7 @@ func (z *MapRecord) UnmarshalMsg(bts []byte) (o []byte, err error) {
 }
 
 // Msgsize returns an upper bound estimate of the number of bytes occupied by the serialized message
-func (z *MapRecord) Msgsize() (s int) {
-	s = 1 + 2 + msgp.TimeSize + 2 + z.V.Msgsize()
+func (z MapRecord) Msgsize() (s int) {
+	s = 1 + 2 + msgp.TimeSize
 	return
 }

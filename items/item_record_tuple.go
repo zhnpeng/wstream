@@ -1,6 +1,6 @@
 package items
 
-//go:generate msgp
+//go:generate msgp -o codec_tuple_record_item.go
 
 import (
 	"errors"
@@ -10,7 +10,7 @@ import (
 
 type TupleRecord struct {
 	T time.Time
-	V TP
+	V []interface{}
 }
 
 func NewTupleRecord(t time.Time, v ...interface{}) *TupleRecord {
@@ -20,6 +20,21 @@ func NewTupleRecord(t time.Time, v ...interface{}) *TupleRecord {
 	}
 	tv.V = append(tv.V, v...)
 	return tv
+}
+
+func (tuple *TupleRecord) Type() ItemType {
+	return TypeTupleRecord
+}
+
+func (tuple *TupleRecord) AsRow() (Row, error) {
+	encodedBytes, err := tuple.UnmarshalMsg(nil)
+	if err != nil {
+		return Row{}, err
+	}
+	return Row{
+		itemType: TypeTupleRecord,
+		item:     encodedBytes,
+	}, nil
 }
 
 func (tuple *TupleRecord) Copy() *TupleRecord {

@@ -5,18 +5,33 @@ import (
 	"time"
 )
 
-//go:generate msgp
+//go:generate msgp -o codec_map_record_item.go
 
 type MapRecord struct {
 	T time.Time
-	V M
+	V map[interface{}]interface{}
 }
 
-func NewMapRecord(t time.Time, v M) *MapRecord {
+func NewMapRecord(t time.Time, v map[interface{}]interface{}) *MapRecord {
 	return &MapRecord{
 		T: t,
 		V: v,
 	}
+}
+
+func (m *MapRecord) Type() ItemType {
+	return TypeMapRecord
+}
+
+func (m *MapRecord) AsRow() (Row, error) {
+	encodedBytes, err := m.MarshalMsg(nil)
+	if err != nil {
+		return Row{}, err
+	}
+	return Row{
+		itemType: TypeMapRecord,
+		item:     encodedBytes,
+	}, nil
 }
 
 func (m *MapRecord) Copy() *MapRecord {
