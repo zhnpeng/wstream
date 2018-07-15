@@ -1,6 +1,11 @@
 package items
 
-//Item2Row convert Item to Row
-func Item2Row(item Item) (Row, error) {
-	return item.AsRow()
+//EncodeItem convert Item to Row then encode row
+func EncodeItem(item Item) ([]byte, error) {
+	var encodedBytes []byte
+	row, err := item.AsRow()
+	if err != nil {
+		return encodedBytes, err
+	}
+	return row.MarshalMsg(nil)
 }
