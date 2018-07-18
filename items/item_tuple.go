@@ -1,6 +1,6 @@
 package items
 
-//go:generate msgp -o codec_tuple_record_item.go
+//go:generate msgp -o codec_tuple_item.go
 
 import (
 	"errors"

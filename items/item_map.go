@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-//go:generate msgp -o codec_map_record_item.go
+//go:generate msgp -o codec_map_item.go
 
 type MapRecord struct {
 	T time.Time
