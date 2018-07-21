@@ -9,7 +9,7 @@ import (
 	zmq "github.com/pebbe/zmq4"
 )
 
-func TestNewTaskManager(t *testing.T) {
+func TesTaskManager_Run(t *testing.T) {
 	workers := map[string]*Worker{
 		"w1": &Worker{ID: "w1"},
 		"w2": &Worker{ID: "w2"},
