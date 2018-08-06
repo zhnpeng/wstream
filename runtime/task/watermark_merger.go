@@ -1,6 +1,7 @@
 package task
 
 import (
+	"container/heap"
 	"sync"
 
 	"github.com/wandouz/wstream/types"
@@ -28,11 +29,11 @@ func (h WatermarkHeap) Top() WatermarkHeapItem {
 	return h[0]
 }
 
-func (h *WatermarkHeap) Push(x WatermarkHeapItem) {
-	*h = append(*h, WatermarkHeapItem(x))
+func (h *WatermarkHeap) Push(x interface{}) {
+	*h = append(*h, x.(WatermarkHeapItem))
 }
 
-func (h *WatermarkHeap) Pop() WatermarkHeapItem {
+func (h *WatermarkHeap) Pop() interface{} {
 	old := *h
 	n := len(old)
 	x := old[n-1]
@@ -42,61 +43,45 @@ func (h *WatermarkHeap) Pop() WatermarkHeapItem {
 
 // WatermarkMerger is multiway merger for watermark
 type WatermarkMerger struct {
-	inputs []WatermarkChan
-	closed map[int]bool
-	output types.ItemChan
-	hp     *WatermarkHeap
-	mu     sync.Mutex
+	inputs    []WatermarkChan
+	watermark types.Watermark
+	output    types.ItemChan
+	hp        *WatermarkHeap
+	mu        sync.Mutex
 }
 
 func NewWatermarkMerger(inputs []WatermarkChan, output types.ItemChan) *WatermarkMerger {
-	closed := make(map[int]bool, 0)
-	for id := range inputs {
-		closed[id] = false
-	}
 	return &WatermarkMerger{
 		inputs: inputs,
 		output: output,
-		closed: closed,
 		hp:     &WatermarkHeap{},
 	}
 }
 
-func (m *WatermarkMerger) Close(id int) bool {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.closed[id] = true
-	for _, isClosed := range m.closed {
-		if isClosed == false {
-			return false
-		}
-	}
-	return true
-}
-
 func (m *WatermarkMerger) Run() {
 	for {
-		for id, ch := range m.inputs {
+		for _, ch := range m.inputs {
 			i, ok := <-ch
 			if !ok {
-				if m.Close(id) {
-					return
-				}
-				continue
+				// return if any of input channel is closed
+				return
 			}
-			m.hp.Push(WatermarkHeapItem{
+			heap.Push(m.hp, WatermarkHeapItem{
 				item: i,
 				ch:   ch,
 			})
 		}
 		for m.hp.Len() > 0 {
-			item := m.hp.Pop()
-			m.output <- item.item
+			item := heap.Pop(m.hp).(WatermarkHeapItem)
+			if item.item.Time().After(m.watermark.Time()) {
+				m.output <- item.item
+				m.watermark.T = item.item.Time()
+			}
 			nextWatermark, ok := <-item.ch
 			if !ok {
-				continue
+				return
 			}
-			m.hp.Push(WatermarkHeapItem{
+			heap.Push(m.hp, WatermarkHeapItem{
 				item: nextWatermark,
 				ch:   item.ch,
 			})
