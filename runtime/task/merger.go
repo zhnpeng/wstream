@@ -4,7 +4,6 @@ import (
 	"container/heap"
 	"sync"
 
-	"github.com/sirupsen/logrus"
 	"github.com/wandouz/wstream/types"
 )
 
@@ -80,7 +79,6 @@ func (m *WatermarkMerger) Run() {
 			}
 			nextWatermark, ok := <-item.ch
 			if !ok {
-				logrus.Error("222222222")
 				return
 			}
 			heap.Push(m.hp, WatermarkHeapItem{
