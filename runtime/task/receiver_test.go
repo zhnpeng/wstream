@@ -2,10 +2,8 @@ package task
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"testing"
-	"time"
 
 	"github.com/wandouz/wstream/types"
 	"github.com/wandouz/wstream/utils"
@@ -140,24 +138,27 @@ func TestReceiver_Run(t *testing.T) {
 
 	got := make([]types.Item, 0)
 	ctx, cancel := context.WithCancel(context.Background())
+	var wg1 sync.WaitGroup
+	wg1.Add(1)
 	go func(ctx context.Context) {
+		defer wg1.Done()
 		for {
 			select {
-			case <-ctx.Done():
-				return
 			case item, ok := <-recv.Next():
 				if !ok {
 					return
 				}
 				got = append(got, item)
+			case <-ctx.Done():
+				return
 			}
 		}
 	}(ctx)
 
 	wg.Wait()
 	recv.Wait()
-	time.Sleep(2 * time.Second)
 	cancel()
+	wg1.Wait()
 
 	var mark types.Watermark
 	var id210500A int
@@ -170,7 +171,6 @@ func TestReceiver_Run(t *testing.T) {
 			if i.Time().Before(mark.Time()) {
 				t.Errorf("got an mis order watermark %v, want watermark after %v", i, mark)
 			}
-			fmt.Println(i)
 			if i.Time() == utils.TimeParse("2018-08-05 21:05:00") {
 				idwm210500 = id
 			} else if i.Time() == utils.TimeParse("2018-08-05 21:05:03") {
