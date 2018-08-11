@@ -38,7 +38,7 @@ func (m *MapRecord) AsRow() (Row, error) {
 	}, nil
 }
 
-func (m *MapRecord) Copy() *MapRecord {
+func (m *MapRecord) Copy() Record {
 	return NewMapRecord(m.T, m.V)
 }
 

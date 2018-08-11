@@ -6,11 +6,12 @@ import (
 	"time"
 )
 
+// Watermark is kind of item
 type Watermark struct {
 	T time.Time
 }
 
-func NewWaterMark(t time.Time) *Watermark {
+func NewWatermark(t time.Time) *Watermark {
 	return &Watermark{T: t}
 }
 

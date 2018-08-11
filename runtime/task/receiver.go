@@ -29,7 +29,7 @@ func NewReceiver() *Receiver {
 func (recv *Receiver) AddInput(input types.ItemChan) {
 	recv.channels = append(recv.channels, input)
 	// watermarkChans map to input channels
-	recv.watermarkChans = append(recv.watermarkChans, make(WatermarkChan, 300))
+	recv.watermarkChans = append(recv.watermarkChans, make(WatermarkChan, DefaultWatermarkChannelBufferSize))
 }
 
 func (recv *Receiver) Run() {
@@ -79,6 +79,7 @@ func (recv *Receiver) Wait() {
 	recv.wg.Wait()
 }
 
+// Next will run reciver if it is not running
 func (recv *Receiver) Next() <-chan types.Item {
 	if !recv.running {
 		go recv.Run()

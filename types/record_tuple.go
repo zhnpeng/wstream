@@ -41,7 +41,7 @@ func (tuple *TupleRecord) AsRow() (Row, error) {
 	}, nil
 }
 
-func (tuple *TupleRecord) Copy() *TupleRecord {
+func (tuple *TupleRecord) Copy() Record {
 	return NewTupleRecord(tuple.T, tuple.V...)
 }
 

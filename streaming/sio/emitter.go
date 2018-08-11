@@ -31,7 +31,7 @@ func (e *Emitter) Emit(item types.Item) error {
 }
 
 // EmitTo emit item to one output channel
-func (e *Emitter) EmitTo(item types.Item, index int) error {
+func (e *Emitter) EmitTo(index int, item types.Item) error {
 	length := len(e.chans)
 	if length == 0 {
 		return errors.Errorf("no avaliable channel")

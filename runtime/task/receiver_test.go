@@ -39,7 +39,7 @@ func TestReceiver_Run(t *testing.T) {
 			utils.TimeParse("2018-08-05 21:05:02"),
 			va,
 		),
-		types.NewWaterMark(
+		types.NewWatermark(
 			utils.TimeParse("2018-08-05 21:05:00"),
 		),
 		types.NewMapRecord(
@@ -50,7 +50,7 @@ func TestReceiver_Run(t *testing.T) {
 			utils.TimeParse("2018-08-05 21:05:06"),
 			va,
 		),
-		types.NewWaterMark(
+		types.NewWatermark(
 			utils.TimeParse("2018-08-05 21:05:03"),
 		),
 	}
@@ -59,7 +59,7 @@ func TestReceiver_Run(t *testing.T) {
 			utils.TimeParse("2018-08-05 21:05:03"),
 			vb,
 		),
-		types.NewWaterMark(
+		types.NewWatermark(
 			utils.TimeParse("2018-08-05 21:05:00"),
 		),
 		types.NewMapRecord(
@@ -70,7 +70,7 @@ func TestReceiver_Run(t *testing.T) {
 			utils.TimeParse("2018-08-05 21:05:07"),
 			vb,
 		),
-		types.NewWaterMark(
+		types.NewWatermark(
 			utils.TimeParse("2018-08-05 21:05:05"),
 		),
 		types.NewMapRecord(
@@ -83,7 +83,7 @@ func TestReceiver_Run(t *testing.T) {
 			utils.TimeParse("2018-08-05 21:05:11"),
 			vc,
 		),
-		types.NewWaterMark(
+		types.NewWatermark(
 			utils.TimeParse("2018-08-05 21:05:13"),
 		),
 		types.NewMapRecord(
@@ -98,14 +98,14 @@ func TestReceiver_Run(t *testing.T) {
 			utils.TimeParse("2018-08-05 21:05:20"),
 			vc,
 		),
-		types.NewWaterMark(
+		types.NewWatermark(
 			utils.TimeParse("2018-08-05 21:05:10"),
 		),
 		types.NewMapRecord(
 			utils.TimeParse("2018-08-05 21:05:25"),
 			vc,
 		),
-		types.NewWaterMark(
+		types.NewWatermark(
 			utils.TimeParse("2018-08-05 21:05:20"),
 		),
 	}

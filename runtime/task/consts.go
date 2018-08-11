@@ -3,7 +3,11 @@ package task
 type NodeType int
 
 const (
-	SourceNode NodeType = iota
-	BroadcastNode
-	RoundRobinNode
+	TypeSourceNode NodeType = iota
+	TypeBroadcastNode
+	TypeRoundRobinNode
+)
+
+const (
+	DefaultWatermarkChannelBufferSize = 300
 )
