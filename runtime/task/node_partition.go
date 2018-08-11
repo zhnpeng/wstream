@@ -14,7 +14,7 @@ type PartitionNode struct {
 	emitter   *sio.Emitter
 	watermark types.Watermark
 	ctx       context.Context
-
+	// parameters
 	keys []interface{}
 }
 
