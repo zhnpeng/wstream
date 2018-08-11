@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"math"
 	"strings"
+
+	"github.com/spf13/cast"
 )
 
 func HashByKeys(data []interface{}) int {
@@ -87,11 +89,11 @@ func Compare(a interface{}, b interface{}) (ret int) {
 		aIsFloat := isFloat(a)
 		bIsFloat := isFloat(b)
 		if !aIsFloat && !bIsFloat {
-			return int(ToInt64(a) - ToInt64(b))
+			return int(cast.ToInt64(a) - cast.ToInt64(b))
 		}
 
-		t := ToFloat64(a)
-		y := ToFloat64(b)
+		t := cast.ToFloat64(a)
+		y := cast.ToFloat64(b)
 
 		if t < y {
 			return -1
