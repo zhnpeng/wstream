@@ -1,7 +1,6 @@
 package functions
 
 import (
-	"github.com/wandouz/wstream/streaming/sio"
 	"github.com/wandouz/wstream/types"
 )
 
@@ -13,7 +12,7 @@ type Map struct {
 	Function MapFunc
 }
 
-func (f *Map) Run(item types.Item, emitter *sio.Emitter) {
+func (f *Map) Run(item types.Item, emitter Emitter) {
 	o := f.Function.Map(item)
 	emitter.Emit(o)
 }

@@ -45,12 +45,12 @@ func (h *WatermarkHeap) Pop() interface{} {
 type WatermarkMerger struct {
 	inputs    []WatermarkChan
 	watermark types.Watermark
-	output    types.ItemChan
+	output    Edge
 	hp        *WatermarkHeap
 	mu        sync.Mutex
 }
 
-func NewWatermarkMerger(inputs []WatermarkChan, output types.ItemChan) *WatermarkMerger {
+func NewWatermarkMerger(inputs []WatermarkChan, output Edge) *WatermarkMerger {
 	return &WatermarkMerger{
 		inputs: inputs,
 		output: output,

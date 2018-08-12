@@ -4,14 +4,13 @@ import (
 	"context"
 
 	"github.com/wandouz/wstream/runtime/utils"
-	"github.com/wandouz/wstream/streaming/sio"
 	"github.com/wandouz/wstream/types"
 )
 
 type PartitionNode struct {
 	Type      NodeType
 	receiver  *Receiver
-	emitter   *sio.Emitter
+	emitter   *Emitter
 	watermark types.Watermark
 	ctx       context.Context
 	// parameters
@@ -24,9 +23,9 @@ func (n *PartitionNode) Despose() {
 
 func (n *PartitionNode) handleRecord(record types.Record) {
 	// get key values, then calculate index, then emit to partition by index
-	kvs := item.GetMany(n.keys)
+	kvs := record.GetMany(n.keys)
 	index := utils.PartitionByKeys(n.emitter.Length(), kvs)
-	n.emitter.EmitTo(index, item)
+	n.emitter.EmitTo(index, record)
 }
 
 func (n *PartitionNode) handleWatermark(watermark types.Item) {
@@ -44,7 +43,7 @@ func (n *PartitionNode) Run() {
 			switch item.(type) {
 			case types.Record:
 				n.handleRecord(item.(types.Record))
-			case types.Watermark:
+			case *types.Watermark:
 				// no need to do type assert to watermark because
 				// watermark will directly emit to all output channels
 				n.handleWatermark(item)

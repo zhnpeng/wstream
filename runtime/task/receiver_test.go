@@ -11,12 +11,12 @@ import (
 
 func TestReceiver_Run(t *testing.T) {
 	recv := NewReceiver()
-	input1 := make(types.ItemChan)
-	input2 := make(types.ItemChan)
-	input3 := make(types.ItemChan)
-	recv.AddInput(input1)
-	recv.AddInput(input2)
-	recv.AddInput(input3)
+	input1 := make(Edge)
+	input2 := make(Edge)
+	input3 := make(Edge)
+	recv.Add(input1.In())
+	recv.Add(input2.In())
+	recv.Add(input3.In())
 	va := map[interface{}]interface{}{
 		"mark": "A",
 	}
@@ -142,6 +142,7 @@ func TestReceiver_Run(t *testing.T) {
 	wg1.Add(1)
 	go func(ctx context.Context) {
 		defer wg1.Done()
+		recv.Run()
 		for {
 			select {
 			case item, ok := <-recv.Next():

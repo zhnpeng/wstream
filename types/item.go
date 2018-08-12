@@ -7,5 +7,3 @@ type Item interface {
 	AsRow() (Row, error)
 	Time() time.Time
 }
-
-type ItemChan chan Item

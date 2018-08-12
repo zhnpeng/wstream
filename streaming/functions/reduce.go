@@ -1,7 +1,6 @@
 package functions
 
 import (
-	"github.com/wandouz/wstream/streaming/sio"
 	"github.com/wandouz/wstream/types"
 )
 
@@ -29,7 +28,7 @@ func (f *Reduce) Accmulator() types.Item {
 	return f.Function.Accmulator()
 }
 
-func (f *Reduce) Run(item types.Item, emitter *sio.Emitter) {
+func (f *Reduce) Run(item types.Item, emitter Emitter) {
 	f.accmulator = f.Function.Reduce(f.accmulator, item)
 	emitter.Emit(f.accmulator)
 }
