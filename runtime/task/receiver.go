@@ -8,6 +8,9 @@ import (
 
 type WatermarkChan chan *types.Watermark
 
+// Receiver receive items from multiple way
+// and do a multi-way merge for watermark
+// and parallel by-pass for other items
 type Receiver struct {
 	wg             *sync.WaitGroup
 	mu             sync.Mutex

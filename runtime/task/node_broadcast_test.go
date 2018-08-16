@@ -5,5 +5,4 @@ import (
 )
 
 func TestBroadcastNode_Run(t *testing.T) {
-
 }

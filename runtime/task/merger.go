@@ -41,7 +41,7 @@ func (h *WatermarkHeap) Pop() interface{} {
 	return x
 }
 
-// WatermarkMerger is multiway merger for watermark
+// WatermarkMerger is serial multiway merger for watermark
 type WatermarkMerger struct {
 	inputs    []WatermarkChan
 	watermark types.Watermark
