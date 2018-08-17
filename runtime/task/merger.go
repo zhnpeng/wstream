@@ -2,7 +2,6 @@ package task
 
 import (
 	"container/heap"
-	"sync"
 
 	"github.com/wandouz/wstream/types"
 )
@@ -46,15 +45,14 @@ type WatermarkMerger struct {
 	inputs    []WatermarkChan
 	watermark types.Watermark
 	output    Edge
-	hp        *WatermarkHeap
-	mu        sync.Mutex
+	wmHeap    *WatermarkHeap
 }
 
 func NewWatermarkMerger(inputs []WatermarkChan, output Edge) *WatermarkMerger {
 	return &WatermarkMerger{
 		inputs: inputs,
 		output: output,
-		hp:     &WatermarkHeap{},
+		wmHeap: &WatermarkHeap{},
 	}
 }
 
@@ -71,13 +69,13 @@ func (m *WatermarkMerger) Run() {
 				*/
 				return
 			}
-			heap.Push(m.hp, WatermarkHeapItem{
+			heap.Push(m.wmHeap, WatermarkHeapItem{
 				item: i,
 				ch:   ch,
 			})
 		}
-		for m.hp.Len() > 0 {
-			item := heap.Pop(m.hp).(WatermarkHeapItem)
+		for m.wmHeap.Len() > 0 {
+			item := heap.Pop(m.wmHeap).(WatermarkHeapItem)
 			if item.item.Time().After(m.watermark.Time()) {
 				m.output <- item.item
 				m.watermark.T = item.item.Time()
@@ -87,7 +85,7 @@ func (m *WatermarkMerger) Run() {
 				// return if any of input channel is closed
 				return
 			}
-			heap.Push(m.hp, WatermarkHeapItem{
+			heap.Push(m.wmHeap, WatermarkHeapItem{
 				item: nextWatermark,
 				ch:   item.ch,
 			})

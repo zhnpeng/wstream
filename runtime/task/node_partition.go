@@ -45,9 +45,9 @@ func (n *PartitionNode) handleWatermark(watermark types.Item) {
 func (n *PartitionNode) Run() {
 	var wg sync.WaitGroup
 	wg.Add(1)
+	go n.in.Run()
 	go func() {
 		defer wg.Done()
-		go n.in.Run()
 		for {
 			select {
 			case item, ok := <-n.in.Next():
