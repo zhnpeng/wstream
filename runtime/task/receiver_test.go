@@ -1,7 +1,6 @@
 package task
 
 import (
-	"context"
 	"sync"
 	"testing"
 
@@ -137,28 +136,22 @@ func TestReceiver_Run(t *testing.T) {
 	}()
 
 	got := make([]types.Item, 0)
-	ctx, cancel := context.WithCancel(context.Background())
 	var wg1 sync.WaitGroup
 	wg1.Add(1)
-	go func(ctx context.Context) {
+	go func() {
 		defer wg1.Done()
-		recv.Run()
+		go recv.Run()
 		for {
-			select {
-			case item, ok := <-recv.Next():
-				if !ok {
-					return
-				}
-				got = append(got, item)
-			case <-ctx.Done():
+			item, ok := <-recv.Next()
+			if !ok {
 				return
 			}
+			got = append(got, item)
+
 		}
-	}(ctx)
+	}()
 
 	wg.Wait()
-	recv.Wait()
-	cancel()
 	wg1.Wait()
 
 	var mark types.Watermark

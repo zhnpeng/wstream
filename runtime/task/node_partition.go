@@ -45,10 +45,12 @@ func (n *PartitionNode) handleWatermark(watermark types.Item) {
 
 func (n *PartitionNode) Run() {
 	go func() {
+		go n.in.Run()
 		for {
 			select {
 			case item, ok := <-n.in.Next():
 				if !ok {
+					n.Despose()
 					return
 				}
 				switch item.(type) {

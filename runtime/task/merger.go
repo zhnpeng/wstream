@@ -63,7 +63,12 @@ func (m *WatermarkMerger) Run() {
 		for _, ch := range m.inputs {
 			i, ok := <-ch
 			if !ok {
-				// return if any of input channel is closed
+				/*
+					return if any of input channel is closed
+					buffer in heap or other channels should not emit
+					because they may be disordered becase not all
+					channles have data
+				*/
 				return
 			}
 			heap.Push(m.hp, WatermarkHeapItem{
@@ -79,6 +84,7 @@ func (m *WatermarkMerger) Run() {
 			}
 			nextWatermark, ok := <-item.ch
 			if !ok {
+				// return if any of input channel is closed
 				return
 			}
 			heap.Push(m.hp, WatermarkHeapItem{

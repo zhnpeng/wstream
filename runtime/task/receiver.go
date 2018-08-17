@@ -12,7 +12,6 @@ type WatermarkChan chan *types.Watermark
 // and do a multi-way merge for watermark
 // and parallel by-pass for other items
 type Receiver struct {
-	wg             *sync.WaitGroup
 	mu             sync.Mutex
 	inEdges        []InEdge
 	watermarkChans []WatermarkChan
@@ -22,10 +21,8 @@ type Receiver struct {
 }
 
 func NewReceiver() *Receiver {
-	var wg sync.WaitGroup
 	return &Receiver{
 		output: make(Edge),
-		wg:     &wg,
 	}
 }
 
@@ -39,6 +36,7 @@ func (recv *Receiver) Run() {
 	if recv.running {
 		return
 	}
+	var wg sync.WaitGroup
 	recv.mu.Lock()
 	if recv.running {
 		return
@@ -48,17 +46,17 @@ func (recv *Receiver) Run() {
 
 	//fire up watermakr merger
 	watermarkMerger := NewWatermarkMerger(recv.watermarkChans, recv.output)
-	recv.wg.Add(1)
+	wg.Add(1)
 	go func() {
-		defer recv.wg.Done()
+		defer wg.Done()
 		watermarkMerger.Run()
 	}()
 
 	//fire up input inEdges
 	for id, ch := range recv.inEdges {
-		recv.wg.Add(1)
+		wg.Add(1)
 		go func(_id int, _ch InEdge) {
-			defer recv.wg.Done()
+			defer wg.Done()
 			for {
 				item, ok := <-_ch
 				if !ok {
@@ -76,10 +74,12 @@ func (recv *Receiver) Run() {
 			}
 		}(id, ch)
 	}
+	wg.Wait()
+	recv.Despose()
 }
 
-func (recv *Receiver) Wait() {
-	recv.wg.Wait()
+func (recv *Receiver) Despose() {
+	close(recv.output)
 }
 
 // Next will run reciver if it is not running
