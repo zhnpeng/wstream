@@ -2,6 +2,7 @@ package task
 
 import (
 	"context"
+	"sync"
 
 	"github.com/wandouz/wstream/streaming/functions"
 	"github.com/wandouz/wstream/types"
@@ -13,7 +14,6 @@ type BroadcastNode struct {
 	in  *Receiver
 	out *Emitter
 
-	Type      NodeType
 	watermark types.Watermark
 	ctx       context.Context
 }
@@ -44,13 +44,15 @@ func (n *BroadcastNode) handleWatermark(watermark types.Item) {
 }
 
 func (n *BroadcastNode) Run() {
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go n.in.Run()
 	go func() {
-		go n.in.Run()
+		defer wg.Done()
 		for {
 			select {
 			case item, ok := <-n.in.Next():
 				if !ok {
-					n.Despose()
 					return
 				}
 				switch item.(type) {
@@ -65,4 +67,6 @@ func (n *BroadcastNode) Run() {
 			}
 		}
 	}()
+	wg.Wait()
+	defer n.Despose()
 }

@@ -2,14 +2,13 @@ package task
 
 import (
 	"context"
+	"sync"
 
 	"github.com/wandouz/wstream/runtime/utils"
 	"github.com/wandouz/wstream/types"
 )
 
 type PartitionNode struct {
-	Type NodeType
-
 	in  *Receiver
 	out *Emitter
 
@@ -44,13 +43,15 @@ func (n *PartitionNode) handleWatermark(watermark types.Item) {
 }
 
 func (n *PartitionNode) Run() {
+	var wg sync.WaitGroup
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		go n.in.Run()
 		for {
 			select {
 			case item, ok := <-n.in.Next():
 				if !ok {
-					n.Despose()
 					return
 				}
 				switch item.(type) {
@@ -67,4 +68,6 @@ func (n *PartitionNode) Run() {
 			}
 		}
 	}()
+	wg.Wait()
+	defer n.Despose()
 }

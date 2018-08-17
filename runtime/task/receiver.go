@@ -33,10 +33,10 @@ func (recv *Receiver) Add(input InEdge) {
 }
 
 func (recv *Receiver) Run() {
+	var wg sync.WaitGroup
 	if recv.running {
 		return
 	}
-	var wg sync.WaitGroup
 	recv.mu.Lock()
 	if recv.running {
 		return
@@ -60,7 +60,6 @@ func (recv *Receiver) Run() {
 			for {
 				item, ok := <-_ch
 				if !ok {
-					// TODO: if all inputs are closed close output channel and all watermark inEdges
 					close(recv.watermarkChans[_id])
 					return
 				}
@@ -75,7 +74,8 @@ func (recv *Receiver) Run() {
 		}(id, ch)
 	}
 	wg.Wait()
-	recv.Despose()
+	// despose self before return
+	defer recv.Despose()
 }
 
 func (recv *Receiver) Despose() {

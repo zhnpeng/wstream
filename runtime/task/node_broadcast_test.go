@@ -2,7 +2,6 @@ package task
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"testing"
 	"time"
@@ -12,6 +11,11 @@ import (
 )
 
 func TestBroadcastNode_Run(t *testing.T) {
+	/*
+		NodeA0
+		|---> NodeB0 ---> SinkB0
+		|---> NodeB1 ---> SinkB1
+	*/
 	source := make(Edge)
 	sinkB0 := make(Edge)
 	sinkB1 := make(Edge)
@@ -38,38 +42,10 @@ func TestBroadcastNode_Run(t *testing.T) {
 	go func() {
 		defer wg.Done()
 		for i := 0; i < 50; i++ {
-			item := types.NewWatermark(tm.Add(time.Second))
+			item := types.NewWatermark(tm.Add(time.Duration(i) * time.Second))
 			source.Out() <- item
 		}
 		close(source)
-	}()
-
-	got := make([]types.Item, 0)
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		closedChanCnt := 0
-		for {
-			if closedChanCnt == 2 {
-				return
-			}
-			select {
-			case item, ok := <-sinkB0.In():
-				if !ok {
-					closedChanCnt++
-					continue
-				}
-				got = append(got, item)
-				fmt.Println(item)
-			case item, ok := <-sinkB1.In():
-				if !ok {
-					closedChanCnt++
-					continue
-				}
-				got = append(got, item)
-				fmt.Println(item)
-			}
-		}
 	}()
 
 	wg.Add(1)
@@ -88,6 +64,51 @@ func TestBroadcastNode_Run(t *testing.T) {
 		nodeB1.Run()
 	}()
 
+	got1 := make([]types.Item, 0)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			item, ok := <-sinkB0.In()
+			if !ok {
+				return
+			}
+			got1 = append(got1, item)
+		}
+	}()
+
+	got2 := make([]types.Item, 0)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			item, ok := <-sinkB1.In()
+			if !ok {
+				return
+			}
+			got2 = append(got2, item)
+		}
+	}()
 	wg.Wait()
-	fmt.Println(got)
+
+	if len(got1) != 50 {
+		t.Errorf("got unexcepted count got: %v, want: %v", len(got1), 50)
+	}
+	for i, item := range got1 {
+		g := item.(*types.Watermark).Time()
+		e := tm.Add(time.Duration(i) * time.Second)
+		if !g.Equal(e) {
+			t.Errorf("got incorrect watermark time got: %v, want: %v", g, e)
+		}
+	}
+	if len(got2) != 50 {
+		t.Errorf("got unexcepted count got: %v, want: %v", len(got2), 50)
+	}
+	for i, item := range got2 {
+		g := item.(*types.Watermark).Time()
+		e := tm.Add(time.Duration(i) * time.Second)
+		if !g.Equal(e) {
+			t.Errorf("got incorrect watermark time got: %v, want: %v", g, e)
+		}
+	}
 }
