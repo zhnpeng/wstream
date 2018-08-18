@@ -26,8 +26,8 @@ func (trf *testReduceFunc) Reduce(a, b types.Item) types.Item {
 }
 
 func Test_All_Stream_Graph(t *testing.T) {
-	input1 := make(types.ItemChan)
-	input2 := make(types.ItemChan)
+	input1 := make(chan types.Item)
+	input2 := make(chan types.Item)
 	graph := NewStreamGraph()
 	source := NewSourceStream("channels", graph, nil)
 	source.Channels(input1, input2).
