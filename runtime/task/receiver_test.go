@@ -4,8 +4,8 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/wandouz/wstream/helpers"
 	"github.com/wandouz/wstream/types"
-	"github.com/wandouz/wstream/utils"
 )
 
 func TestReceiver_Run_Multi_Way(t *testing.T) {
@@ -16,6 +16,7 @@ func TestReceiver_Run_Multi_Way(t *testing.T) {
 	recv.Add(input1.In())
 	recv.Add(input2.In())
 	recv.Add(input3.In())
+
 	va := map[interface{}]interface{}{
 		"mark": "A",
 	}
@@ -27,85 +28,85 @@ func TestReceiver_Run_Multi_Way(t *testing.T) {
 	}
 	item1 := []types.Item{
 		types.NewMapRecord(
-			utils.TimeParse("2018-08-05 21:05:00"),
+			helpers.TimeParse("2018-08-05 21:05:00"),
 			va,
 		),
 		types.NewMapRecord(
-			utils.TimeParse("2018-08-05 21:05:01"),
+			helpers.TimeParse("2018-08-05 21:05:01"),
 			va,
 		),
 		types.NewMapRecord(
-			utils.TimeParse("2018-08-05 21:05:02"),
+			helpers.TimeParse("2018-08-05 21:05:02"),
 			va,
 		),
 		types.NewWatermark(
-			utils.TimeParse("2018-08-05 21:05:00"),
+			helpers.TimeParse("2018-08-05 21:05:00"),
 		),
 		types.NewMapRecord(
-			utils.TimeParse("2018-08-05 21:05:04"),
+			helpers.TimeParse("2018-08-05 21:05:04"),
 			va,
 		),
 		types.NewMapRecord(
-			utils.TimeParse("2018-08-05 21:05:06"),
+			helpers.TimeParse("2018-08-05 21:05:06"),
 			va,
 		),
 		types.NewWatermark(
-			utils.TimeParse("2018-08-05 21:05:03"),
+			helpers.TimeParse("2018-08-05 21:05:03"),
 		),
 	}
 	item2 := []types.Item{
 		types.NewMapRecord(
-			utils.TimeParse("2018-08-05 21:05:03"),
+			helpers.TimeParse("2018-08-05 21:05:03"),
 			vb,
 		),
 		types.NewWatermark(
-			utils.TimeParse("2018-08-05 21:05:00"),
+			helpers.TimeParse("2018-08-05 21:05:00"),
 		),
 		types.NewMapRecord(
-			utils.TimeParse("2018-08-05 21:05:05"),
+			helpers.TimeParse("2018-08-05 21:05:05"),
 			vb,
 		),
 		types.NewMapRecord(
-			utils.TimeParse("2018-08-05 21:05:07"),
+			helpers.TimeParse("2018-08-05 21:05:07"),
 			vb,
 		),
 		types.NewWatermark(
-			utils.TimeParse("2018-08-05 21:05:05"),
+			helpers.TimeParse("2018-08-05 21:05:05"),
 		),
 		types.NewMapRecord(
-			utils.TimeParse("2018-08-05 21:05:14"),
+			helpers.TimeParse("2018-08-05 21:05:14"),
 			vb,
 		),
 	}
 	item3 := []types.Item{
 		types.NewMapRecord(
-			utils.TimeParse("2018-08-05 21:05:11"),
+			helpers.TimeParse("2018-08-05 21:05:11"),
 			vc,
 		),
 		types.NewWatermark(
-			utils.TimeParse("2018-08-05 21:05:13"),
+			helpers.TimeParse("2018-08-05 21:05:13"),
 		),
 		types.NewMapRecord(
-			utils.TimeParse("2018-08-05 21:05:14"),
+			helpers.TimeParse("2018-08-05 21:05:14"),
 			vc,
 		),
 		types.NewMapRecord(
-			utils.TimeParse("2018-08-05 21:05:15"),
+			helpers.TimeParse("2018-08-05 21:05:15"),
 			vc,
 		),
 		types.NewMapRecord(
-			utils.TimeParse("2018-08-05 21:05:20"),
-			vc,
-		),
-		types.NewWatermark(
-			utils.TimeParse("2018-08-05 21:05:10"),
-		),
-		types.NewMapRecord(
-			utils.TimeParse("2018-08-05 21:05:25"),
+			helpers.TimeParse("2018-08-05 21:05:20"),
 			vc,
 		),
 		types.NewWatermark(
-			utils.TimeParse("2018-08-05 21:05:20"),
+			helpers.TimeParse("2018-08-05 21:05:10"),
+		),
+		types.NewMapRecord(
+			helpers.TimeParse("2018-08-05 21:05:25"),
+			vc,
+		),
+		types.NewWatermark(
+			helpers.TimeParse("2018-08-05 21:05:20"),
 		),
 	}
 
@@ -164,9 +165,9 @@ func TestReceiver_Run_Multi_Way(t *testing.T) {
 			if i.Time().Before(mark.Time()) {
 				t.Errorf("got an mis order watermark %v, want watermark after %v", i, mark)
 			}
-			if i.Time() == utils.TimeParse("2018-08-05 21:05:00") {
+			if i.Time() == helpers.TimeParse("2018-08-05 21:05:00") {
 				idwm210500 = id
-			} else if i.Time() == utils.TimeParse("2018-08-05 21:05:03") {
+			} else if i.Time() == helpers.TimeParse("2018-08-05 21:05:03") {
 				idwm210503 = id
 			}
 			mark.T = i.(*types.Watermark).Time()
@@ -174,11 +175,11 @@ func TestReceiver_Run_Multi_Way(t *testing.T) {
 			item := i.(*types.MapRecord)
 			if item.V["mark"] == "A" {
 				switch item.Time() {
-				case utils.TimeParse("2018-08-05 21:05:00"):
+				case helpers.TimeParse("2018-08-05 21:05:00"):
 					id210500A = id
-				case utils.TimeParse("2018-08-05 21:05:01"):
+				case helpers.TimeParse("2018-08-05 21:05:01"):
 					id210501A = id
-				case utils.TimeParse("2018-08-05 21:05:02"):
+				case helpers.TimeParse("2018-08-05 21:05:02"):
 					id210502A = id
 				}
 			}
@@ -205,30 +206,30 @@ func TestReceiver_Run_Single_Way(t *testing.T) {
 	}
 	item1 := []types.Item{
 		types.NewMapRecord(
-			utils.TimeParse("2018-08-05 21:05:00"),
+			helpers.TimeParse("2018-08-05 21:05:00"),
 			va,
 		),
 		types.NewMapRecord(
-			utils.TimeParse("2018-08-05 21:05:01"),
+			helpers.TimeParse("2018-08-05 21:05:01"),
 			va,
 		),
 		types.NewMapRecord(
-			utils.TimeParse("2018-08-05 21:05:02"),
+			helpers.TimeParse("2018-08-05 21:05:02"),
 			va,
 		),
 		types.NewWatermark(
-			utils.TimeParse("2018-08-05 21:05:00"),
+			helpers.TimeParse("2018-08-05 21:05:00"),
 		),
 		types.NewMapRecord(
-			utils.TimeParse("2018-08-05 21:05:04"),
+			helpers.TimeParse("2018-08-05 21:05:04"),
 			va,
 		),
 		types.NewMapRecord(
-			utils.TimeParse("2018-08-05 21:05:06"),
+			helpers.TimeParse("2018-08-05 21:05:06"),
 			va,
 		),
 		types.NewWatermark(
-			utils.TimeParse("2018-08-05 21:05:03"),
+			helpers.TimeParse("2018-08-05 21:05:03"),
 		),
 	}
 
@@ -271,9 +272,9 @@ func TestReceiver_Run_Single_Way(t *testing.T) {
 			if i.Time().Before(mark.Time()) {
 				t.Errorf("got an mis order watermark %v, want watermark after %v", i, mark)
 			}
-			if i.Time() == utils.TimeParse("2018-08-05 21:05:00") {
+			if i.Time() == helpers.TimeParse("2018-08-05 21:05:00") {
 				idwm210500 = id
-			} else if i.Time() == utils.TimeParse("2018-08-05 21:05:03") {
+			} else if i.Time() == helpers.TimeParse("2018-08-05 21:05:03") {
 				idwm210503 = id
 			}
 			mark.T = i.(*types.Watermark).Time()
@@ -281,11 +282,11 @@ func TestReceiver_Run_Single_Way(t *testing.T) {
 			item := i.(*types.MapRecord)
 			if item.V["mark"] == "A" {
 				switch item.Time() {
-				case utils.TimeParse("2018-08-05 21:05:00"):
+				case helpers.TimeParse("2018-08-05 21:05:00"):
 					id210500A = id
-				case utils.TimeParse("2018-08-05 21:05:01"):
+				case helpers.TimeParse("2018-08-05 21:05:01"):
 					id210501A = id
-				case utils.TimeParse("2018-08-05 21:05:02"):
+				case helpers.TimeParse("2018-08-05 21:05:02"):
 					id210502A = id
 				}
 			}

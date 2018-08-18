@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/wandouz/wstream/helpers"
 	"github.com/wandouz/wstream/types"
-	"github.com/wandouz/wstream/utils"
 )
 
 func TestBroadcastNode_Run_Single_Source_Watermark_Only(t *testing.T) {
@@ -37,7 +37,7 @@ func TestBroadcastNode_Run_Single_Source_Watermark_Only(t *testing.T) {
 	nodeB0.AddOutEdge(sinkB0.Out())
 	nodeB1.AddOutEdge(sinkB1.Out())
 
-	tm := utils.TimeParse("2018-08-17 10:00:00")
+	tm := helpers.TimeParse("2018-08-17 10:00:00")
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
@@ -147,7 +147,7 @@ func TestBroadcastNode_Run_Multiple_Source_Watermark_Only(t *testing.T) {
 	nodeB0.AddOutEdge(sinkB0.Out())
 	nodeB1.AddOutEdge(sinkB1.Out())
 
-	tm := utils.TimeParse("2018-08-17 10:00:00")
+	tm := helpers.TimeParse("2018-08-17 10:00:00")
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {

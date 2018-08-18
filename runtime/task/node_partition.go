@@ -8,14 +8,16 @@ import (
 	"github.com/wandouz/wstream/types"
 )
 
+// PartitionNode emit item to one of its out edges
+// according key partition
 type PartitionNode struct {
+	keys []interface{}
+
 	in  *Receiver
 	out *Emitter
 
 	watermark types.Watermark
 	ctx       context.Context
-	// parameters
-	keys []interface{}
 }
 
 func (n *PartitionNode) Despose() {

@@ -8,6 +8,7 @@ import (
 	"github.com/wandouz/wstream/types"
 )
 
+// BroadcastNode emit item to all out edges
 type BroadcastNode struct {
 	udf functions.UserDefinedFunction
 
@@ -59,6 +60,8 @@ func (n *BroadcastNode) Run() {
 				case types.Record:
 					n.handleRecord(item.(types.Record))
 				case *types.Watermark:
+					// no need to do type assert to watermark because
+					// watermark will directly emit to all output channels
 					n.handleWatermark(item)
 				}
 			case <-n.ctx.Done():
