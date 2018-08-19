@@ -33,11 +33,11 @@ func Test_All_Stream_Graph(t *testing.T) {
 	source.Channels(input1, input2).
 		Map(&testMapFunc{}).
 		SetPartition(4).
-		Map(&testMapFunc{}).
 		Reduce(&testReduceFunc{}).
 		KeyBy("dimA", "dimB").
 		TimeWindow(time.Minute)
-	if graph.Length() != 6 {
-		t.Errorf("graph length wrong want: %v, got: %v", 6, graph.Length())
+	excepted := 5
+	if graph.Length() != excepted {
+		t.Errorf("graph length wrong got: %v, want: %v", graph.Length(), excepted)
 	}
 }

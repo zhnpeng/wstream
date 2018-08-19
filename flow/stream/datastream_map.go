@@ -1,7 +1,7 @@
 package stream
 
 import (
-	"github.com/wandouz/wstream/streaming/functions"
+	"github.com/wandouz/wstream/flow/functions"
 )
 
 func (s *DataStream) Map(mapFunc functions.MapFunc) *DataStream {

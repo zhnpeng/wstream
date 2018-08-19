@@ -1,9 +1,14 @@
 package stream
 
-import "github.com/wandouz/wstream/streaming/functions"
+import "github.com/wandouz/wstream/flow/functions"
 
 type DataStream struct {
-	Basic
+	name       string
+	parallel   int
+	streamNode *streamNode
+	graph      *StreamGraph
+	options    map[string]interface{}
+
 	udf functions.UserDefinedFunction
 }
 
@@ -13,12 +18,10 @@ DataStream API
 
 func NewDataStream(name string, graph *StreamGraph, parallel int, options map[string]interface{}) *DataStream {
 	return &DataStream{
-		Basic: Basic{
-			name:     name,
-			parallel: parallel,
-			graph:    graph,
-			options:  options,
-		},
+		name:     name,
+		parallel: parallel,
+		graph:    graph,
+		options:  options,
 	}
 }
 
@@ -32,15 +35,21 @@ func (s *DataStream) UDF() functions.UserDefinedFunction {
 
 func (s *DataStream) Copy(name string) *DataStream {
 	return &DataStream{
-		Basic: Basic{
-			name:     name,
-			graph:    s.graph,
-			parallel: s.parallel,
-		},
+		name:     name,
+		graph:    s.graph,
+		parallel: s.parallel,
 	}
 }
 
 func (s *DataStream) SetPartition(parallel int) *DataStream {
 	s.parallel = parallel
 	return s
+}
+
+func (s *DataStream) SetStreamNode(node *streamNode) {
+	s.streamNode = node
+}
+
+func (s *DataStream) GetStreamNode() (node *streamNode) {
+	return s.streamNode
 }
