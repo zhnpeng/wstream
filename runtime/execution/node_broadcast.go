@@ -1,10 +1,10 @@
-package task
+package execution
 
 import (
 	"context"
 	"sync"
 
-	"github.com/wandouz/wstream/streaming/functions"
+	"github.com/wandouz/wstream/flow/functions"
 	"github.com/wandouz/wstream/types"
 )
 
