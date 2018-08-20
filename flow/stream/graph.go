@@ -43,7 +43,9 @@ func (g *StreamGraph) AddStream(stm Stream) error {
 	id := g.length
 	g.length++
 	g.mu.Unlock()
-	return g.AddVertex(id, stm)
+	node := newStreamNode(id, stm)
+	stm.SetStreamNode(node)
+	return g.AddVertex(id, node)
 }
 
 func (g *StreamGraph) AddStreamEdge(from, to Stream) error {
@@ -85,13 +87,11 @@ func (g *StreamGraph) GetVertex(id int) *streamNode {
 	return nil
 }
 
-func (g *StreamGraph) AddVertex(id int, stm Stream) error {
+func (g *StreamGraph) AddVertex(id int, node *streamNode) error {
 	if g.ExistsVertex(id) {
 		return errors.Errorf("graph already contains a node with ID %d", id)
 	}
-	sn := newStreamNode(id, stm)
-	stm.SetStreamNode(sn)
-	g.Vertices[id] = sn
+	g.Vertices[id] = node
 	return nil
 }
 
