@@ -3,13 +3,15 @@ package stream
 import "github.com/wandouz/wstream/flow/functions"
 
 type DataStream struct {
-	name       string
-	parallel   int
-	streamNode *streamNode
-	graph      *StreamGraph
-	options    map[string]interface{}
+	name     string
+	parallel int
+	options  map[string]interface{}
 
 	udf functions.UserDefinedFunction
+
+	// graph reference
+	streamNode *streamNode
+	graph      *StreamGraph
 }
 
 /*
