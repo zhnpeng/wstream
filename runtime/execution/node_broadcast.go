@@ -4,7 +4,7 @@ import (
 	"context"
 	"sync"
 
-	"github.com/wandouz/wstream/flow/functions"
+	"github.com/wandouz/wstream/functions"
 	"github.com/wandouz/wstream/types"
 )
 
