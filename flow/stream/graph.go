@@ -3,117 +3,79 @@ package stream
 import (
 	"sync"
 
-	"github.com/pkg/errors"
+	"github.com/wandouz/wstream/utils/graph"
 )
 
 type StreamGraph struct {
-	Vertices map[int]*streamNode
-	length   int
+	vertices map[int]*streamNode
+	graph    *graph.Mutable
 	mu       sync.Mutex
 }
 
 func NewStreamGraph() *StreamGraph {
 	return &StreamGraph{
-		Vertices: make(map[int]*streamNode),
+		vertices: make(map[int]*streamNode),
+		graph:    graph.New(0),
 	}
 }
 
+// streamNode bind stream with id
 type streamNode struct {
-	ID        int
-	Value     Stream
-	Outgoings map[int]*streamNode
-	Incomings map[int]*streamNode
+	id     int
+	stream Stream
 }
 
 func newStreamNode(id int, stm Stream) *streamNode {
 	return &streamNode{
-		ID:        id,
-		Value:     stm,
-		Incomings: make(map[int]*streamNode),
-		Outgoings: make(map[int]*streamNode),
+		id:     id,
+		stream: stm,
 	}
 }
 
+// Length return numbers of vertices of graph
 func (g *StreamGraph) Length() int {
-	return g.length
+	return len(g.vertices)
 }
 
-func (g *StreamGraph) AddStream(stm Stream) error {
-	g.mu.Lock()
-	id := g.length
-	g.length++
-	g.mu.Unlock()
+// AddStream add a stream vertex to graph
+func (g *StreamGraph) AddStream(stm Stream) {
+	id := g.graph.AddVertex()
 	node := newStreamNode(id, stm)
 	stm.SetStreamNode(node)
-	return g.AddVertex(id, node)
+	g.vertices[id] = node
 }
 
+// AddStreamEdge add directed edge between two stream
 func (g *StreamGraph) AddStreamEdge(from, to Stream) error {
-	if !g.ExistsStream(from) {
+	if !g.existsStream(from) {
 		g.AddStream(from)
 	}
-	if !g.ExistsStream(to) {
+	if !g.existsStream(to) {
 		g.AddStream(to)
 	}
-	fromID := from.GetStreamNode().ID
-	toID := to.GetStreamNode().ID
-	return g.AddEdge(fromID, toID)
+	fromID := from.GetStreamNode().id
+	toID := to.GetStreamNode().id
+	return g.addEdge(fromID, toID)
 }
 
-func (g *StreamGraph) ExistsStream(stm Stream) bool {
+func (g *StreamGraph) existsStream(stm Stream) bool {
 	node := stm.GetStreamNode()
 	if node == nil {
 		return false
 	}
-	if !g.ExistsVertex(node.ID) {
+	if g.getVertex(node.id) == nil {
 		return false
 	}
 	return true
 }
 
-/*
-DAG API
-*/
-
-func (g *StreamGraph) ExistsVertex(id int) (ok bool) {
-	_, ok = g.Vertices[id]
-	return
-}
-
-func (g *StreamGraph) GetVertex(id int) *streamNode {
-	if v, ok := g.Vertices[id]; ok {
+func (g *StreamGraph) getVertex(id int) *streamNode {
+	if v, ok := g.vertices[id]; ok {
 		return v
 	}
 	return nil
 }
 
-func (g *StreamGraph) AddVertex(id int, node *streamNode) error {
-	if g.ExistsVertex(id) {
-		return errors.Errorf("graph already contains a node with ID %d", id)
-	}
-	g.Vertices[id] = node
-	return nil
-}
-
-func (g *StreamGraph) AddEdge(fromID, ToID int) error {
-	var from, to *streamNode
-	var ok bool
-
-	if from, ok = g.Vertices[fromID]; !ok {
-		return errors.Errorf("vertex with the id %v not found, so it can't be added", fromID)
-	}
-
-	if to, ok = g.Vertices[ToID]; !ok {
-		return errors.Errorf("vertex with the id %v not found, so it can't be added", ToID)
-	}
-
-	for _, childVertex := range from.Outgoings {
-		if childVertex == to {
-			return errors.Errorf("edge (%v,%v) already exists, so it can't be added", fromID, ToID)
-		}
-	}
-
-	from.Outgoings[to.ID] = to
-	to.Incomings[from.ID] = from
-	return nil
+func (g *StreamGraph) addEdge(v, w int) error {
+	return g.graph.AddEdge(v, w)
 }
