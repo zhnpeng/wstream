@@ -1,6 +1,6 @@
 package stream
 
-import "github.com/wandouz/wstream/flow/functions"
+import "github.com/wandouz/wstream/functions"
 
 type DataStream struct {
 	name     string
