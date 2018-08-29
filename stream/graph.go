@@ -1,15 +1,12 @@
 package stream
 
 import (
-	"sync"
-
 	"github.com/wandouz/wstream/utils/graph"
 )
 
 type StreamGraph struct {
 	vertices map[int]*streamNode
 	graph    *graph.Mutable
-	mu       sync.Mutex
 }
 
 func NewStreamGraph() *StreamGraph {
@@ -55,7 +52,7 @@ func (g *StreamGraph) AddStreamEdge(from, to Stream) error {
 	}
 	fromID := from.GetStreamNode().id
 	toID := to.GetStreamNode().id
-	return g.addEdge(fromID, toID)
+	return g.graph.AddEdge(fromID, toID)
 }
 
 func (g *StreamGraph) existsStream(stm Stream) bool {
@@ -63,19 +60,8 @@ func (g *StreamGraph) existsStream(stm Stream) bool {
 	if node == nil {
 		return false
 	}
-	if g.getVertex(node.id) == nil {
-		return false
+	if _, ok := g.vertices[node.id]; ok {
+		return true
 	}
-	return true
-}
-
-func (g *StreamGraph) getVertex(id int) *streamNode {
-	if v, ok := g.vertices[id]; ok {
-		return v
-	}
-	return nil
-}
-
-func (g *StreamGraph) addEdge(v, w int) error {
-	return g.graph.AddEdge(v, w)
+	return false
 }
