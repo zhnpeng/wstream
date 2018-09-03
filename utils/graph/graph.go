@@ -10,6 +10,7 @@ import (
 type Iterator interface {
 	Order() int
 	Visit(v int, do func(w int, c int64) (skip bool)) (aborted bool)
+	VisitBoth(v int, doIn func(w int, c int64) (skip bool), doOut func(w int, c int64) (skip bool)) (aborted bool)
 }
 
 // Stats holds basic data about an Iterator.

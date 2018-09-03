@@ -1,6 +1,10 @@
 package task
 
-import "github.com/wandouz/wstream/runtime/execution"
+import (
+	"sync"
+
+	"github.com/wandouz/wstream/runtime/execution"
+)
 
 type Task struct {
 	nodes    []execution.Node
@@ -13,4 +17,16 @@ func (t *Task) SetTaskNode(tn *taskNode) {
 
 func (t *Task) GetTaskNode() *taskNode {
 	return t.taskNode
+}
+
+func (t *Task) Run() {
+	var wg sync.WaitGroup
+	for _, node := range t.nodes {
+		wg.Add(1)
+		go func(subtask execution.Node) {
+			defer wg.Done()
+			subtask.Run()
+		}(node)
+	}
+	wg.Wait()
 }

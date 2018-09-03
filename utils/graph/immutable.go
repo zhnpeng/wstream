@@ -11,9 +11,10 @@ import (
 // iteration: the Visit method produces its elements by reading
 // from a fixed sorted precomputed list. This type supports multigraphs.
 type Immutable struct {
-	// edges[v] is a sorted list of v's neighbors.
-	edges [][]neighbor
-	stats Stats
+	// outEdges[v] is a sorted list of v's neighbors.
+	outEdges [][]neighbor
+	inEdges  [][]neighbor
+	stats    Stats
 }
 
 type neighbor struct {
@@ -32,36 +33,56 @@ func Sort(g Iterator) *Immutable {
 
 // Transpose returns the transpose graph of g.
 // The transpose graph has the same set of vertices as g,
-// but all of the edges are reversed compared to the orientation
-// of the corresponding edges in g.
+// but all of the outEdges are reversed compared to the orientation
+// of the corresponding outEdges in g.
 func Transpose(g Iterator) *Immutable {
 	return build(g, true)
 }
 
 func build(g Iterator, transpose bool) *Immutable {
 	n := g.Order()
-	h := &Immutable{edges: make([][]neighbor, n)}
-	for v := range h.edges {
+	h := &Immutable{outEdges: make([][]neighbor, n)}
+	for v := range h.outEdges {
 		g.Visit(v, func(w int, c int64) (skip bool) {
 			if w < 0 || w >= n {
 				panic("vertex out of range: " + strconv.Itoa(w))
 			}
 			if transpose {
-				h.edges[w] = append(h.edges[w], neighbor{v, c})
+				h.outEdges[w] = append(h.outEdges[w], neighbor{v, c})
 			} else {
-				h.edges[v] = append(h.edges[v], neighbor{w, c})
+				h.outEdges[v] = append(h.outEdges[v], neighbor{w, c})
 			}
 			return
 		})
-		sort.Slice(h.edges[v], func(i, j int) bool {
-			if e := h.edges[v]; e[i].vertex == e[j].vertex {
+		sort.Slice(h.outEdges[v], func(i, j int) bool {
+			if e := h.outEdges[v]; e[i].vertex == e[j].vertex {
 				return e[i].cost < e[j].cost
 			} else {
 				return e[i].vertex < e[j].vertex
 			}
 		})
 	}
-	for v, neighbors := range h.edges {
+	for v := range h.inEdges {
+		g.Visit(v, func(w int, c int64) (skip bool) {
+			if w < 0 || w >= n {
+				panic("vertex out of range: " + strconv.Itoa(w))
+			}
+			if transpose {
+				h.inEdges[w] = append(h.inEdges[w], neighbor{v, c})
+			} else {
+				h.inEdges[v] = append(h.inEdges[v], neighbor{w, c})
+			}
+			return
+		})
+		sort.Slice(h.inEdges[v], func(i, j int) bool {
+			if e := h.inEdges[v]; e[i].vertex == e[j].vertex {
+				return e[i].cost < e[j].cost
+			} else {
+				return e[i].vertex < e[j].vertex
+			}
+		})
+	}
+	for v, neighbors := range h.outEdges {
 		if len(neighbors) == 0 {
 			h.stats.Isolated++
 		}
@@ -91,8 +112,23 @@ func build(g Iterator, transpose bool) *Immutable {
 // If do returns true, Visit returns immediately,
 // skipping any remaining neighbors, and returns true.
 func (g *Immutable) Visit(v int, do func(w int, c int64) bool) bool {
-	for _, e := range g.edges[v] {
+	for _, e := range g.outEdges[v] {
 		if do(e.vertex, e.cost) {
+			return true
+		}
+	}
+	return false
+}
+
+// VisitBoth travel both in-degrees and out-degrees
+func (g *Immutable) VisitBoth(v int, doIn func(w int, c int64) bool, doOut func(w int, c int64) bool) bool {
+	for _, e := range g.inEdges[v] {
+		if doIn(e.vertex, e.cost) {
+			return true
+		}
+	}
+	for _, e := range g.outEdges[v] {
+		if doOut(e.vertex, e.cost) {
 			return true
 		}
 	}
@@ -105,7 +141,7 @@ func (g *Immutable) Visit(v int, do func(w int, c int64) bool) bool {
 // If do returns true, VisitFrom returns immediately,
 // skipping any remaining neighbors, and returns true.
 func (g *Immutable) VisitFrom(v int, a int, do func(w int, c int64) bool) bool {
-	neighbors := g.edges[v]
+	neighbors := g.outEdges[v]
 	n := len(neighbors)
 	i := sort.Search(n, func(i int) bool { return a <= neighbors[i].vertex })
 	for ; i < n; i++ {
@@ -124,21 +160,21 @@ func (g *Immutable) String() string {
 
 // Order returns the number of vertices in the graph.
 func (g *Immutable) Order() int {
-	return len(g.edges)
+	return len(g.outEdges)
 }
 
 // Edge tells if there is an edge from v to w.
 func (g *Immutable) Edge(v, w int) bool {
-	if v < 0 || v >= len(g.edges) {
+	if v < 0 || v >= len(g.outEdges) {
 		return false
 	}
-	edges := g.edges[v]
-	n := len(edges)
-	i := sort.Search(n, func(i int) bool { return w <= edges[i].vertex })
-	return i < n && w == edges[i].vertex
+	outEdges := g.outEdges[v]
+	n := len(outEdges)
+	i := sort.Search(n, func(i int) bool { return w <= outEdges[i].vertex })
+	return i < n && w == outEdges[i].vertex
 }
 
-// Degree returns the number of outward directed edges from v.
+// Degree returns the number of outward directed outEdges from v.
 func (g *Immutable) Degree(v int) int {
-	return len(g.edges[v])
+	return len(g.outEdges[v])
 }

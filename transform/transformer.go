@@ -1,8 +1,8 @@
 package transform
 
 import (
-	"github.com/wandouz/wstream/flow/stream"
-	"github.com/wandouz/wstream/runtime/execution"
+	"github.com/wandouz/wstream/runtime/task"
+	"github.com/wandouz/wstream/stream"
 )
 
 type Transformer struct {
@@ -12,19 +12,21 @@ func New() *Transformer {
 	return &Transformer{}
 }
 
-func (t *Transformer) Stream2Execution(sg *stream.StreamGraph) (eg *execution.ExecutionGraph) {
-	eg = &execution.ExecutionGraph{}
+func doBuildTaskGraph(sg *stream.StreamGraph, tg *task.TaskGraph) func(v, w int, c int64) {
+	return func(v, w int, c int64) {
+		streamNode := sg.GetStream(w)
+		if streamNode != nil {
+			//TODO: transform streamNode to taskNode
+		}
+	}
+}
+
+func (t *Transformer) Stream2Execution(sg *stream.StreamGraph) (tg *task.TaskGraph) {
+	tg = task.NewTaskGraph()
 	if sg.Length() == 0 {
 		return
 	}
-	stmNode := sg.GetVertex(0)
-	if stmNode == nil {
-		return
-	}
-	stm := stmNode.Value
-	switch stm.(type) {
-	case *stream.DataStream:
-	case *stream.KeyedStream:
-	}
+
+	sg.BFS(0, doBuildTaskGraph(sg, tg))
 	return
 }

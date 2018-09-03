@@ -29,6 +29,13 @@ func newStreamNode(id int, stm Stream) *streamNode {
 	}
 }
 
+func (g *StreamGraph) GetStream(id int) (stm Stream) {
+	if node, ok := g.vertices[id]; ok {
+		stm = node.stream
+	}
+	return
+}
+
 // Length return numbers of vertices of graph
 func (g *StreamGraph) Length() int {
 	return len(g.vertices)
@@ -40,6 +47,10 @@ func (g *StreamGraph) AddStream(stm Stream) {
 	node := newStreamNode(id, stm)
 	stm.SetStreamNode(node)
 	g.vertices[id] = node
+}
+
+func (g *StreamGraph) BFS(v int, do func(v, w int, c int64)) {
+	graph.BFS(g.graph, v, do)
 }
 
 // AddStreamEdge add directed edge between two stream
