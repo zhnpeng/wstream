@@ -41,7 +41,10 @@ func Transpose(g Iterator) *Immutable {
 
 func build(g Iterator, transpose bool) *Immutable {
 	n := g.Order()
-	h := &Immutable{outEdges: make([][]neighbor, n)}
+	h := &Immutable{
+		outEdges: make([][]neighbor, n),
+		inEdges:  make([][]neighbor, n),
+	}
 	for v := range h.outEdges {
 		g.Visit(v, func(w int, c int64) (skip bool) {
 			if w < 0 || w >= n {
@@ -49,8 +52,10 @@ func build(g Iterator, transpose bool) *Immutable {
 			}
 			if transpose {
 				h.outEdges[w] = append(h.outEdges[w], neighbor{v, c})
+				h.inEdges[v] = append(h.inEdges[v], neighbor{w, c})
 			} else {
 				h.outEdges[v] = append(h.outEdges[v], neighbor{w, c})
+				h.inEdges[w] = append(h.inEdges[w], neighbor{v, c})
 			}
 			return
 		})
@@ -61,19 +66,6 @@ func build(g Iterator, transpose bool) *Immutable {
 				return e[i].vertex < e[j].vertex
 			}
 		})
-	}
-	for v := range h.inEdges {
-		g.Visit(v, func(w int, c int64) (skip bool) {
-			if w < 0 || w >= n {
-				panic("vertex out of range: " + strconv.Itoa(w))
-			}
-			if transpose {
-				h.inEdges[w] = append(h.inEdges[w], neighbor{v, c})
-			} else {
-				h.inEdges[v] = append(h.inEdges[v], neighbor{w, c})
-			}
-			return
-		})
 		sort.Slice(h.inEdges[v], func(i, j int) bool {
 			if e := h.inEdges[v]; e[i].vertex == e[j].vertex {
 				return e[i].cost < e[j].cost
@@ -82,6 +74,7 @@ func build(g Iterator, transpose bool) *Immutable {
 			}
 		})
 	}
+	// stats outEdges only cause inEdges are redundance
 	for v, neighbors := range h.outEdges {
 		if len(neighbors) == 0 {
 			h.stats.Isolated++

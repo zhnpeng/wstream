@@ -52,6 +52,7 @@ func (g *Mutable) Visit(v int, do func(w int, c int64) bool) bool {
 }
 
 // VisitBoth travel both in-degrees and out-degrees
+// Each edge will be visited twice.
 func (g *Mutable) VisitBoth(v int, doIn func(w int, c int64) bool, doOut func(w int, c int64) bool) bool {
 	// visit in-degree
 	for w, c := range g.inEdges[v] {

@@ -39,11 +39,11 @@ func TestBFSBoth(t *testing.T) {
 		{2, 3}, {5, 6},
 		{3, 6}, {8, 9}, {4, 4},
 	} {
-		g.AddEdgeBoth(e.v, e.w)
+		g.AddEdge(e.v, e.w)
 	}
 	exp := "7058149623"
 	res := "7"
-	BFS(Sort(g), 7, func(v, w int, c int64) {
+	BFSBoth(Sort(g), 7, func(v, w int, c int64) {
 		res += strconv.Itoa(w)
 	})
 	if diff := cmp.Diff(res, exp); diff != "" {
