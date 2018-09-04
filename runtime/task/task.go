@@ -12,6 +12,14 @@ type Task struct {
 	taskNode       *taskNode
 }
 
+func (t *Task) RescaleNode() *execution.RescaleNode {
+	return t.rescaleNode
+}
+
+func (t *Task) BroadcastNodes() []*execution.BroadcastNode {
+	return t.broadcastNodes
+}
+
 func (t *Task) SetTaskNode(tn *taskNode) {
 	t.taskNode = tn
 }

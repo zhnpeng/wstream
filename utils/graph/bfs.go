@@ -54,8 +54,8 @@ func BFSBoth(g Iterator, v int, do func(v, w int, c int64)) {
 }
 
 // BFSAll travel in-degree, out-degree and all out-edges
-// BFSAll will call do function handle all out edges
-// this may be a redundance of BFSBoth
+// BFSAll will call do function for all out edges
+// TODO: move away, this is not a standard BFS function.
 func BFSAll(g Iterator, v int, do func(v, w int, c int64)) {
 	visited := make([]bool, g.Order())
 	visited[v] = true

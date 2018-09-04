@@ -49,8 +49,8 @@ func (g *StreamGraph) AddStream(stm Stream) {
 	g.vertices[id] = node
 }
 
-func (g *StreamGraph) BFS(v int, do func(v, w int, c int64)) {
-	graph.BFS(g.graph, v, do)
+func (g *StreamGraph) BFSAll(v int, do func(v, w int, c int64)) {
+	graph.BFSAll(g.graph, v, do)
 }
 
 // AddStreamEdge add directed edge between two stream
