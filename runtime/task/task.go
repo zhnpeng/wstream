@@ -7,8 +7,9 @@ import (
 )
 
 type Task struct {
-	nodes    []execution.Node
-	taskNode *taskNode
+	rescaleNode    *execution.RescaleNode
+	broadcastNodes []*execution.BroadcastNode
+	taskNode       *taskNode
 }
 
 func (t *Task) SetTaskNode(tn *taskNode) {
@@ -21,11 +22,18 @@ func (t *Task) GetTaskNode() *taskNode {
 
 func (t *Task) Run() {
 	var wg sync.WaitGroup
-	for _, node := range t.nodes {
+	if t.rescaleNode != nil {
 		wg.Add(1)
-		go func(subtask execution.Node) {
+		go func(n *execution.RescaleNode) {
 			defer wg.Done()
-			subtask.Run()
+			n.Run()
+		}(t.rescaleNode)
+	}
+	for _, node := range t.broadcastNodes {
+		wg.Add(1)
+		go func(n *execution.BroadcastNode) {
+			defer wg.Done()
+			n.Run()
 		}(node)
 	}
 	wg.Wait()

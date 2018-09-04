@@ -23,7 +23,6 @@ func BFS(g Iterator, v int, do func(v, w int, c int64)) {
 }
 
 // BFSBoth travel both in-degree and out-degree
-// TODO: not elegant enought, refine me
 func BFSBoth(g Iterator, v int, do func(v, w int, c int64)) {
 	visited := make([]bool, g.Order())
 	visited[v] = true
@@ -46,6 +45,38 @@ func BFSBoth(g Iterator, v int, do func(v, w int, c int64)) {
 					return
 				}
 				do(v, w, c)
+				visited[w] = true
+				queue = append(queue, w)
+				return
+			},
+		)
+	}
+}
+
+// BFSAll travel in-degree, out-degree and all out-edges
+// BFSAll will call do function handle all out edges
+// this may be a redundance of BFSBoth
+func BFSAll(g Iterator, v int, do func(v, w int, c int64)) {
+	visited := make([]bool, g.Order())
+	visited[v] = true
+	for queue := []int{v}; len(queue) > 0; {
+		v := queue[0]
+		queue = queue[1:]
+		g.VisitBoth(
+			v,
+			func(w int, c int64) (skip bool) {
+				if visited[w] {
+					return
+				}
+				visited[w] = true
+				queue = append(queue, w)
+				return
+			},
+			func(w int, c int64) (skip bool) {
+				do(v, w, c)
+				if visited[w] {
+					return
+				}
 				visited[w] = true
 				queue = append(queue, w)
 				return
