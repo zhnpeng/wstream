@@ -5,7 +5,7 @@ import "github.com/wandouz/wstream/functions"
 type KeyedStream struct {
 	name       string
 	parallel   int
-	streamNode *streamNode
+	streamNode *StreamNode
 	graph      *StreamGraph
 	options    map[string]interface{}
 	keys       []interface{}
@@ -33,10 +33,10 @@ func (s *KeyedStream) SetPartition(parallel int) *KeyedStream {
 	return s
 }
 
-func (s *KeyedStream) SetStreamNode(node *streamNode) {
+func (s *KeyedStream) SetStreamNode(node *StreamNode) {
 	s.streamNode = node
 }
 
-func (s *KeyedStream) GetStreamNode() (node *streamNode) {
+func (s *KeyedStream) GetStreamNode() (node *StreamNode) {
 	return s.streamNode
 }

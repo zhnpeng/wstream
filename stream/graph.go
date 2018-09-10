@@ -1,29 +1,31 @@
 package stream
 
 import (
+	"github.com/wandouz/wstream/runtime/execution"
 	"github.com/wandouz/wstream/utils/graph"
 )
 
 type StreamGraph struct {
-	vertices map[int]*streamNode
+	vertices map[int]*StreamNode
 	graph    *graph.Mutable
 }
 
 func NewStreamGraph() *StreamGraph {
 	return &StreamGraph{
-		vertices: make(map[int]*streamNode),
+		vertices: make(map[int]*StreamNode),
 		graph:    graph.New(0),
 	}
 }
 
-// streamNode bind stream with id
-type streamNode struct {
+// StreamNode bind stream with id
+type StreamNode struct {
 	id     int
 	stream Stream
+	Task   *execution.Task
 }
 
-func newStreamNode(id int, stm Stream) *streamNode {
-	return &streamNode{
+func newStreamNode(id int, stm Stream) *StreamNode {
+	return &StreamNode{
 		id:     id,
 		stream: stm,
 	}
@@ -49,10 +51,6 @@ func (g *StreamGraph) AddStream(stm Stream) {
 	g.vertices[id] = node
 }
 
-func (g *StreamGraph) BFSAll(v int, do func(v, w int, c int64)) {
-	graph.BFSAll(g.graph, v, do)
-}
-
 // AddStreamEdge add directed edge between two stream
 func (g *StreamGraph) AddStreamEdge(from, to Stream) error {
 	if !g.existsStream(from) {
@@ -75,4 +73,8 @@ func (g *StreamGraph) existsStream(stm Stream) bool {
 		return true
 	}
 	return false
+}
+
+func (g *StreamGraph) GetStreamNode(id int) (node *StreamNode) {
+	return g.vertices[id]
 }

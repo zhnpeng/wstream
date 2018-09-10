@@ -20,6 +20,14 @@ type RescaleNode struct {
 	ctx       context.Context
 }
 
+func NewRescaleNode(in *Receiver, out *Emitter, keys []interface{}) *RescaleNode {
+	return &RescaleNode{
+		in:   in,
+		out:  out,
+		keys: keys,
+	}
+}
+
 func (n *RescaleNode) Despose() {
 	n.out.Despose()
 }

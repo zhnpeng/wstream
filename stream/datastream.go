@@ -10,7 +10,7 @@ type DataStream struct {
 	udf functions.UserDefinedFunction
 
 	// graph reference
-	streamNode *streamNode
+	streamNode *StreamNode
 	graph      *StreamGraph
 }
 
@@ -48,10 +48,10 @@ func (s *DataStream) SetPartition(parallel int) *DataStream {
 	return s
 }
 
-func (s *DataStream) SetStreamNode(node *streamNode) {
+func (s *DataStream) SetStreamNode(node *StreamNode) {
 	s.streamNode = node
 }
 
-func (s *DataStream) GetStreamNode() (node *streamNode) {
+func (s *DataStream) GetStreamNode() (node *StreamNode) {
 	return s.streamNode
 }

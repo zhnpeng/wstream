@@ -10,13 +10,21 @@ import (
 
 // BroadcastNode emit item to all out edges
 type BroadcastNode struct {
-	udf functions.UserDefinedFunction
+	function functions.UserDefinedFunction
 
 	in  *Receiver
 	out *Emitter
 
 	watermark types.Watermark
 	ctx       context.Context
+}
+
+func NewBroadcastNode(in *Receiver, out *Emitter, ctx context.Context) *BroadcastNode {
+	return &BroadcastNode{
+		in:  in,
+		out: out,
+		ctx: ctx,
+	}
 }
 
 func (n *BroadcastNode) Despose() {
@@ -32,8 +40,8 @@ func (n *BroadcastNode) AddOutEdge(outEdge OutEdge) {
 }
 
 func (n *BroadcastNode) handleRecord(record types.Record) {
-	if n.udf != nil {
-		n.udf.Run(record, n.out)
+	if n.function != nil {
+		n.function.Run(record, n.out)
 	} else {
 		n.out.Emit(record)
 	}
