@@ -40,6 +40,13 @@ func (g *StreamGraph) GetStream(id int) (stm Stream) {
 	return
 }
 
+func (g *StreamGraph) GetTask(id int) (task *execution.Task) {
+	if node, ok := g.vertices[id]; ok {
+		task = node.Task
+	}
+	return
+}
+
 // Length return numbers of vertices of graph
 func (g *StreamGraph) Length() int {
 	return len(g.vertices)
@@ -79,6 +86,10 @@ func (g *StreamGraph) existsStream(stm Stream) bool {
 
 func (g *StreamGraph) GetStreamNode(id int) (node *StreamNode) {
 	return g.vertices[id]
+}
+
+func (g *StreamGraph) BFSBoth(v int, do func(v, w int, c int64)) {
+	graph.BFSAll(g.graph, v, do)
 }
 
 func (g *StreamGraph) Run() {

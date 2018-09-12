@@ -33,6 +33,10 @@ func (s *KeyedStream) SetPartition(parallel int) *KeyedStream {
 	return s
 }
 
+func (s *KeyedStream) Parallelism() int {
+	return s.parallel
+}
+
 func (s *KeyedStream) SetStreamNode(node *StreamNode) {
 	s.streamNode = node
 }

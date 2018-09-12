@@ -9,6 +9,7 @@ import (
 )
 
 func stream2task(stream Stream) (task *execution.Task) {
+	// TODO: refine me
 	// transform stream to executable node
 	switch stream.(type) {
 	case *KeyedStream:
@@ -19,8 +20,8 @@ func stream2task(stream Stream) (task *execution.Task) {
 			context.Background(),
 			stm.keys,
 		)
-		broadcastNodes := make([]execution.Node, 0, stm.parallel)
-		for i := 0; i < stm.parallel; i++ {
+		broadcastNodes := make([]execution.Node, 0, stm.Parallelism())
+		for i := 0; i < stm.Parallelism(); i++ {
 			broadcastNode := execution.NewBroadcastNode(
 				execution.NewReceiver(),
 				execution.NewEmitter(),
@@ -37,8 +38,8 @@ func stream2task(stream Stream) (task *execution.Task) {
 		}
 	case *DataStream:
 		stm := stream.(*DataStream)
-		broadcastNodes := make([]execution.Node, 0, stm.parallel)
-		for i := 0; i < stm.parallel; i++ {
+		broadcastNodes := make([]execution.Node, 0, stm.Parallelism())
+		for i := 0; i < stm.Parallelism(); i++ {
 			broadcastNode := execution.NewBroadcastNode(
 				execution.NewReceiver(),
 				execution.NewEmitter(),
@@ -50,15 +51,18 @@ func stream2task(stream Stream) (task *execution.Task) {
 			RescaleNode:    nil,
 			BroadcastNodes: broadcastNodes,
 		}
-	case *SourceStreamChannels:
-		stm := stream.(*SourceStreamChannels)
+	case *SourceStream:
+		stm := stream.(*SourceStream)
 		rescaleNode := execution.NewRoundRobinNode(
 			execution.NewReceiver(),
 			execution.NewEmitter(),
 			context.Background(),
 		)
-		broadcastNodes := make([]execution.Node, 0, stm.parallel)
-		for i := 0; i < stm.parallel; i++ {
+		for _, input := range stm.Inputs {
+			rescaleNode.AddInEdge(execution.Edge(input).In())
+		}
+		broadcastNodes := make([]execution.Node, 0, stm.Parallelism())
+		for i := 0; i < stm.Parallelism(); i++ {
 			broadcastNode := execution.NewBroadcastNode(
 				execution.NewReceiver(),
 				execution.NewEmitter(),

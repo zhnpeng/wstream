@@ -27,12 +27,12 @@ func NewDataStream(name string, graph *StreamGraph, parallel int, options map[st
 	}
 }
 
-func (s *DataStream) Type() StreamType {
-	return TypeDataStream
-}
-
 func (s *DataStream) UDF() functions.UserDefinedFunction {
 	return s.udf
+}
+
+func (s *DataStream) Parallelism() int {
+	return s.parallel
 }
 
 func (s *DataStream) Copy(name string) *DataStream {

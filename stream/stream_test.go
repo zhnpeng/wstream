@@ -40,4 +40,7 @@ func Test_All_Stream_Graph(t *testing.T) {
 	if graph.Length() != excepted {
 		t.Errorf("graph length wrong got: %v, want: %v", graph.Length(), excepted)
 	}
+	if _, ok := graph.GetStream(0).(*SourceStream); !ok {
+		t.Errorf("got unexcepted stram type %+v", graph.GetStream(0))
+	}
 }

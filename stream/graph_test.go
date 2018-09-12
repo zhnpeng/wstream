@@ -11,19 +11,24 @@ import (
 func TestStreamGraph_Run(t *testing.T) {
 	input1 := make(chan types.Item)
 	input2 := make(chan types.Item)
-	graph := NewStreamGraph()
-	source := NewSourceStream("channels", graph, nil)
+	gph := NewStreamGraph()
+	source := NewSourceStream("source", gph, nil)
 	source.Channels(input1, input2).SetPartition(4).
 		Map(&testMapFunc{}).
 		KeyBy("A", "B").
 		Reduce(&testReduceFunc{}).
 		Map(&testMapFunc{})
-	graph.Transform()
+	gph.Transform()
+	// debug
+	// gph.BFSBoth(0, func(v, w int, c int64) {
+	// 	fmt.Println(reflect.TypeOf(gph.GetStream(w)))
+	// 	fmt.Println(gph.GetTask(w))
+	// })
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		graph.Run()
+		gph.Run()
 	}()
 	wg.Add(1)
 	go func() {
