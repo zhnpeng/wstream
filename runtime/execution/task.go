@@ -1,13 +1,29 @@
 package execution
 
+import (
+	"sync"
+)
+
 type Task struct {
-	rescaleNode    *RescaleNode
-	broadcastNodes []*BroadcastNode
+	RescaleNode    Node
+	BroadcastNodes []Node
 }
 
-func NewTask(rn *RescaleNode, bn []*BroadcastNode) *Task {
-	return &Task{
-		rescaleNode:    rn,
-		broadcastNodes: bn,
+func (t *Task) Run() {
+	var wg sync.WaitGroup
+	if t.RescaleNode != nil {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			t.RescaleNode.Run()
+		}()
 	}
+	for _, n := range t.BroadcastNodes {
+		wg.Add(1)
+		go func(bn Node) {
+			defer wg.Done()
+			bn.Run()
+		}(n)
+	}
+	wg.Wait()
 }

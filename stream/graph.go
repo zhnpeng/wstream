@@ -1,6 +1,8 @@
 package stream
 
 import (
+	"sync"
+
 	"github.com/wandouz/wstream/runtime/execution"
 	"github.com/wandouz/wstream/utils/graph"
 )
@@ -77,4 +79,23 @@ func (g *StreamGraph) existsStream(stm Stream) bool {
 
 func (g *StreamGraph) GetStreamNode(id int) (node *StreamNode) {
 	return g.vertices[id]
+}
+
+func (g *StreamGraph) Run() {
+	var wg sync.WaitGroup
+	begin := g.GetStreamNode(0)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		begin.Task.Run()
+	}()
+	graph.BFSBoth(g.graph, 0, func(v, w int, c int64) {
+		task := g.GetStreamNode(w).Task
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			task.Run()
+		}()
+	})
+	wg.Wait()
 }

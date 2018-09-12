@@ -3,57 +3,56 @@ package execution
 import (
 	"context"
 	"sync"
+	"sync/atomic"
 
-	"github.com/wandouz/wstream/runtime/utils"
 	"github.com/wandouz/wstream/types"
 )
 
-// RescaleNode emit item to one of its out edges
+// RoundRobinNode emit item to one of its out edges
 // according key partition
-type RescaleNode struct {
-	keys []interface{}
-
+type RoundRobinNode struct {
 	in  *Receiver
 	out *Emitter
 
 	watermark types.Watermark
 	ctx       context.Context
+
+	count int32
 }
 
-func NewRescaleNode(in *Receiver, out *Emitter, ctx context.Context, keys []interface{}) *RescaleNode {
-	return &RescaleNode{
-		in:   in,
-		out:  out,
-		ctx:  ctx,
-		keys: keys,
+func NewRoundRobinNode(in *Receiver, out *Emitter, ctx context.Context) *RoundRobinNode {
+	return &RoundRobinNode{
+		in:  in,
+		out: out,
+		ctx: ctx,
 	}
 }
 
-func (n *RescaleNode) Despose() {
+func (n *RoundRobinNode) Despose() {
 	n.out.Despose()
 }
 
-func (n *RescaleNode) AddInEdge(inEdge InEdge) {
+func (n *RoundRobinNode) AddInEdge(inEdge InEdge) {
 	n.in.Add(inEdge)
 }
 
-func (n *RescaleNode) AddOutEdge(outEdge OutEdge) {
+func (n *RoundRobinNode) AddOutEdge(outEdge OutEdge) {
 	n.out.Add(outEdge)
 }
 
-func (n *RescaleNode) handleRecord(record types.Record) {
+func (n *RoundRobinNode) handleRecord(record types.Record) {
 	// get key values, then calculate index, then emit to partition by index
-	kvs := record.GetMany(n.keys)
-	index := utils.PartitionByKeys(n.out.Length(), kvs)
-	n.out.EmitTo(index, record)
+	cnt := atomic.AddInt32(&n.count, 1)
+	index := cnt % int32(n.out.Length())
+	n.out.EmitTo(int(index), record)
 }
 
-func (n *RescaleNode) handleWatermark(watermark types.Item) {
+func (n *RoundRobinNode) handleWatermark(watermark types.Item) {
 	// watermark should always broadcast to all output channels
 	n.out.Emit(watermark)
 }
 
-func (n *RescaleNode) Run() {
+func (n *RoundRobinNode) Run() {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go n.in.Run()
