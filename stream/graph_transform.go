@@ -9,7 +9,7 @@ import (
 )
 
 func stream2task(stream Stream) (task *execution.Task) {
-	// TODO: refine me
+	// TODO: refine me, tranformation may implement by each stream operator
 	// transform stream to executable node
 	switch stream.(type) {
 	case *KeyedStream:
@@ -33,7 +33,7 @@ func stream2task(stream Stream) (task *execution.Task) {
 			broadcastNodes = append(broadcastNodes, broadcastNode)
 		}
 		task = &execution.Task{
-			RescaleNode:    rescaleNode,
+			RescaleNodes:   []execution.Node{rescaleNode},
 			BroadcastNodes: broadcastNodes,
 		}
 	case *DataStream:
@@ -48,7 +48,6 @@ func stream2task(stream Stream) (task *execution.Task) {
 			broadcastNodes = append(broadcastNodes, broadcastNode)
 		}
 		task = &execution.Task{
-			RescaleNode:    nil,
 			BroadcastNodes: broadcastNodes,
 		}
 	case *SourceStream:
@@ -74,7 +73,7 @@ func stream2task(stream Stream) (task *execution.Task) {
 			broadcastNodes = append(broadcastNodes, broadcastNode)
 		}
 		task = &execution.Task{
-			RescaleNode:    rescaleNode,
+			RescaleNodes:   []execution.Node{rescaleNode},
 			BroadcastNodes: broadcastNodes,
 		}
 	default:
@@ -96,7 +95,7 @@ func (g *StreamGraph) Transform() {
 			//Create executable
 			toNode.Task = stream2task(toNode.stream)
 		}
-		if toNode.Task.RescaleNode == nil {
+		if len(toNode.Task.RescaleNodes) == 0 {
 			// is not a rescale node
 			for i, n := range fromNode.Task.BroadcastNodes {
 				edge := make(execution.Edge)
@@ -105,10 +104,11 @@ func (g *StreamGraph) Transform() {
 			}
 		} else {
 			// is a rescale node
-			for _, n := range fromNode.Task.BroadcastNodes {
+			length := len(toNode.Task.RescaleNodes)
+			for i, n := range fromNode.Task.BroadcastNodes {
 				edge := make(execution.Edge)
 				n.AddOutEdge(edge.Out())
-				toNode.Task.RescaleNode.AddInEdge(edge.In())
+				toNode.Task.RescaleNodes[i%length].AddInEdge(edge.In())
 			}
 		}
 	})

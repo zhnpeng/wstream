@@ -31,8 +31,8 @@ func Test_All_Stream_Graph(t *testing.T) {
 	graph := NewStreamGraph()
 	source := NewSourceStream("channels", graph, nil)
 	source.Channels(input1, input2).
-		Map(&testMapFunc{}).
 		SetPartition(4).
+		Map(&testMapFunc{}).
 		Reduce(&testReduceFunc{}).
 		KeyBy("dimA", "dimB").
 		TimeWindow(time.Minute)

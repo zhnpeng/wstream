@@ -5,18 +5,5 @@ import (
 )
 
 type MapFunc interface {
-	Map(item types.Item) (Out types.Item)
-}
-
-type Map struct {
-	Function MapFunc
-}
-
-func (f *Map) Run(item types.Item, emitter Emitter) {
-	o := f.Function.Map(item)
-	emitter.Emit(o)
-}
-
-func (f *Map) Accmulator() types.Item {
-	return nil
+	Map(record types.Record) (Out types.Record)
 }

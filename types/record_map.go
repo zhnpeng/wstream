@@ -23,6 +23,10 @@ func (m *MapRecord) Time() time.Time {
 	return m.T
 }
 
+func (m *MapRecord) SetTime(t time.Time) {
+	m.T = t
+}
+
 func (m *MapRecord) Type() ItemType {
 	return TypeMapRecord
 }

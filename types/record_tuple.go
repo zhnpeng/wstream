@@ -30,6 +30,10 @@ func (tuple *TupleRecord) Time() time.Time {
 	return tuple.T
 }
 
+func (tuple *TupleRecord) SetTime(t time.Time) {
+	tuple.T = t
+}
+
 func (tuple *TupleRecord) AsRow() (Row, error) {
 	encodedBytes, err := tuple.UnmarshalMsg(nil)
 	if err != nil {
