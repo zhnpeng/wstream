@@ -7,21 +7,22 @@ import (
 	"time"
 
 	"github.com/wandouz/wstream/helpers"
+	"github.com/wandouz/wstream/runtime/utils"
 	"github.com/wandouz/wstream/types"
 )
 
 type bypass_opt_test struct {
 }
 
-func (o *bypass_opt_test) handleRecord(record types.Record, out Emitter) {
+func (o *bypass_opt_test) handleRecord(record types.Record, out utils.Emitter) {
 	out.Emit(record)
 }
 
-func (o *bypass_opt_test) handleWatermark(watermark *types.Watermark, out Emitter) {
+func (o *bypass_opt_test) handleWatermark(watermark *types.Watermark, out utils.Emitter) {
 	out.Emit(watermark)
 }
 
-func (o *bypass_opt_test) Run(in *Receiver, out Emitter) {
+func (o *bypass_opt_test) Run(in *Receiver, out utils.Emitter) {
 	for {
 		item, ok := <-in.Next()
 		if !ok {
@@ -50,19 +51,19 @@ func TestNode_Run_Single_Source_Watermark_Only(t *testing.T) {
 	nodeA0 := &Node{
 		operator: &bypass_opt_test{},
 		in:       NewReceiver(),
-		out:      NewFactEmitter(),
+		out:      NewEmitter(),
 		ctx:      context.Background(),
 	}
 	nodeB0 := &Node{
 		operator: &bypass_opt_test{},
 		in:       NewReceiver(),
-		out:      NewFactEmitter(),
+		out:      NewEmitter(),
 		ctx:      context.Background(),
 	}
 	nodeB1 := &Node{
 		operator: &bypass_opt_test{},
 		in:       NewReceiver(),
-		out:      NewFactEmitter(),
+		out:      NewEmitter(),
 		ctx:      context.Background(),
 	}
 
@@ -173,19 +174,19 @@ func TestNode_Run_Multiple_Source_Watermark_Only(t *testing.T) {
 	nodeA0 := &Node{
 		operator: &bypass_opt_test{},
 		in:       NewReceiver(),
-		out:      NewFactEmitter(),
+		out:      NewEmitter(),
 		ctx:      context.Background(),
 	}
 	nodeB0 := &Node{
 		operator: &bypass_opt_test{},
 		in:       NewReceiver(),
-		out:      NewFactEmitter(),
+		out:      NewEmitter(),
 		ctx:      context.Background(),
 	}
 	nodeB1 := &Node{
 		operator: &bypass_opt_test{},
 		in:       NewReceiver(),
-		out:      NewFactEmitter(),
+		out:      NewEmitter(),
 		ctx:      context.Background(),
 	}
 

@@ -17,13 +17,13 @@ type Node struct {
 	operator Operator
 
 	in  *Receiver
-	out *FactEmitter
+	out *Emitter
 
 	watermark types.Watermark
 	ctx       context.Context
 }
 
-func NewNode(in *Receiver, out *FactEmitter, ctx context.Context) *Node {
+func NewNode(in *Receiver, out *Emitter, ctx context.Context) *Node {
 	return &Node{
 		in:  in,
 		out: out,

@@ -2,15 +2,16 @@ package operator
 
 import (
 	"github.com/wandouz/wstream/runtime/execution"
+	"github.com/wandouz/wstream/runtime/utils"
 	"github.com/wandouz/wstream/types"
 )
 
 type Handler interface {
-	handleRecord(record types.Record, out Emitter)
-	handleWatermark(wm *types.Watermark, out Emitter)
+	handleRecord(record types.Record, out utils.Emitter)
+	handleWatermark(wm *types.Watermark, out utils.Emitter)
 }
 
-func consume(in *execution.Receiver, out Emitter, handler Handler) {
+func consume(in *execution.Receiver, out utils.Emitter, handler Handler) {
 	for {
 		item, ok := <-in.Next()
 		if !ok {

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/wandouz/wstream/runtime/execution"
+	"github.com/wandouz/wstream/runtime/utils"
 
 	"github.com/wandouz/wstream/functions"
 	"github.com/wandouz/wstream/types"
@@ -18,21 +19,21 @@ type AssignTimestampWithPeriodicWatermark struct {
 	prevWatermark     *types.Watermark
 }
 
-func (f *AssignTimestampWithPeriodicWatermark) handleRecord(record types.Record, out Emitter) {
+func (f *AssignTimestampWithPeriodicWatermark) handleRecord(record types.Record, out utils.Emitter) {
 	extractedTimestamp := f.Function.ExtractTimestamp(record, f.prevItemTimestamp)
 	f.prevItemTimestamp = extractedTimestamp
 	record.SetTime(time.Unix(extractedTimestamp, 0))
 	out.Emit(record)
 }
 
-func (f *AssignTimestampWithPeriodicWatermark) handleWatermark(wm *types.Watermark, out Emitter) {
+func (f *AssignTimestampWithPeriodicWatermark) handleWatermark(wm *types.Watermark, out utils.Emitter) {
 	if wm != nil && wm.After(f.prevWatermark) {
 		f.prevWatermark = wm
 		out.Emit(wm)
 	}
 }
 
-func (f *AssignTimestampWithPeriodicWatermark) Run(ctx context.Context, in *execution.Receiver, out Emitter) {
+func (f *AssignTimestampWithPeriodicWatermark) Run(ctx context.Context, in *execution.Receiver, out utils.Emitter) {
 	var wg sync.WaitGroup
 	ctx, cancel := context.WithCancel(context.Background())
 
