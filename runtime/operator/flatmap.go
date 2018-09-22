@@ -19,5 +19,5 @@ func (m *FlatMap) handleWatermark(wm *types.Watermark, out Emitter) {
 }
 
 func (m *FlatMap) Run(in *execution.Receiver, out Emitter) {
-	dispatch(in, out, m)
+	consume(in, out, m)
 }

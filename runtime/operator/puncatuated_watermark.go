@@ -36,5 +36,5 @@ func (f *AssignTimestampWithPunctuatedWatermark) handleWatermark(wm *types.Water
 }
 
 func (f *AssignTimestampWithPunctuatedWatermark) Run(in *execution.Receiver, out Emitter) {
-	dispatch(in, out, f)
+	consume(in, out, f)
 }

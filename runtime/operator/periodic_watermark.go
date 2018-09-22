@@ -56,7 +56,7 @@ func (f *AssignTimestampWithPeriodicWatermark) Run(ctx context.Context, in *exec
 	go func() {
 		defer wg.Done()
 		defer cancel()
-		dispatch(in, out, f)
+		consume(in, out, f)
 	}()
 
 	wg.Wait()

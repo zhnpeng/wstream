@@ -21,5 +21,5 @@ func (m *Filter) handleWatermark(wm *types.Watermark, out Emitter) {
 }
 
 func (m *Filter) Run(in *execution.Receiver, out Emitter) {
-	dispatch(in, out, m)
+	consume(in, out, m)
 }

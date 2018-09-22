@@ -7,43 +7,43 @@ import (
 	"github.com/wandouz/wstream/types"
 )
 
-type Node interface {
-	AddInEdge(inEdge InEdge)
-	AddOutEdge(outEdge OutEdge)
-	Run()
-}
+// type Node interface {
+// 	AddInEdge(inEdge InEdge)
+// 	AddOutEdge(outEdge OutEdge)
+// 	Run()
+// }
 
-type ExecutionNode struct {
+type Node struct {
 	operator Operator
 
 	in  *Receiver
-	out *Emitter
+	out *FactEmitter
 
 	watermark types.Watermark
 	ctx       context.Context
 }
 
-func NewExecutionNode(in *Receiver, out *Emitter, ctx context.Context) *ExecutionNode {
-	return &ExecutionNode{
+func NewNode(in *Receiver, out *FactEmitter, ctx context.Context) *Node {
+	return &Node{
 		in:  in,
 		out: out,
 		ctx: ctx,
 	}
 }
 
-func (n *ExecutionNode) Despose() {
+func (n *Node) Despose() {
 	n.out.Despose()
 }
 
-func (n *ExecutionNode) AddInEdge(inEdge InEdge) {
+func (n *Node) AddInEdge(inEdge InEdge) {
 	n.in.Add(inEdge)
 }
 
-func (n *ExecutionNode) AddOutEdge(outEdge OutEdge) {
+func (n *Node) AddOutEdge(outEdge OutEdge) {
 	n.out.Add(outEdge)
 }
 
-func (n *ExecutionNode) Run() {
+func (n *Node) Run() {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go n.in.Run()

@@ -10,7 +10,33 @@ import (
 	"github.com/wandouz/wstream/types"
 )
 
-func TestBroadcastNode_Run_Single_Source_Watermark_Only(t *testing.T) {
+type bypass_opt_test struct {
+}
+
+func (o *bypass_opt_test) handleRecord(record types.Record, out Emitter) {
+	out.Emit(record)
+}
+
+func (o *bypass_opt_test) handleWatermark(watermark *types.Watermark, out Emitter) {
+	out.Emit(watermark)
+}
+
+func (o *bypass_opt_test) Run(in *Receiver, out Emitter) {
+	for {
+		item, ok := <-in.Next()
+		if !ok {
+			return
+		}
+		switch item.(type) {
+		case types.Record:
+			o.handleRecord(item.(types.Record), out)
+		case *types.Watermark:
+			o.handleWatermark(item.(*types.Watermark), out)
+		}
+	}
+}
+
+func TestNode_Run_Single_Source_Watermark_Only(t *testing.T) {
 	/*
 		Source
 			|---> NodeA0
@@ -21,9 +47,24 @@ func TestBroadcastNode_Run_Single_Source_Watermark_Only(t *testing.T) {
 	sinkB0 := make(Edge)
 	sinkB1 := make(Edge)
 
-	nodeA0 := &BroadcastNode{in: NewReceiver(), out: NewEmitter(), ctx: context.Background()}
-	nodeB0 := &BroadcastNode{in: NewReceiver(), out: NewEmitter(), ctx: context.Background()}
-	nodeB1 := &BroadcastNode{in: NewReceiver(), out: NewEmitter(), ctx: context.Background()}
+	nodeA0 := &Node{
+		operator: &bypass_opt_test{},
+		in:       NewReceiver(),
+		out:      NewFactEmitter(),
+		ctx:      context.Background(),
+	}
+	nodeB0 := &Node{
+		operator: &bypass_opt_test{},
+		in:       NewReceiver(),
+		out:      NewFactEmitter(),
+		ctx:      context.Background(),
+	}
+	nodeB1 := &Node{
+		operator: &bypass_opt_test{},
+		in:       NewReceiver(),
+		out:      NewFactEmitter(),
+		ctx:      context.Background(),
+	}
 
 	edgeA02B0 := make(Edge)
 	edgeA02B1 := make(Edge)
@@ -114,7 +155,7 @@ func TestBroadcastNode_Run_Single_Source_Watermark_Only(t *testing.T) {
 	}
 }
 
-func TestBroadcastNode_Run_Multiple_Source_Watermark_Only(t *testing.T) {
+func TestNode_Run_Multiple_Source_Watermark_Only(t *testing.T) {
 	/*
 		Source0
 		Source1
@@ -129,9 +170,24 @@ func TestBroadcastNode_Run_Multiple_Source_Watermark_Only(t *testing.T) {
 	sinkB0 := make(Edge)
 	sinkB1 := make(Edge)
 
-	nodeA0 := &BroadcastNode{in: NewReceiver(), out: NewEmitter(), ctx: context.Background()}
-	nodeB0 := &BroadcastNode{in: NewReceiver(), out: NewEmitter(), ctx: context.Background()}
-	nodeB1 := &BroadcastNode{in: NewReceiver(), out: NewEmitter(), ctx: context.Background()}
+	nodeA0 := &Node{
+		operator: &bypass_opt_test{},
+		in:       NewReceiver(),
+		out:      NewFactEmitter(),
+		ctx:      context.Background(),
+	}
+	nodeB0 := &Node{
+		operator: &bypass_opt_test{},
+		in:       NewReceiver(),
+		out:      NewFactEmitter(),
+		ctx:      context.Background(),
+	}
+	nodeB1 := &Node{
+		operator: &bypass_opt_test{},
+		in:       NewReceiver(),
+		out:      NewFactEmitter(),
+		ctx:      context.Background(),
+	}
 
 	edgeA02B0 := make(Edge)
 	edgeA02B1 := make(Edge)

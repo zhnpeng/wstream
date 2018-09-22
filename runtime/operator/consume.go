@@ -10,7 +10,7 @@ type Handler interface {
 	handleWatermark(wm *types.Watermark, out Emitter)
 }
 
-func dispatch(in *execution.Receiver, out Emitter, handler Handler) {
+func consume(in *execution.Receiver, out Emitter, handler Handler) {
 	for {
 		item, ok := <-in.Next()
 		if !ok {
