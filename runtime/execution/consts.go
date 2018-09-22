@@ -1,13 +1,7 @@
 package execution
 
-type NodeType int
-
 const (
-	TypeSourceNode NodeType = iota
-	TypeBroadcastNode
-	TypeRoundRobinNode
-)
-
-const (
+	// DefaultWatermarkChannelBufferSize is
+	// receiver's default watermark chaneel buffer size
 	DefaultWatermarkChannelBufferSize = 300
 )
