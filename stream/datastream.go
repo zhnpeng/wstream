@@ -1,13 +1,15 @@
 package stream
 
-import "github.com/wandouz/wstream/functions"
+import (
+	"github.com/wandouz/wstream/runtime/execution"
+)
 
 type DataStream struct {
 	name     string
 	parallel int
-	options  map[string]interface{}
+	operator execution.Operator
 
-	udf functions.UserDefinedFunction
+	options map[string]interface{}
 
 	// graph reference
 	streamNode *StreamNode
@@ -27,8 +29,8 @@ func NewDataStream(name string, graph *StreamGraph, parallel int, options map[st
 	}
 }
 
-func (s *DataStream) UDF() functions.UserDefinedFunction {
-	return s.udf
+func (s *DataStream) Operator() execution.Operator {
+	return s.operator
 }
 
 func (s *DataStream) Parallelism() int {

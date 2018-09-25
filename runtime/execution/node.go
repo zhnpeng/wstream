@@ -23,16 +23,17 @@ type Node struct {
 	ctx       context.Context
 }
 
-func NewNode(in *Receiver, out *Emitter, ctx context.Context) *Node {
+func NewNode(in *Receiver, out *Emitter, operator Operator, ctx context.Context) *Node {
 	return &Node{
-		in:  in,
-		out: out,
-		ctx: ctx,
+		in:       in,
+		out:      out,
+		operator: operator,
+		ctx:      ctx,
 	}
 }
 
-func (n *Node) Despose() {
-	n.out.Despose()
+func (n *Node) Dispose() {
+	n.out.Dispose()
 }
 
 func (n *Node) AddInEdge(inEdge InEdge) {
@@ -53,5 +54,5 @@ func (n *Node) Run() {
 		n.operator.Run(n.in, n.out)
 	}()
 	wg.Wait()
-	defer n.Despose()
+	defer n.Dispose()
 }

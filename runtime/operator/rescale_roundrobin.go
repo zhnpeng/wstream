@@ -8,11 +8,16 @@ import (
 	"github.com/wandouz/wstream/types"
 )
 
-type Source struct {
+type RescaleRoundrobin struct {
 	count int64
 }
 
-func (m *Source) handleRecord(record types.Record, out utils.Emitter) {
+func NewRescaleRoundRobin() *RescaleRoundrobin {
+	return &RescaleRoundrobin{}
+}
+
+func (m *RescaleRoundrobin) handleRecord(record types.Record, out utils.Emitter) {
+	// TODO: refine this
 	// Round Robin way to emit item
 	// get key values, then calculate index, then emit to partition by index
 	cnt := atomic.AddInt64(&m.count, 1)
@@ -20,10 +25,10 @@ func (m *Source) handleRecord(record types.Record, out utils.Emitter) {
 	out.EmitTo(int(index), record)
 }
 
-func (m *Source) handleWatermark(wm *types.Watermark, out utils.Emitter) {
+func (m *RescaleRoundrobin) handleWatermark(wm *types.Watermark, out utils.Emitter) {
 	out.Emit(wm)
 }
 
-func (m *Source) Run(in *execution.Receiver, out utils.Emitter) {
+func (m *RescaleRoundrobin) Run(in *execution.Receiver, out utils.Emitter) {
 	consume(in, out, m)
 }

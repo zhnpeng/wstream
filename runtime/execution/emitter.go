@@ -40,8 +40,8 @@ func (e *Emitter) EmitTo(index int, item types.Item) error {
 	return nil
 }
 
-// Despose close all output channels
-func (e *Emitter) Despose() {
+// Dispose close all output channels
+func (e *Emitter) Dispose() {
 	for _, ch := range e.outEdges {
 		close(ch)
 	}

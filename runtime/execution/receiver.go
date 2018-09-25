@@ -74,11 +74,11 @@ func (recv *Receiver) Run() {
 		}(id, ch)
 	}
 	wg.Wait()
-	// despose self before return
-	defer recv.Despose()
+	// dispose self before return
+	defer recv.Dispose()
 }
 
-func (recv *Receiver) Despose() {
+func (recv *Receiver) Dispose() {
 	close(recv.output)
 }
 

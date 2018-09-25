@@ -11,6 +11,10 @@ type Map struct {
 	function functions.MapFunc
 }
 
+func NewMap(function functions.MapFunc) *Map {
+	return &Map{function}
+}
+
 func (m *Map) handleRecord(record types.Record, out utils.Emitter) {
 	out.Emit(m.function.Map(record))
 }

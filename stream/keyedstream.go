@@ -1,14 +1,19 @@
 package stream
 
-import "github.com/wandouz/wstream/functions"
+import (
+	"github.com/wandouz/wstream/runtime/execution"
+	"github.com/wandouz/wstream/runtime/operator"
+)
 
 type KeyedStream struct {
-	name       string
-	parallel   int
-	streamNode *StreamNode
+	name     string
+	parallel int
+	operator execution.Operator
+
+	options map[string]interface{}
+
 	graph      *StreamGraph
-	options    map[string]interface{}
-	keys       []interface{}
+	streamNode *StreamNode
 }
 
 func NewKeyedStream(name string, graph *StreamGraph, parallel int, keys []interface{}) *KeyedStream {
@@ -16,16 +21,12 @@ func NewKeyedStream(name string, graph *StreamGraph, parallel int, keys []interf
 		name:     name,
 		graph:    graph,
 		parallel: parallel,
-		keys:     keys,
+		operator: operator.NewKeyBy(keys),
 	}
 }
 
-func (s *KeyedStream) Type() StreamType {
-	return TypeKeyedStream
-}
-
-func (s *KeyedStream) UDF() functions.UserDefinedFunction {
-	return nil
+func (s *KeyedStream) Operator() execution.Operator {
+	return s.operator
 }
 
 func (s *KeyedStream) SetPartition(parallel int) *KeyedStream {

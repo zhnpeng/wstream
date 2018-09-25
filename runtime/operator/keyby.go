@@ -11,6 +11,10 @@ type KeyBy struct {
 	keys []interface{}
 }
 
+func NewKeyBy(keys ...interface{}) *KeyBy {
+	return &KeyBy{keys}
+}
+
 func (m *KeyBy) handleRecord(record types.Record, out utils.Emitter) {
 	// get key values, then calculate index, then emit to partition by index
 	kvs := record.GetMany(m.keys)

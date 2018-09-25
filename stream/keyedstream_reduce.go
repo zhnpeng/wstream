@@ -1,6 +1,9 @@
 package stream
 
-import "github.com/wandouz/wstream/functions"
+import (
+	"github.com/wandouz/wstream/functions"
+	"github.com/wandouz/wstream/runtime/operator"
+)
 
 func (s *KeyedStream) Reduce(reduceFunc functions.ReduceFunc) *DataStream {
 	name := "reduce"
@@ -8,8 +11,6 @@ func (s *KeyedStream) Reduce(reduceFunc functions.ReduceFunc) *DataStream {
 	newStream := s.ToDataStream(name, nil)
 	graph.AddStreamEdge(s, newStream)
 
-	newStream.udf = &functions.Reduce{
-		Function: reduceFunc,
-	}
+	newStream.operator = operator.NewReduce(reduceFunc)
 	return newStream
 }

@@ -14,17 +14,18 @@ func stream2task(stream Stream) (task *execution.Task) {
 	switch stream.(type) {
 	case *KeyedStream:
 		stm := stream.(*KeyedStream)
-		rescaleNode := execution.NewRescaleNode(
+		rescaleNode := execution.NewNode(
 			execution.NewReceiver(),
 			execution.NewEmitter(),
+			stm.operator,
 			context.Background(),
-			stm.keys,
 		)
-		broadcastNodes := make([]execution.Node, 0, stm.Parallelism())
+		broadcastNodes := make([]*execution.Node, 0, stm.Parallelism())
 		for i := 0; i < stm.Parallelism(); i++ {
-			broadcastNode := execution.NewBroadcastNode(
+			broadcastNode := execution.NewNode(
 				execution.NewReceiver(),
 				execution.NewEmitter(),
+				stm.operator,
 				context.Background(),
 			)
 			edge := make(execution.Edge)
@@ -33,38 +34,41 @@ func stream2task(stream Stream) (task *execution.Task) {
 			broadcastNodes = append(broadcastNodes, broadcastNode)
 		}
 		task = &execution.Task{
-			RescaleNodes:   []execution.Node{rescaleNode},
+			RescaleNodes:   []*execution.Node{rescaleNode},
 			BroadcastNodes: broadcastNodes,
 		}
 	case *DataStream:
 		stm := stream.(*DataStream)
-		broadcastNodes := make([]execution.Node, 0, stm.Parallelism())
+		broadcastNodes := make([]*execution.Node, 0, stm.Parallelism())
 		for i := 0; i < stm.Parallelism(); i++ {
-			broadcastNode := execution.NewBroadcastNode(
+			node := execution.NewNode(
 				execution.NewReceiver(),
 				execution.NewEmitter(),
+				stm.operator,
 				context.Background(),
 			)
-			broadcastNodes = append(broadcastNodes, broadcastNode)
+			broadcastNodes = append(broadcastNodes, node)
 		}
 		task = &execution.Task{
 			BroadcastNodes: broadcastNodes,
 		}
 	case *SourceStream:
 		stm := stream.(*SourceStream)
-		rescaleNode := execution.NewRoundRobinNode(
+		rescaleNode := execution.NewNode(
 			execution.NewReceiver(),
 			execution.NewEmitter(),
+			stm.operator,
 			context.Background(),
 		)
 		for _, input := range stm.Inputs {
 			rescaleNode.AddInEdge(execution.Edge(input).In())
 		}
-		broadcastNodes := make([]execution.Node, 0, stm.Parallelism())
+		broadcastNodes := make([]*execution.Node, 0, stm.Parallelism())
 		for i := 0; i < stm.Parallelism(); i++ {
-			broadcastNode := execution.NewBroadcastNode(
+			broadcastNode := execution.NewNode(
 				execution.NewReceiver(),
 				execution.NewEmitter(),
+				stm.operator,
 				context.Background(),
 			)
 			edge := make(execution.Edge)
@@ -73,7 +77,7 @@ func stream2task(stream Stream) (task *execution.Task) {
 			broadcastNodes = append(broadcastNodes, broadcastNode)
 		}
 		task = &execution.Task{
-			RescaleNodes:   []execution.Node{rescaleNode},
+			RescaleNodes:   []*execution.Node{rescaleNode},
 			BroadcastNodes: broadcastNodes,
 		}
 	default:

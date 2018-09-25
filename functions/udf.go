@@ -6,5 +6,4 @@ import (
 
 type UserDefinedFunction interface {
 	Run(item types.Item, emitter Emitter)
-	Accmulator() types.Item
 }

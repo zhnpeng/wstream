@@ -2,6 +2,7 @@ package stream
 
 import (
 	"github.com/wandouz/wstream/functions"
+	"github.com/wandouz/wstream/runtime/operator"
 )
 
 func (s *DataStream) Map(mapFunc functions.MapFunc) *DataStream {
@@ -10,8 +11,6 @@ func (s *DataStream) Map(mapFunc functions.MapFunc) *DataStream {
 	newStream := s.Copy(name)
 	graph.AddStreamEdge(s, newStream)
 
-	newStream.udf = &functions.Map{
-		Function: mapFunc,
-	}
+	newStream.operator = operator.NewMap(mapFunc)
 	return newStream
 }
