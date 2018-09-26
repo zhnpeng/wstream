@@ -17,13 +17,13 @@ func TestReceiver_Run_Multi_Way(t *testing.T) {
 	recv.Add(input2.In())
 	recv.Add(input3.In())
 
-	va := map[interface{}]interface{}{
+	va := map[string]interface{}{
 		"mark": "A",
 	}
-	vb := map[interface{}]interface{}{
+	vb := map[string]interface{}{
 		"mark": "B",
 	}
-	vc := map[interface{}]interface{}{
+	vc := map[string]interface{}{
 		"mark": "C",
 	}
 	item1 := []types.Item{
@@ -201,7 +201,7 @@ func TestReceiver_Run_Single_Way(t *testing.T) {
 	recv := NewReceiver()
 	input1 := make(Edge)
 	recv.Add(input1.In())
-	va := map[interface{}]interface{}{
+	va := map[string]interface{}{
 		"mark": "A",
 	}
 	item1 := []types.Item{
