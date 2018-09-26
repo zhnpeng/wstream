@@ -11,6 +11,6 @@ func (s *KeyedStream) Reduce(reduceFunc functions.ReduceFunc) *DataStream {
 	newStream := s.ToDataStream(name, nil)
 	graph.AddStreamEdge(s, newStream)
 
-	newStream.operator = operator.NewReduce(reduceFunc)
+	newStream.operator = operator.GenReduce(reduceFunc)
 	return newStream
 }

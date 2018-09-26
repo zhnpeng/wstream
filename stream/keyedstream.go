@@ -8,7 +8,7 @@ import (
 type KeyedStream struct {
 	name     string
 	parallel int
-	operator execution.Operator
+	operator func() execution.Operator
 
 	options map[string]interface{}
 
@@ -21,12 +21,12 @@ func NewKeyedStream(name string, graph *StreamGraph, parallel int, keys []interf
 		name:     name,
 		graph:    graph,
 		parallel: parallel,
-		operator: operator.NewKeyBy(keys),
+		operator: operator.GenKeyBy(keys),
 	}
 }
 
 func (s *KeyedStream) Operator() execution.Operator {
-	return s.operator
+	return s.operator()
 }
 
 func (s *KeyedStream) SetPartition(parallel int) *KeyedStream {

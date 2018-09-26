@@ -5,7 +5,7 @@ import (
 )
 
 /*
-ReduceFunc is a "rolling" reduce
+ReduceFunc run after non-windowded datastream is a "rolling" reduce
 */
 type ReduceFunc interface {
 	InitialAccmulator() types.Record

@@ -1,6 +1,8 @@
 package operator
 
 import (
+	"encoding/gob"
+
 	"github.com/wandouz/wstream/functions"
 	"github.com/wandouz/wstream/runtime/execution"
 	"github.com/wandouz/wstream/runtime/utils"
@@ -11,6 +13,18 @@ import (
 type Reduce struct {
 	function    functions.ReduceFunc
 	accumulator types.Record
+}
+
+func GenReduce(function functions.ReduceFunc) func() execution.Operator {
+	reader := encodeFunction(function)
+	return func() (ret execution.Operator) {
+		defer reader.Seek(0, 0)
+		decoder := gob.NewDecoder(reader)
+		var udf functions.ReduceFunc
+		decoder.Decode(&udf)
+		ret = NewReduce(udf)
+		return
+	}
 }
 
 func NewReduce(function functions.ReduceFunc) *Reduce {

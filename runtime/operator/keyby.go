@@ -11,7 +11,13 @@ type KeyBy struct {
 	keys []interface{}
 }
 
-func NewKeyBy(keys ...interface{}) *KeyBy {
+func GenKeyBy(keys []interface{}) func() execution.Operator {
+	return func() execution.Operator {
+		return NewKeyBy(keys)
+	}
+}
+
+func NewKeyBy(keys []interface{}) *KeyBy {
 	return &KeyBy{keys}
 }
 

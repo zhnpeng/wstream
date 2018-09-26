@@ -9,11 +9,7 @@ func (s *DataStream) KeyBy(keys ...interface{}) *KeyedStream {
 	return newStream
 }
 
+// ToKeyedStream TODO: refine this
 func (s *DataStream) ToKeyedStream(name string, keys []interface{}) *KeyedStream {
-	return NewKeyedStream(
-		name,
-		s.graph,
-		s.parallel,
-		keys,
-	)
+	return NewKeyedStream(name, s.graph, s.parallel, keys)
 }

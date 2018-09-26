@@ -11,6 +11,6 @@ func (s *DataStream) Map(mapFunc functions.MapFunc) *DataStream {
 	newStream := s.Copy(name)
 	graph.AddStreamEdge(s, newStream)
 
-	newStream.operator = operator.NewMap(mapFunc)
+	newStream.operator = operator.GenMap(mapFunc)
 	return newStream
 }

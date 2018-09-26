@@ -1,6 +1,8 @@
 package stream
 
-import "github.com/wandouz/wstream/runtime/execution"
+import (
+	"github.com/wandouz/wstream/runtime/execution"
+)
 
 type Stream interface {
 	Parallelism() int

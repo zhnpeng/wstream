@@ -17,7 +17,7 @@ func stream2task(stream Stream) (task *execution.Task) {
 		rescaleNode := execution.NewNode(
 			execution.NewReceiver(),
 			execution.NewEmitter(),
-			stm.operator,
+			stm.Operator(),
 			context.Background(),
 		)
 		broadcastNodes := make([]*execution.Node, 0, stm.Parallelism())
@@ -25,7 +25,7 @@ func stream2task(stream Stream) (task *execution.Task) {
 			broadcastNode := execution.NewNode(
 				execution.NewReceiver(),
 				execution.NewEmitter(),
-				stm.operator,
+				stm.Operator(),
 				context.Background(),
 			)
 			edge := make(execution.Edge)
@@ -44,7 +44,7 @@ func stream2task(stream Stream) (task *execution.Task) {
 			node := execution.NewNode(
 				execution.NewReceiver(),
 				execution.NewEmitter(),
-				stm.operator,
+				stm.Operator(),
 				context.Background(),
 			)
 			broadcastNodes = append(broadcastNodes, node)
@@ -57,7 +57,7 @@ func stream2task(stream Stream) (task *execution.Task) {
 		rescaleNode := execution.NewNode(
 			execution.NewReceiver(),
 			execution.NewEmitter(),
-			stm.operator,
+			stm.Operator(),
 			context.Background(),
 		)
 		for _, input := range stm.Inputs {
@@ -68,7 +68,7 @@ func stream2task(stream Stream) (task *execution.Task) {
 			broadcastNode := execution.NewNode(
 				execution.NewReceiver(),
 				execution.NewEmitter(),
-				stm.operator,
+				stm.Operator(),
 				context.Background(),
 			)
 			edge := make(execution.Edge)
@@ -81,7 +81,7 @@ func stream2task(stream Stream) (task *execution.Task) {
 			BroadcastNodes: broadcastNodes,
 		}
 	default:
-		logrus.Errorf("got unexcepted stream: %+v", stream)
+		logrus.Errorf("got unexpected stream: %+v", stream)
 	}
 	return
 }

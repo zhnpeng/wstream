@@ -184,14 +184,14 @@ func TestReceiver_Run_Multi_Way(t *testing.T) {
 				}
 			}
 		} else {
-			t.Errorf("got unexcepted item %v", i)
+			t.Errorf("got unexpected item %v", i)
 		}
 	}
 	if !(id210500A < id210501A &&
 		id210501A < id210502A &&
 		id210502A < idwm210500 &&
 		idwm210500 < idwm210503) {
-		t.Errorf("receiver got unexcepted order for items %v", []int{
+		t.Errorf("receiver got unexpected order for items %v", []int{
 			id210500A, id210501A, id210502A, idwm210500, idwm210503,
 		})
 	}
@@ -291,14 +291,14 @@ func TestReceiver_Run_Single_Way(t *testing.T) {
 				}
 			}
 		} else {
-			t.Errorf("got unexcepted item %v", i)
+			t.Errorf("got unexpected item %v", i)
 		}
 	}
 	if !(id210500A < id210501A &&
 		id210501A < id210502A &&
 		id210502A < idwm210500 &&
 		idwm210500 < idwm210503) {
-		t.Errorf("receiver got unexcepted order for items %v", []int{
+		t.Errorf("receiver got unexpected order for items %v", []int{
 			id210500A, id210501A, id210502A, idwm210500, idwm210503,
 		})
 	}

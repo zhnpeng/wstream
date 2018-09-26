@@ -135,7 +135,7 @@ func TestNode_Run_Single_Source_Watermark_Only(t *testing.T) {
 	wg.Wait()
 
 	if len(got1) != 50 {
-		t.Errorf("got unexcepted count got: %v, want: %v", len(got1), 50)
+		t.Errorf("got unexpected count got: %v, want: %v", len(got1), 50)
 	}
 	for i, item := range got1 {
 		g := item.(*types.Watermark).Time()
@@ -145,7 +145,7 @@ func TestNode_Run_Single_Source_Watermark_Only(t *testing.T) {
 		}
 	}
 	if len(got2) != 50 {
-		t.Errorf("got unexcepted count got: %v, want: %v", len(got2), 50)
+		t.Errorf("got unexpected count got: %v, want: %v", len(got2), 50)
 	}
 	for i, item := range got2 {
 		g := item.(*types.Watermark).Time()
@@ -277,7 +277,7 @@ func TestNode_Run_Multiple_Source_Watermark_Only(t *testing.T) {
 	wg.Wait()
 
 	if len(got1) != 50 {
-		t.Errorf("got unexcepted count got: %v, want: %v", len(got1), 50)
+		t.Errorf("got unexpected count got: %v, want: %v", len(got1), 50)
 	}
 	for i, item := range got1 {
 		g := item.(*types.Watermark).Time()
@@ -287,7 +287,7 @@ func TestNode_Run_Multiple_Source_Watermark_Only(t *testing.T) {
 		}
 	}
 	if len(got2) != 50 {
-		t.Errorf("got unexcepted count got: %v, want: %v", len(got2), 50)
+		t.Errorf("got unexpected count got: %v, want: %v", len(got2), 50)
 	}
 	for i, item := range got2 {
 		g := item.(*types.Watermark).Time()

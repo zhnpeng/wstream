@@ -7,7 +7,7 @@ import (
 type DataStream struct {
 	name     string
 	parallel int
-	operator execution.Operator
+	operator func() execution.Operator
 
 	options map[string]interface{}
 
@@ -30,7 +30,7 @@ func NewDataStream(name string, graph *StreamGraph, parallel int, options map[st
 }
 
 func (s *DataStream) Operator() execution.Operator {
-	return s.operator
+	return s.operator()
 }
 
 func (s *DataStream) Parallelism() int {

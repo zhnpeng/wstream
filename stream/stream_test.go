@@ -36,11 +36,11 @@ func Test_All_Stream_Graph(t *testing.T) {
 		Reduce(&testReduceFunc{}).
 		KeyBy("dimA", "dimB").
 		TimeWindow(time.Minute)
-	excepted := 5
-	if graph.Length() != excepted {
-		t.Errorf("graph length wrong got: %v, want: %v", graph.Length(), excepted)
+	expected := 5
+	if graph.Length() != expected {
+		t.Errorf("graph length wrong got: %v, want: %v", graph.Length(), expected)
 	}
 	if _, ok := graph.GetStream(0).(*SourceStream); !ok {
-		t.Errorf("got unexcepted stram type %+v", graph.GetStream(0))
+		t.Errorf("got unexpected stram type %+v", graph.GetStream(0))
 	}
 }

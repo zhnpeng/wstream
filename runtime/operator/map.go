@@ -1,6 +1,8 @@
 package operator
 
 import (
+	"encoding/gob"
+
 	"github.com/wandouz/wstream/functions"
 	"github.com/wandouz/wstream/runtime/execution"
 	"github.com/wandouz/wstream/runtime/utils"
@@ -9,6 +11,19 @@ import (
 
 type Map struct {
 	function functions.MapFunc
+}
+
+func GenMap(function functions.MapFunc) func() execution.Operator {
+	// use gob to support multi instance of user defined function
+	reader := encodeFunction(function)
+	return func() (ret execution.Operator) {
+		defer reader.Seek(0, 0)
+		decoder := gob.NewDecoder(reader)
+		var udf functions.MapFunc
+		decoder.Decode(&udf)
+		ret = NewMap(udf)
+		return
+	}
 }
 
 func NewMap(function functions.MapFunc) *Map {
