@@ -10,6 +10,7 @@ import (
 
 type TupleRecord struct {
 	T time.Time
+	K []interface{}
 	V []interface{}
 }
 
@@ -58,11 +59,10 @@ func (tuple *TupleRecord) Get(index interface{}) interface{} {
 	if !ok {
 		return nil
 	}
-	vl := len(tuple.V)
-	if i <= vl {
-		return tuple.V[i]
+	if i < 0 || i >= len(tuple.V) {
+		return nil
 	}
-	return nil
+	return tuple.V[i]
 }
 
 func (tuple *TupleRecord) GetMany(indexes ...interface{}) []interface{} {
@@ -78,10 +78,21 @@ func (tuple *TupleRecord) Set(index, value interface{}) error {
 	if !ok {
 		return errors.New("index should be integer")
 	}
+	if i < 0 { // if i < 0 append to tail
+		tuple.V = append(tuple.V, value)
+		return nil
+	}
 	vLen := len(tuple.V)
-	if i < 0 || i >= vLen {
+	if i >= vLen {
 		return errors.New("index out of range")
 	}
 	tuple.V[i] = value
 	return nil
+}
+
+// UseKeys use indexes key's values as record's key
+func (tuple *TupleRecord) UseKeys(indexes ...interface{}) []interface{} {
+	keys := tuple.GetMany(indexes)
+	tuple.K = keys
+	return keys
 }

@@ -1,6 +1,7 @@
 package operator
 
 import (
+	"bytes"
 	"encoding/gob"
 	"time"
 
@@ -20,12 +21,15 @@ type AssignTimestampWithPunctuatedWatermark struct {
 func GenAssignTimestampWithPunctuatedWatermar(
 	function functions.TimestampWithPunctuatedWatermar,
 ) func() execution.Operator {
-	reader := encodeFunction(function)
+	encodedBytes := encodeFunction(function)
 	return func() (ret execution.Operator) {
-		defer reader.Seek(0, 0)
+		reader := bytes.NewReader(encodedBytes)
 		decoder := gob.NewDecoder(reader)
 		var udf functions.TimestampWithPunctuatedWatermar
-		decoder.Decode(&udf)
+		err := decoder.Decode(&udf)
+		if err != nil {
+			panic(err)
+		}
 		ret = NewAssignTimestampWithPunctuatedWatermark(udf)
 		return
 	}

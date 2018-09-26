@@ -7,4 +7,5 @@ type Record interface {
 	Get(index interface{}) interface{}
 	GetMany(indexes ...interface{}) []interface{}
 	Set(index, value interface{}) error
+	UseKeys(indexes ...interface{}) []interface{}
 }

@@ -1,6 +1,7 @@
 package operator
 
 import (
+	"bytes"
 	"context"
 	"encoding/gob"
 	"sync"
@@ -24,12 +25,15 @@ func GenAssignTimestampWithPeriodicWatermar(
 	function functions.TimestampWithPeriodicWatermark,
 	period time.Duration,
 ) func() execution.Operator {
-	reader := encodeFunction(function)
+	encodedBytes := encodeFunction(function)
 	return func() (ret execution.Operator) {
-		defer reader.Seek(0, 0)
+		reader := bytes.NewReader(encodedBytes)
 		decoder := gob.NewDecoder(reader)
 		var udf functions.TimestampWithPeriodicWatermark
-		decoder.Decode(&udf)
+		err := decoder.Decode(&udf)
+		if err != nil {
+			panic(err)
+		}
 		ret = NewAssignTimestampWithPeriodicWatermark(udf, period)
 		return
 	}

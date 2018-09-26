@@ -7,33 +7,33 @@ import (
 	"github.com/wandouz/wstream/types"
 )
 
-type testMapFunc struct{}
-
-func (tmf *testMapFunc) Map(i types.Item) (o types.Item) {
-	return i
+type reduceFuncForStreamTest struct {
 }
 
-type testReduceFunc struct{}
+type mapFuncForStreamTest struct{}
 
-var testNow = time.Now()
-
-func (trf *testReduceFunc) Accmulator() types.Item {
-	return types.NewMapRecord(testNow, nil)
+func (tmf *mapFuncForStreamTest) Map(record types.Record) (o types.Record) {
+	return record
 }
 
-func (trf *testReduceFunc) Reduce(a, b types.Item) types.Item {
+func (trf *reduceFuncForStreamTest) InitialAccmulator() types.Record {
+	return types.NewMapRecord(time.Now(), nil)
+}
+
+func (trf *reduceFuncForStreamTest) Reduce(a, b types.Record) types.Record {
 	return b
 }
 
 func Test_All_Stream_Graph(t *testing.T) {
+
 	input1 := make(chan types.Item)
 	input2 := make(chan types.Item)
 	graph := NewStreamGraph()
-	source := NewSourceStream("channels", graph, nil)
+	source := NewSourceStream("channels", graph)
 	source.Channels(input1, input2).
 		SetPartition(4).
-		Map(&testMapFunc{}).
-		Reduce(&testReduceFunc{}).
+		Map(&mapFuncForStreamTest{}).
+		Reduce(&reduceFuncForStreamTest{}).
 		KeyBy("dimA", "dimB").
 		TimeWindow(time.Minute)
 	expected := 5

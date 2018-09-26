@@ -1,6 +1,7 @@
 package operator
 
 import (
+	"bytes"
 	"encoding/gob"
 
 	"github.com/wandouz/wstream/functions"
@@ -14,12 +15,15 @@ type Filter struct {
 }
 
 func GenFilter(function functions.FilterFunc) func() execution.Operator {
-	reader := encodeFunction(function)
+	encodedBytes := encodeFunction(function)
 	return func() (ret execution.Operator) {
-		defer reader.Seek(0, 0)
+		reader := bytes.NewReader(encodedBytes)
 		decoder := gob.NewDecoder(reader)
 		var udf functions.FilterFunc
-		decoder.Decode(&udf)
+		err := decoder.Decode(&udf)
+		if err != nil {
+			panic(err)
+		}
 		ret = NewFilter(udf)
 		return
 	}

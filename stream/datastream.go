@@ -9,8 +9,6 @@ type DataStream struct {
 	parallel int
 	operator func() execution.Operator
 
-	options map[string]interface{}
-
 	// graph reference
 	streamNode *StreamNode
 	graph      *StreamGraph
@@ -20,12 +18,11 @@ type DataStream struct {
 DataStream API
 */
 
-func NewDataStream(name string, graph *StreamGraph, parallel int, options map[string]interface{}) *DataStream {
+func NewDataStream(name string, graph *StreamGraph, parallel int) *DataStream {
 	return &DataStream{
 		name:     name,
 		parallel: parallel,
 		graph:    graph,
-		options:  options,
 	}
 }
 

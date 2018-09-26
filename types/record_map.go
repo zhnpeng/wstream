@@ -9,10 +9,11 @@ import (
 
 type MapRecord struct {
 	T time.Time
-	V map[interface{}]interface{}
+	K []interface{}
+	V map[string]interface{}
 }
 
-func NewMapRecord(t time.Time, v map[interface{}]interface{}) *MapRecord {
+func NewMapRecord(t time.Time, v map[string]interface{}) *MapRecord {
 	return &MapRecord{
 		T: t,
 		V: v,
@@ -51,9 +52,16 @@ func (m *MapRecord) Get(index interface{}) interface{} {
 	if !ok {
 		return nil
 	}
-	ret, ok := m.V[i]
-	if !ok {
-		return nil
+	if v, ok := m.V[i]; ok {
+		return v
+	}
+	return nil
+}
+
+func (m *MapRecord) GetMany(indexes ...interface{}) []interface{} {
+	ret := make([]interface{}, len(indexes))
+	for i, index := range indexes {
+		ret[i] = m.Get(index)
 	}
 	return ret
 }
@@ -67,10 +75,8 @@ func (m *MapRecord) Set(index, value interface{}) error {
 	return nil
 }
 
-func (m *MapRecord) GetMany(indexes ...interface{}) []interface{} {
-	ret := make([]interface{}, len(indexes))
-	for i, index := range indexes {
-		ret[i] = m.Get(index)
-	}
-	return ret
+func (m *MapRecord) UseKeys(indexes ...interface{}) []interface{} {
+	keys := m.GetMany(indexes)
+	m.K = keys
+	return keys
 }

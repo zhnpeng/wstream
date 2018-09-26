@@ -22,8 +22,8 @@ func NewKeyBy(keys []interface{}) *KeyBy {
 }
 
 func (m *KeyBy) handleRecord(record types.Record, out utils.Emitter) {
-	// get key values, then calculate index, then emit to partition by index
-	kvs := record.GetMany(m.keys)
+	// usekeys and get key values
+	kvs := record.UseKeys(m.keys)
 	index := utils.PartitionByKeys(out.Length(), kvs)
 	out.EmitTo(index, record)
 }

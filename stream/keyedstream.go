@@ -10,8 +10,6 @@ type KeyedStream struct {
 	parallel int
 	operator func() execution.Operator
 
-	options map[string]interface{}
-
 	graph      *StreamGraph
 	streamNode *StreamNode
 }
@@ -44,4 +42,12 @@ func (s *KeyedStream) SetStreamNode(node *StreamNode) {
 
 func (s *KeyedStream) GetStreamNode() (node *StreamNode) {
 	return s.streamNode
+}
+
+func (s *KeyedStream) ToDataStream(name string) *DataStream {
+	return NewDataStream(
+		name,
+		s.graph,
+		s.parallel,
+	)
 }

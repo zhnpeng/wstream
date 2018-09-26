@@ -8,7 +8,7 @@ import (
 func (s *KeyedStream) Reduce(reduceFunc functions.ReduceFunc) *DataStream {
 	name := "reduce"
 	graph := s.graph
-	newStream := s.ToDataStream(name, nil)
+	newStream := s.ToDataStream(name)
 	graph.AddStreamEdge(s, newStream)
 
 	newStream.operator = operator.GenReduce(reduceFunc)

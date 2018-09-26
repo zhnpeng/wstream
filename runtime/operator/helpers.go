@@ -5,10 +5,9 @@ import (
 	"encoding/gob"
 )
 
-func encodeFunction(function interface{}) *bytes.Reader {
+func encodeFunction(function interface{}) []byte {
 	var buf bytes.Buffer
 	gob.Register(function)
-	gob.NewEncoder(&buf).Encode(function)
-	reader := bytes.NewReader(buf.Bytes())
-	return reader
+	gob.NewEncoder(&buf).Encode(&function)
+	return buf.Bytes()
 }

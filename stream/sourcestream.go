@@ -1,6 +1,9 @@
 package stream
 
-import "github.com/wandouz/wstream/types"
+import (
+	"github.com/wandouz/wstream/runtime/operator"
+	"github.com/wandouz/wstream/types"
+)
 
 // SourceStream accept channels as inputs
 type SourceStream struct {
@@ -9,12 +12,12 @@ type SourceStream struct {
 	Inputs   []chan types.Item
 }
 
-func NewSourceStream(name string, graph *StreamGraph, options map[string]interface{}) *SourceStream {
+func NewSourceStream(name string, graph *StreamGraph) *SourceStream {
 	stm := &SourceStream{
 		DataStream: DataStream{
-			name:    name,
-			graph:   graph,
-			options: options,
+			name:     name,
+			graph:    graph,
+			operator: operator.GenRescaleRoundRobin(),
 		},
 	}
 	graph.AddStream(stm)

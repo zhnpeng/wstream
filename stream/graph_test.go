@@ -8,16 +8,34 @@ import (
 	"github.com/wandouz/wstream/types"
 )
 
+type reduceFuncForGraphTest struct {
+	InitialTime time.Time
+}
+
+type mapFuncForGraphTest struct{}
+
+func (tmf *mapFuncForGraphTest) Map(record types.Record) (o types.Record) {
+	return record
+}
+
+func (trf *reduceFuncForGraphTest) InitialAccmulator() types.Record {
+	return types.NewMapRecord(trf.InitialTime, nil)
+}
+
+func (trf *reduceFuncForGraphTest) Reduce(a, b types.Record) types.Record {
+	return b
+}
+
 func TestStreamGraph_Run(t *testing.T) {
 	input1 := make(chan types.Item)
 	input2 := make(chan types.Item)
 	gph := NewStreamGraph()
-	source := NewSourceStream("source", gph, nil)
+	source := NewSourceStream("source", gph)
 	source.Channels(input1, input2).SetPartition(4).
-		Map(&testMapFunc{}).
+		Map(&mapFuncForGraphTest{}).
 		KeyBy("A", "B").
-		Reduce(&testReduceFunc{}).
-		Map(&testMapFunc{})
+		Reduce(&reduceFuncForGraphTest{time.Now()}).
+		Map(&mapFuncForGraphTest{})
 	gph.Transform()
 	// debug
 	// gph.BFSBoth(0, func(v, w int, c int64) {

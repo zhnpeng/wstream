@@ -1,6 +1,7 @@
 package operator
 
 import (
+	"bytes"
 	"encoding/gob"
 
 	"github.com/wandouz/wstream/functions"
@@ -15,12 +16,15 @@ type Map struct {
 
 func GenMap(function functions.MapFunc) func() execution.Operator {
 	// use gob to support multi instance of user defined function
-	reader := encodeFunction(function)
+	encodedBytes := encodeFunction(function)
 	return func() (ret execution.Operator) {
-		defer reader.Seek(0, 0)
+		reader := bytes.NewReader(encodedBytes)
 		decoder := gob.NewDecoder(reader)
 		var udf functions.MapFunc
-		decoder.Decode(&udf)
+		err := decoder.Decode(&udf)
+		if err != nil {
+			panic(err)
+		}
 		ret = NewMap(udf)
 		return
 	}

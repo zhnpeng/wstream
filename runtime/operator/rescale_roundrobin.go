@@ -12,14 +12,14 @@ type RescaleRoundrobin struct {
 	count int64
 }
 
-func GenRescaleRoundRobin(count int64) func() execution.Operator {
+func GenRescaleRoundRobin() func() execution.Operator {
 	return func() execution.Operator {
-		return NewRescaleRoundRobin(count)
+		return NewRescaleRoundRobin()
 	}
 }
 
-func NewRescaleRoundRobin(count int64) *RescaleRoundrobin {
-	return &RescaleRoundrobin{count}
+func NewRescaleRoundRobin() *RescaleRoundrobin {
+	return &RescaleRoundrobin{}
 }
 
 func (m *RescaleRoundrobin) handleRecord(record types.Record, out utils.Emitter) {
