@@ -12,8 +12,8 @@ import (
 
 // Reduce is a rolling reduce in datastream and keyedstream
 type Reduce struct {
-	function    functions.ReduceFunc
-	accumulator types.Record
+	function         functions.ReduceFunc
+	keyedAccumulator map[string]types.Record
 }
 
 func GenReduce(function functions.ReduceFunc) func() execution.Operator {
@@ -33,14 +33,21 @@ func GenReduce(function functions.ReduceFunc) func() execution.Operator {
 
 func NewReduce(function functions.ReduceFunc) *Reduce {
 	return &Reduce{
-		function:    function,
-		accumulator: function.InitialAccmulator(),
+		function:         function,
+		keyedAccumulator: make(map[string]types.Record),
 	}
 }
 
 func (m *Reduce) handleRecord(record types.Record, out utils.Emitter) {
-	m.accumulator = m.function.Reduce(m.accumulator, record)
-	out.Emit(m.accumulator)
+	keys := hashSlice(record.Key())
+	if acc, ok := m.keyedAccumulator[keys]; ok {
+		ret := m.function.Reduce(acc, record)
+		m.keyedAccumulator[keys] = ret.Inherit(record)
+	} else {
+		ret := m.function.Reduce(m.function.InitialAccmulator(), record)
+		m.keyedAccumulator[keys] = ret.Inherit(record)
+	}
+	out.Emit(m.keyedAccumulator[keys])
 }
 
 func (m *Reduce) handleWatermark(wm *types.Watermark, out utils.Emitter) {

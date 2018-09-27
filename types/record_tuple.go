@@ -47,7 +47,11 @@ func (tuple *TupleRecord) AsRow() (Row, error) {
 }
 
 func (tuple *TupleRecord) Copy() Record {
-	return NewTupleRecord(tuple.T, tuple.V...)
+	return &TupleRecord{
+		T: tuple.T,
+		K: tuple.K,
+		V: tuple.V,
+	}
 }
 
 func (tuple *TupleRecord) AsString() string {
@@ -90,9 +94,19 @@ func (tuple *TupleRecord) Set(index, value interface{}) error {
 	return nil
 }
 
+func (tuple *TupleRecord) Inherit(record Record) Record {
+	tuple.T = record.Time()
+	tuple.K = record.Key()
+	return tuple
+}
+
 // UseKeys use indexes key's values as record's key
 func (tuple *TupleRecord) UseKeys(indexes ...interface{}) []interface{} {
 	keys := tuple.GetMany(indexes)
 	tuple.K = keys
 	return keys
+}
+
+func (tuple *TupleRecord) Key() []interface{} {
+	return tuple.K
 }

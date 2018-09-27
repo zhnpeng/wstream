@@ -8,4 +8,6 @@ type Record interface {
 	GetMany(indexes ...interface{}) []interface{}
 	Set(index, value interface{}) error
 	UseKeys(indexes ...interface{}) []interface{}
+	Key() []interface{}
+	Inherit(Record) Record
 }

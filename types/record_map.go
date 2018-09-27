@@ -44,7 +44,11 @@ func (m *MapRecord) AsRow() (Row, error) {
 }
 
 func (m *MapRecord) Copy() Record {
-	return NewMapRecord(m.T, m.V)
+	return &MapRecord{
+		T: m.T,
+		K: m.K,
+		V: m.V,
+	}
 }
 
 func (m *MapRecord) Get(index interface{}) interface{} {
@@ -75,8 +79,19 @@ func (m *MapRecord) Set(index, value interface{}) error {
 	return nil
 }
 
+// Inherit inherit T and K from another record
+func (m *MapRecord) Inherit(record Record) Record {
+	m.T = record.Time()
+	m.K = record.Key()
+	return m
+}
+
 func (m *MapRecord) UseKeys(indexes ...interface{}) []interface{} {
 	keys := m.GetMany(indexes)
 	m.K = keys
 	return keys
+}
+
+func (m *MapRecord) Key() []interface{} {
+	return m.K
 }
