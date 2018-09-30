@@ -18,28 +18,23 @@ type AssignTimestampWithPunctuatedWatermark struct {
 	prevWatermark     *types.Watermark
 }
 
-func GenAssignTimestampWithPunctuatedWatermar(
-	function functions.TimestampWithPunctuatedWatermar,
-) func() execution.Operator {
-	encodedBytes := encodeFunction(function)
-	return func() (ret execution.Operator) {
-		reader := bytes.NewReader(encodedBytes)
-		decoder := gob.NewDecoder(reader)
-		var udf functions.TimestampWithPunctuatedWatermar
-		err := decoder.Decode(&udf)
-		if err != nil {
-			panic(err)
-		}
-		ret = NewAssignTimestampWithPunctuatedWatermark(udf)
-		return
-	}
-}
-
 func NewAssignTimestampWithPunctuatedWatermark(function functions.TimestampWithPunctuatedWatermar) *AssignTimestampWithPunctuatedWatermark {
 	return &AssignTimestampWithPunctuatedWatermark{
 		function:      function,
 		prevWatermark: &types.Watermark{},
 	}
+}
+
+func (f *AssignTimestampWithPunctuatedWatermark) New() execution.Operator {
+	encodedBytes := encodeFunction(f.function)
+	reader := bytes.NewReader(encodedBytes)
+	decoder := gob.NewDecoder(reader)
+	var udf functions.TimestampWithPunctuatedWatermar
+	err := decoder.Decode(&udf)
+	if err != nil {
+		panic(err)
+	}
+	return NewAssignTimestampWithPunctuatedWatermark(udf)
 }
 
 func (f *AssignTimestampWithPunctuatedWatermark) handleRecord(record types.Record, out utils.Emitter) {

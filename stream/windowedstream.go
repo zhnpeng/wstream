@@ -2,12 +2,14 @@ package stream
 
 import (
 	"github.com/wandouz/wstream/runtime/execution"
+	"github.com/wandouz/wstream/runtime/operator/windowing/triggers"
 )
 
 type WindowedStream struct {
 	name     string
 	parallel int
-	operator func() execution.Operator
+	trigger  triggers.Trigger
+	operator execution.Operator
 
 	graph      *StreamGraph
 	streamNode *StreamNode
@@ -22,7 +24,7 @@ func NewWindowedStream(name string, graph *StreamGraph, parallel int) *WindowedS
 }
 
 func (s *WindowedStream) Operator() execution.Operator {
-	return s.operator()
+	return s.operator.New()
 }
 
 func (s *WindowedStream) Parallelism() int {
@@ -43,4 +45,9 @@ func (s *WindowedStream) ToDataStream(name string) *DataStream {
 		s.graph,
 		s.parallel,
 	)
+}
+
+func (s *WindowedStream) Trigger(trigger triggers.Trigger) *WindowedStream {
+	s.trigger = trigger
+	return s
 }

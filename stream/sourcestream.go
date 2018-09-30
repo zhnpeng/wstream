@@ -17,7 +17,7 @@ func NewSourceStream(name string, graph *StreamGraph) *SourceStream {
 		DataStream: DataStream{
 			name:     name,
 			graph:    graph,
-			operator: operator.GenRescaleRoundRobin(),
+			operator: operator.NewRescaleRoundRobin(),
 		},
 	}
 	graph.AddStream(stm)

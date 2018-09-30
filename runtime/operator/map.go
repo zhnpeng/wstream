@@ -14,24 +14,20 @@ type Map struct {
 	function functions.MapFunc
 }
 
-func GenMap(function functions.MapFunc) func() execution.Operator {
-	// use gob to support multi instance of user defined function
-	encodedBytes := encodeFunction(function)
-	return func() (ret execution.Operator) {
-		reader := bytes.NewReader(encodedBytes)
-		decoder := gob.NewDecoder(reader)
-		var udf functions.MapFunc
-		err := decoder.Decode(&udf)
-		if err != nil {
-			panic(err)
-		}
-		ret = NewMap(udf)
-		return
-	}
-}
-
 func NewMap(function functions.MapFunc) *Map {
 	return &Map{function}
+}
+
+func (m *Map) New() execution.Operator {
+	encodedBytes := encodeFunction(m.function)
+	reader := bytes.NewReader(encodedBytes)
+	decoder := gob.NewDecoder(reader)
+	var udf functions.MapFunc
+	err := decoder.Decode(&udf)
+	if err != nil {
+		panic(err)
+	}
+	return NewMap(udf)
 }
 
 func (m *Map) handleRecord(record types.Record, out utils.Emitter) {

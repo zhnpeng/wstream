@@ -11,14 +11,11 @@ type KeyBy struct {
 	keys []interface{}
 }
 
-func GenKeyBy(keys []interface{}) func() execution.Operator {
-	return func() execution.Operator {
-		return NewKeyBy(keys)
-	}
-}
-
 func NewKeyBy(keys []interface{}) *KeyBy {
 	return &KeyBy{keys}
+}
+func (m *KeyBy) New() execution.Operator {
+	return NewKeyBy(m.keys)
 }
 
 func (m *KeyBy) handleRecord(record types.Record, out utils.Emitter) {

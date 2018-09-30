@@ -21,24 +21,6 @@ type AssignTimestampWithPeriodicWatermark struct {
 	prevWatermark     *types.Watermark
 }
 
-func GenAssignTimestampWithPeriodicWatermar(
-	function functions.TimestampWithPeriodicWatermark,
-	period time.Duration,
-) func() execution.Operator {
-	encodedBytes := encodeFunction(function)
-	return func() (ret execution.Operator) {
-		reader := bytes.NewReader(encodedBytes)
-		decoder := gob.NewDecoder(reader)
-		var udf functions.TimestampWithPeriodicWatermark
-		err := decoder.Decode(&udf)
-		if err != nil {
-			panic(err)
-		}
-		ret = NewAssignTimestampWithPeriodicWatermark(udf, period)
-		return
-	}
-}
-
 func NewAssignTimestampWithPeriodicWatermark(
 	function functions.TimestampWithPeriodicWatermark,
 	period time.Duration,
@@ -48,6 +30,18 @@ func NewAssignTimestampWithPeriodicWatermark(
 		period:        period,
 		prevWatermark: &types.Watermark{},
 	}
+}
+
+func (f *AssignTimestampWithPeriodicWatermark) New() execution.Operator {
+	encodedBytes := encodeFunction(f.function)
+	reader := bytes.NewReader(encodedBytes)
+	decoder := gob.NewDecoder(reader)
+	var udf functions.TimestampWithPeriodicWatermark
+	err := decoder.Decode(&udf)
+	if err != nil {
+		panic(err)
+	}
+	return NewAssignTimestampWithPeriodicWatermark(udf, f.period)
 }
 
 func (f *AssignTimestampWithPeriodicWatermark) handleRecord(record types.Record, out utils.Emitter) {

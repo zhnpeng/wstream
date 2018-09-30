@@ -34,3 +34,8 @@ func (t *CountTrigger) OnProcessingTime(timestamp time.Duration, window windows.
 func (t *CountTrigger) OnEventTime(timestamp time.Duration, window windows.Window, ctx *TriggerContext) TriggerSignal {
 	return CONTINUE
 }
+
+func (t *CountTrigger) Of(maxCount int64) *CountTrigger {
+	t.maxCount = maxCount
+	return t
+}

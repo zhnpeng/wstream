@@ -14,23 +14,19 @@ type FlatMap struct {
 	function functions.FlatMapFunc
 }
 
-func GenFlatMap(function functions.FlatMapFunc) func() execution.Operator {
-	encodedBytes := encodeFunction(function)
-	return func() (ret execution.Operator) {
-		reader := bytes.NewReader(encodedBytes)
-		decoder := gob.NewDecoder(reader)
-		var udf functions.FlatMapFunc
-		err := decoder.Decode(&udf)
-		if err != nil {
-			panic(err)
-		}
-		ret = NewFlatMap(udf)
-		return
-	}
-}
-
 func NewFlatMap(function functions.FlatMapFunc) *FlatMap {
 	return &FlatMap{function}
+}
+func (m *FlatMap) New() execution.Operator {
+	encodedBytes := encodeFunction(m.function)
+	reader := bytes.NewReader(encodedBytes)
+	decoder := gob.NewDecoder(reader)
+	var udf functions.FlatMapFunc
+	err := decoder.Decode(&udf)
+	if err != nil {
+		panic(err)
+	}
+	return NewFlatMap(udf)
 }
 
 func (m *FlatMap) handleRecord(record types.Record, out utils.Emitter) {

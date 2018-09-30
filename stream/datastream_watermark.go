@@ -17,7 +17,7 @@ func (s *DataStream) TimestampWithPeriodicWatermark(
 	newStream := s.Copy(name)
 	graph.AddStreamEdge(s, newStream)
 
-	newStream.operator = operator.GenAssignTimestampWithPeriodicWatermar(function, period)
+	newStream.operator = operator.NewAssignTimestampWithPeriodicWatermark(function, period)
 	return newStream
 }
 
@@ -29,6 +29,6 @@ func (s *DataStream) TimestampWithPuncatuatedWatermark(
 	newStream := s.Copy(name)
 	graph.AddStreamEdge(s, newStream)
 
-	newStream.operator = operator.GenAssignTimestampWithPunctuatedWatermar(function)
+	newStream.operator = operator.NewAssignTimestampWithPunctuatedWatermark(function)
 	return newStream
 }

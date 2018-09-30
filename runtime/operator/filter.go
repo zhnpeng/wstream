@@ -14,23 +14,20 @@ type Filter struct {
 	function functions.FilterFunc
 }
 
-func GenFilter(function functions.FilterFunc) func() execution.Operator {
-	encodedBytes := encodeFunction(function)
-	return func() (ret execution.Operator) {
-		reader := bytes.NewReader(encodedBytes)
-		decoder := gob.NewDecoder(reader)
-		var udf functions.FilterFunc
-		err := decoder.Decode(&udf)
-		if err != nil {
-			panic(err)
-		}
-		ret = NewFilter(udf)
-		return
-	}
-}
-
 func NewFilter(function functions.FilterFunc) *Filter {
 	return &Filter{function}
+}
+
+func (m *Filter) New() execution.Operator {
+	encodedBytes := encodeFunction(m.function)
+	reader := bytes.NewReader(encodedBytes)
+	decoder := gob.NewDecoder(reader)
+	var udf functions.FilterFunc
+	err := decoder.Decode(&udf)
+	if err != nil {
+		panic(err)
+	}
+	return NewFilter(udf)
 }
 
 func (m *Filter) handleRecord(record types.Record, out utils.Emitter) {

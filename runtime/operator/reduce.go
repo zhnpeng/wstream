@@ -16,26 +16,23 @@ type Reduce struct {
 	keyedAccumulator map[string]types.Record
 }
 
-func GenReduce(function functions.ReduceFunc) func() execution.Operator {
-	encodedBytes := encodeFunction(function)
-	return func() (ret execution.Operator) {
-		reader := bytes.NewReader(encodedBytes)
-		decoder := gob.NewDecoder(reader)
-		var udf functions.ReduceFunc
-		err := decoder.Decode(&udf)
-		if err != nil {
-			panic(err)
-		}
-		ret = NewReduce(udf)
-		return
-	}
-}
-
 func NewReduce(function functions.ReduceFunc) *Reduce {
 	return &Reduce{
 		function:         function,
 		keyedAccumulator: make(map[string]types.Record),
 	}
+}
+
+func (m *Reduce) New() execution.Operator {
+	encodedBytes := encodeFunction(m.function)
+	reader := bytes.NewReader(encodedBytes)
+	decoder := gob.NewDecoder(reader)
+	var udf functions.ReduceFunc
+	err := decoder.Decode(&udf)
+	if err != nil {
+		panic(err)
+	}
+	return NewReduce(udf)
 }
 
 func (m *Reduce) handleRecord(record types.Record, out utils.Emitter) {
