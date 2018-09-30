@@ -1,12 +1,15 @@
 package triggers
 
-import "github.com/wandouz/wstream/types"
+import (
+	"time"
+
+	"github.com/wandouz/wstream/runtime/operator/windowing/windows"
+	"github.com/wandouz/wstream/types"
+)
 
 type Trigger interface {
-	OnItem(item types.Item)
-	OnProcessingTime()
-	OnEventTime()
-	CanMerge() bool
-	OnMerge()
+	OnItem(types.Item, time.Duration, windows.Window, *TriggerContext) TriggerSignal
+	OnProcessingTime(time.Duration, windows.Window, *TriggerContext) TriggerSignal
+	OnEventTime(time.Duration, windows.Window, *TriggerContext) TriggerSignal
 	Dispose()
 }

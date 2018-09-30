@@ -51,3 +51,11 @@ func (s *KeyedStream) ToDataStream(name string) *DataStream {
 		s.parallel,
 	)
 }
+
+func (s *KeyedStream) ToWindowedStream(name string) *WindowedStream {
+	return NewWindowedStream(
+		name,
+		s.graph,
+		s.parallel,
+	)
+}

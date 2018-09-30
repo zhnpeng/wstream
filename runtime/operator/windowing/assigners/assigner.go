@@ -1,9 +1,12 @@
 package assigners
 
-import "github.com/wandouz/wstream/types"
+import (
+	"github.com/wandouz/wstream/runtime/operator/windowing/triggers"
+	"github.com/wandouz/wstream/runtime/operator/windowing/windows"
+	"github.com/wandouz/wstream/types"
+)
 
 type WindowAssinger interface {
-	AssignWindows(item types.Item)
-	GetTrigger()
-	IsEventTime() bool
+	AssignWindows(types.Item) windows.Window
+	GetTrigger() triggers.Trigger
 }

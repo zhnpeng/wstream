@@ -2,7 +2,7 @@ package stream
 
 import "time"
 
-func (s *KeyedStream) TimeWindow(every time.Duration) *DataStream {
+func (s *KeyedStream) Window(every time.Duration) *DataStream {
 	name := "time_window"
 	graph := s.graph
 	newStream := s.ToDataStream(name)
