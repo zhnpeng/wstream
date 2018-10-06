@@ -7,6 +7,7 @@ import (
 	"github.com/wandouz/wstream/runtime/execution"
 	"github.com/wandouz/wstream/runtime/operator/windowing/assigners"
 	"github.com/wandouz/wstream/runtime/operator/windowing/basic"
+	"github.com/wandouz/wstream/runtime/operator/windowing/evictors"
 	"github.com/wandouz/wstream/runtime/operator/windowing/triggers"
 	"github.com/wandouz/wstream/runtime/operator/windowing/windows"
 	"github.com/wandouz/wstream/runtime/utils"
@@ -23,6 +24,7 @@ type GroupID struct {
 type Window struct {
 	assigner assigners.WindowAssinger
 	trigger  triggers.Trigger
+	evictor  evictors.Evictor
 
 	windowsGroup map[GroupID]*basic.WindowCollection
 
@@ -30,7 +32,7 @@ type Window struct {
 	processingTimer *ProcessingTimerService
 }
 
-func NewWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger) execution.Operator {
+func NewWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger, evictor evictors.Evictor) execution.Operator {
 	if assigner == nil {
 		assigner = assigners.NewGlobalWindow()
 	}
@@ -40,14 +42,15 @@ func NewWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger) exec
 	return &Window{
 		assigner:        assigner,
 		trigger:         trigger,
-		windowsGroup:    make(map[GroupID]*WindowCollection),
+		evictor:         evictor,
+		windowsGroup:    make(map[GroupID]*basic.WindowCollection),
 		eventTimer:      NewEventTimerService(),
 		processingTimer: NewProcessingTimerService(time.Second),
 	}
 }
 
 func (w *Window) New() execution.Operator {
-	return NewWindow(w.assigner, w.trigger)
+	return NewWindow(w.assigner, w.trigger, w.evictor)
 }
 
 func (w *Window) handleRecord(record types.Record, out utils.Emitter) {
@@ -55,7 +58,7 @@ func (w *Window) handleRecord(record types.Record, out utils.Emitter) {
 
 	for _, window := range assignedWindows {
 		if w.isWindowLate(window) {
-			// drop event time late window
+			// drop window if it is event time and late
 			continue
 		}
 		k := hashSlice(record.Key())
@@ -64,22 +67,28 @@ func (w *Window) handleRecord(record types.Record, out utils.Emitter) {
 			k: k,
 			t: t,
 		}
-		if wrec, ok := w.windowsGroup[gid]; ok {
-			wrec.PushBack(record)
+		var coll *basic.WindowCollection
+		if coll, ok := w.windowsGroup[gid]; ok {
+			coll.PushBack(record)
 		} else {
-			newColl := NewWindowCollection(t, record.Key())
-			newColl.PushBack(record)
-			w.windowsGroup[gid] = newColl
+			coll = basic.NewWindowCollection(t, record.Key())
+			coll.PushBack(record)
+			w.windowsGroup[gid] = coll
 		}
 		signal := w.trigger.OnItem(record, record.Time(), window, w)
 		if signal.IsFire() {
 			// TODO: emit window
+			w.emitWindow(coll)
 		}
 		if signal.IsPurge() {
+			coll.Clear()
 			// TODO: clear window
 		}
 		w.RegisterCleanupTimer(window)
 	}
+}
+
+func (w *Window) emitWindow(contents *basic.WindowCollection) {
 }
 
 func (w *Window) RegisterCleanupTimer(window windows.Window) {
@@ -93,6 +102,10 @@ func (w *Window) RegisterCleanupTimer(window windows.Window) {
 	}
 }
 
+func (w *Window) GetCurrentEventTime() time.Time {
+	return w.eventTimer.CurrentEventTime()
+}
+
 func (w *Window) isWindowLate(window windows.Window) bool {
 	return w.assigner.IsEventTime() && window.MaxTimestamp().Before(w.eventTimer.CurrentEventTime())
 }
@@ -102,12 +115,18 @@ func (w *Window) handleWatermark(wm *types.Watermark, out utils.Emitter) {
 	out.Emit(wm)
 }
 
-func (w *Window) onProcessingTime(t time.Time) {
+func (w *Window) RegisterProcessingTimer(t time.Time) {
+	w.processingTimer.RegisterProcessingTimer(t, w)
+}
 
+func (w *Window) RegisterEventTimer(t time.Time) {
+	w.eventTimer.RegisterEventTimer(t, w)
+}
+
+func (w *Window) onProcessingTime(t time.Time) {
 }
 
 func (w *Window) onEventTime(t time.Time) {
-
 }
 
 func (w *Window) Run(in *execution.Receiver, out utils.Emitter) {
