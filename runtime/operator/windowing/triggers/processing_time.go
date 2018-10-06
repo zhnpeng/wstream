@@ -10,14 +10,15 @@ import (
 type ProcessingTimeTrigger struct {
 }
 
-func (t *ProcessingTimeTrigger) OnItem(item types.Item, timestamp time.Duration, window windows.Window, ctx *TriggerContext) TriggerSignal {
+func (trigger *ProcessingTimeTrigger) OnItem(item types.Item, t time.Time, window windows.Window, ctx TriggerContext) TriggerSignal {
+	ctx.RegisterProcessingTimer(window.MaxTimestamp())
 	return CONTINUE
 }
 
-func (t *ProcessingTimeTrigger) OnProcessingTime(timestamp time.Duration, window windows.Window, ctx *TriggerContext) TriggerSignal {
+func (trigger *ProcessingTimeTrigger) OnProcessingTime(t time.Time, window windows.Window, ctx TriggerContext) TriggerSignal {
 	return FIRE
 }
 
-func (t *ProcessingTimeTrigger) OnEventTime(timestamp time.Duration, window windows.Window, ctx *TriggerContext) TriggerSignal {
+func (trigger *ProcessingTimeTrigger) OnEventTime(t time.Time, window windows.Window, ctx TriggerContext) TriggerSignal {
 	return CONTINUE
 }

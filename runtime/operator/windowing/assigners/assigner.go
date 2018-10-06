@@ -7,6 +7,7 @@ import (
 )
 
 type WindowAssinger interface {
-	AssignWindows(types.Item) windows.Window
-	GetTrigger() triggers.Trigger
+	AssignWindows(types.Item) []windows.Window
+	GetDefaultTrigger() triggers.Trigger
+	IsEventTime() bool
 }

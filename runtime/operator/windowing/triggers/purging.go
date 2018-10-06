@@ -10,14 +10,14 @@ import (
 type PurgingTrigger struct {
 }
 
-func (t *PurgingTrigger) OnItem(item types.Item, timestamp time.Duration, window windows.Window, ctx *TriggerContext) TriggerSignal {
+func (trigger *PurgingTrigger) OnItem(item types.Item, t time.Time, window windows.Window, ctx *TriggerContext) TriggerSignal {
 	return CONTINUE
 }
 
-func (t *PurgingTrigger) OnProcessingTime(timestamp time.Duration, window windows.Window, ctx *TriggerContext) TriggerSignal {
+func (trigger *PurgingTrigger) OnProcessingTime(t time.Time, window windows.Window, ctx *TriggerContext) TriggerSignal {
 	return CONTINUE
 }
 
-func (t *PurgingTrigger) OnEventTime(timestamp time.Duration, window windows.Window, ctx *TriggerContext) TriggerSignal {
+func (trigger *PurgingTrigger) OnEventTime(t time.Time, window windows.Window, ctx *TriggerContext) TriggerSignal {
 	return CONTINUE
 }

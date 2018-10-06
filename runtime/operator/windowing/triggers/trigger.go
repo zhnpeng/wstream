@@ -7,9 +7,12 @@ import (
 	"github.com/wandouz/wstream/types"
 )
 
+// Trigger interface
 type Trigger interface {
-	OnItem(types.Item, time.Duration, windows.Window, *TriggerContext) TriggerSignal
-	OnProcessingTime(time.Duration, windows.Window, *TriggerContext) TriggerSignal
-	OnEventTime(time.Duration, windows.Window, *TriggerContext) TriggerSignal
+	OnItem(types.Item, time.Time, windows.Window, TriggerContext) TriggerSignal
+	// must not register timer in OnProcessingTime
+	OnProcessingTime(time.Time, windows.Window, TriggerContext) TriggerSignal
+	// must not register timer in OnEventTime
+	OnEventTime(time.Time, windows.Window, TriggerContext) TriggerSignal
 	Dispose()
 }

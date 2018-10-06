@@ -10,28 +10,40 @@ import (
 
 type GlobalWindow struct{}
 
+func NewGlobalWindow() *GlobalWindow {
+	return &GlobalWindow{}
+}
+
 type NeverTrigger struct {
 }
 
-func (t *NeverTrigger) OnItem(types.Item, time.Duration, windows.Window, *triggers.TriggerContext) triggers.TriggerSignal {
+func (t *NeverTrigger) OnItem(types.Item, time.Time, windows.Window, *triggers.TriggerContext) triggers.TriggerSignal {
 	return triggers.CONTINUE
 }
 
-func (t *NeverTrigger) OnProcessingTime(time.Duration, windows.Window, *triggers.TriggerContext) triggers.TriggerSignal {
+func (t *NeverTrigger) OnProcessingTime(time.Time, windows.Window, *triggers.TriggerContext) triggers.TriggerSignal {
 	return triggers.CONTINUE
 }
 
-func (t *NeverTrigger) OnEventTime(time.Duration, windows.Window, *triggers.TriggerContext) triggers.TriggerSignal {
+func (t *NeverTrigger) OnEventTime(time.Time, windows.Window, *triggers.TriggerContext) triggers.TriggerSignal {
 	return triggers.CONTINUE
+}
+
+func (t *NeverTrigger) IsEventTime() bool {
+	return false
 }
 
 func (t *NeverTrigger) Dispose() {}
 
 // AssignWindows return all windows item was assigned to
-func AssignWindows(item types.Item) []windows.Window {
+func (w *GlobalWindow) AssignWindows(item types.Item) []windows.Window {
 	return []windows.Window{windows.GetGlobalWindow()}
 }
 
-func GetTrigger() triggers.Trigger {
+func (w *GlobalWindow) GetDefaultTrigger() triggers.Trigger {
 	return &NeverTrigger{}
+}
+
+func (w *GlobalWindow) IsEventTime() bool {
+	return false
 }

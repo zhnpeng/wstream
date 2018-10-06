@@ -10,18 +10,22 @@ import (
 type EventTimeTrigger struct {
 }
 
-func (t *EventTimeTrigger) OnItem(item types.Item, timestamp time.Duration, window windows.Window, ctx *TriggerContext) TriggerSignal {
+func (trigger *EventTimeTrigger) OnItem(item types.Item, timestamp time.Duration, window windows.Window, ctx TriggerContext) TriggerSignal {
 	// TODO inplement me
+	if window.MaxTimestamp().Before(ctx.GetCurrentEventTime()) {
+		return FIRE
+	}
+	ctx.RegisterEventTimer(window.MaxTimestamp())
 	return CONTINUE
 }
 
-func (t *EventTimeTrigger) OnProcessingTime(timestamp time.Duration, window windows.Window, ctx *TriggerContext) TriggerSignal {
-	if timestamp == window.MaxTimestamp() {
+func (trigger *EventTimeTrigger) OnProcessingTime(t time.Time, window windows.Window, ctx TriggerContext) TriggerSignal {
+	if t.After(window.MaxTimestamp()) {
 		return FIRE
 	}
 	return CONTINUE
 }
 
-func (t *EventTimeTrigger) OnEventTime(timestamp time.Duration, window windows.Window, ctx *TriggerContext) TriggerSignal {
+func (trigger *EventTimeTrigger) OnEventTime(t time.Time, window windows.Window, ctx TriggerContext) TriggerSignal {
 	return CONTINUE
 }

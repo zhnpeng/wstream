@@ -3,22 +3,22 @@ package windows
 import "time"
 
 type TimeWindow struct {
-	start time.Duration
-	end   time.Duration
+	start time.Time
+	end   time.Time
 }
 
-func NewTimeWindow(start, end time.Duration) *TimeWindow {
+func NewTimeWindow(start, end time.Time) *TimeWindow {
 	return &TimeWindow{start, end}
 }
 
-func (w *TimeWindow) Start() time.Duration {
+func (w *TimeWindow) Start() time.Time {
 	return w.start
 }
 
-func (w *TimeWindow) End() time.Duration {
+func (w *TimeWindow) End() time.Time {
 	return w.end
 }
 
-func (w *TimeWindow) MaxTimestamp() time.Duration {
-	return w.end - 1
+func (w *TimeWindow) MaxTimestamp() time.Time {
+	return w.end.Add(-1 * time.Second)
 }

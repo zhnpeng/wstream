@@ -9,5 +9,5 @@ import (
 // has an unique max timestamp
 type Window interface {
 	// MaxTimestamp is the ID of a window
-	MaxTimestamp() time.Duration
+	MaxTimestamp() time.Time
 }

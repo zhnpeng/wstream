@@ -13,13 +13,13 @@ import (
 // Reduce is a rolling reduce in datastream and keyedstream
 type Reduce struct {
 	function         functions.ReduceFunc
-	keyedAccumulator map[string]types.Record
+	keyedAccumulator map[KeyID]types.Record
 }
 
 func NewReduce(function functions.ReduceFunc) *Reduce {
 	return &Reduce{
 		function:         function,
-		keyedAccumulator: make(map[string]types.Record),
+		keyedAccumulator: make(map[KeyID]types.Record),
 	}
 }
 

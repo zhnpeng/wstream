@@ -16,6 +16,8 @@ func encodeFunction(function interface{}) []byte {
 	return buf.Bytes()
 }
 
-func hashSlice(slice []interface{}) string {
-	return fmt.Sprintf("%v", slice)
+type KeyID string
+
+func hashSlice(slice []interface{}) KeyID {
+	return KeyID(fmt.Sprintf("%v", slice))
 }

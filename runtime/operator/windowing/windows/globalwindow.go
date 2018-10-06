@@ -13,9 +13,8 @@ func NewGlobalWindow() *GlobalWindow {
 	return &GlobalWindow{}
 }
 
-// MaxTimestamp is the ID of a window
-func (w *GlobalWindow) MaxTimestamp() time.Duration {
-	return math.MaxInt64
+func (w *GlobalWindow) MaxTimestamp() time.Time {
+	return time.Unix(math.MaxInt64, 0)
 }
 
 var singletonGlobalWindow *GlobalWindow
