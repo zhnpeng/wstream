@@ -55,7 +55,7 @@ type ProcessingTimerService struct {
 	mu          sync.Mutex
 }
 
-// NewProcessingTimerService band handler
+// NewProcessingTimerService bind handler
 func NewProcessingTimerService(handler TimerHandler, d time.Duration) *ProcessingTimerService {
 	ret := &ProcessingTimerService{
 		ticker:      time.NewTicker(d),
@@ -111,7 +111,7 @@ type EventTimerService struct {
 	mu               sync.Mutex
 }
 
-// NewEventTimerService create new timer service and band handler to it
+// NewEventTimerService create new timer service and bind handler to it
 func NewEventTimerService(handler TimerHandler) *EventTimerService {
 	return &EventTimerService{
 		handler:     handler,

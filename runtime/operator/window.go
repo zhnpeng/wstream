@@ -14,6 +14,10 @@ import (
 	"github.com/wandouz/wstream/types"
 )
 
+// Window is window operator
+// assigner is due to assign windows for each record
+// trigger is due to judge timing to emit window records
+// evictor is due to evict records before or after window records are emitted
 type Window struct {
 	assigner assigners.WindowAssinger
 	trigger  triggers.Trigger
@@ -26,6 +30,10 @@ type Window struct {
 	triggerContext  *WindowContext
 }
 
+// NewWindow make a window operator object
+// default assigner is GlobalWindowAssigner
+// default trigger is assigner's default trigger
+// default evictor is nil
 func NewWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger, evictor evictors.Evictor) execution.Operator {
 	if assigner == nil {
 		assigner = assigners.NewGlobalWindow()
@@ -41,10 +49,12 @@ func NewWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger, evic
 	}
 	w.processingTimer = NewProcessingTimerService(w, time.Second)
 	w.eventTimer = NewEventTimerService(w)
+	// bind this window to triggerContext factory
 	w.triggerContext = NewWindowContext(windowing.WindowID{}, w.processingTimer, w.eventTimer)
 	return w
 }
 
+// New is a factory method to new an Window operator object
 func (w *Window) New() execution.Operator {
 	return NewWindow(w.assigner, w.trigger, w.evictor)
 }
@@ -77,14 +87,14 @@ func (w *Window) handleRecord(record types.Record, out utils.Emitter) {
 			coll.Clear()
 			// TODO: clear window
 		}
-		w.RegisterCleanupTimer(wid, window)
+		w.registerCleanupTimer(wid, window)
 	}
 }
 
 func (w *Window) emitWindow(contents *windowing.WindowCollection) {
 }
 
-func (w *Window) RegisterCleanupTimer(wid windowing.WindowID, window windows.Window) {
+func (w *Window) registerCleanupTimer(wid windowing.WindowID, window windows.Window) {
 	if window.MaxTimestamp().Equal(time.Unix(math.MaxInt64, 0)) {
 		return
 	}
@@ -121,13 +131,16 @@ func (w *Window) Run(in *execution.Receiver, out utils.Emitter) {
 	consume(in, out, w)
 }
 
-// WindowContext implement TriggerContext and bind processing/event timer service from window operator
+// WindowContext is a factory
+// implement TriggerContext and bind processing/event timer service from window operator
+// use factory New(windowing.WindowID) *WindowContext to create a new context
 type WindowContext struct {
 	wid                    windowing.WindowID
 	processingTimerService *ProcessingTimerService
 	eventTimerService      *EventTimerService
 }
 
+// NewWindowContext make a context
 func NewWindowContext(wid windowing.WindowID, p *ProcessingTimerService, e *EventTimerService) *WindowContext {
 	return &WindowContext{
 		wid: wid,
@@ -136,6 +149,7 @@ func NewWindowContext(wid windowing.WindowID, p *ProcessingTimerService, e *Even
 	}
 }
 
+// New is factory method to create new WindowContext object with param WindowID
 func (c *WindowContext) New(wid windowing.WindowID) *WindowContext {
 	return &WindowContext{
 		wid: wid,
