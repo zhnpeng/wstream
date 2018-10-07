@@ -95,10 +95,6 @@ func (w *Window) RegisterCleanupTimer(wid windowing.WindowID, window windows.Win
 	}
 }
 
-func (w *Window) GetCurrentEventTime() time.Time {
-	return w.eventTimer.CurrentEventTime()
-}
-
 func (w *Window) isWindowLate(window windows.Window) bool {
 	return w.assigner.IsEventTime() && window.MaxTimestamp().Before(w.eventTimer.CurrentEventTime())
 }
@@ -108,14 +104,7 @@ func (w *Window) handleWatermark(wm *types.Watermark, out utils.Emitter) {
 	out.Emit(wm)
 }
 
-func (w *Window) RegisterProcessingTimer(wid windowing.WindowID, t time.Time) {
-	w.processingTimer.RegisterProcessingTimer(wid, t)
-}
-
-func (w *Window) RegisterEventTimer(wid windowing.WindowID, t time.Time) {
-	w.eventTimer.RegisterEventTimer(wid, t)
-}
-
+// onProcessingTime is callback for processing timer service
 func (w *Window) onProcessingTime(wid windowing.WindowID, t time.Time) {
 	// signal := w.trigger.OnProcessingTime(t)
 	// if signale.IsFire() {
@@ -123,13 +112,16 @@ func (w *Window) onProcessingTime(wid windowing.WindowID, t time.Time) {
 	// }
 }
 
+// onEventTIme is callback for event timer service
 func (w *Window) onEventTime(wid windowing.WindowID, t time.Time) {
 }
 
+// Run this operator
 func (w *Window) Run(in *execution.Receiver, out utils.Emitter) {
 	consume(in, out, w)
 }
 
+// WindowContext implement TriggerContext and bind processing/event timer service from window operator
 type WindowContext struct {
 	wid                    windowing.WindowID
 	processingTimerService *ProcessingTimerService
