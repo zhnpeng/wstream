@@ -3,7 +3,6 @@ package operator
 import (
 	"bytes"
 	"encoding/gob"
-	"fmt"
 )
 
 func encodeFunction(function interface{}) []byte {
@@ -14,10 +13,4 @@ func encodeFunction(function interface{}) []byte {
 		panic(err)
 	}
 	return buf.Bytes()
-}
-
-type KeyID string
-
-func hashSlice(slice []interface{}) KeyID {
-	return KeyID(fmt.Sprintf("%v", slice))
 }

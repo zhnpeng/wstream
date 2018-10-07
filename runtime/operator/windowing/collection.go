@@ -1,4 +1,4 @@
-package basic
+package windowing
 
 import (
 	"container/list"

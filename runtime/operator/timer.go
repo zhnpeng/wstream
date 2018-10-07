@@ -4,16 +4,18 @@ import (
 	"container/heap"
 	"sync"
 	"time"
+
+	"github.com/wandouz/wstream/runtime/operator/windowing"
 )
 
 type TimerHandler interface {
-	onProcessingTime(time time.Time)
-	onEventTime(time time.Time)
+	onProcessingTime(windowing.WindowID, time.Time)
+	onEventTime(windowing.WindowID, time.Time)
 }
 
 type TimerHeapItem struct {
-	T       time.Time
-	Handler TimerHandler
+	t   time.Time
+	wid windowing.WindowID
 }
 
 type TimerHeap []TimerHeapItem
@@ -22,7 +24,7 @@ func (h TimerHeap) Len() int { return len(h) }
 
 // Less function for heap sort by Time
 func (h TimerHeap) Less(i, j int) bool {
-	return h[i].T.Before(h[j].T)
+	return h[i].t.Before(h[j].t)
 }
 
 func (h TimerHeap) Swap(i, j int) {
@@ -46,16 +48,19 @@ func (h *TimerHeap) Pop() interface{} {
 }
 
 type ProcessingTimerService struct {
+	handler     TimerHandler
 	timerHeap   *TimerHeap
-	timerExists map[time.Time]bool
+	timerExists map[windowing.WindowID]bool
 	ticker      *time.Ticker
 	mu          sync.Mutex
 }
 
-func NewProcessingTimerService(d time.Duration) *ProcessingTimerService {
+// NewProcessingTimerService band handler
+func NewProcessingTimerService(handler TimerHandler, d time.Duration) *ProcessingTimerService {
 	ret := &ProcessingTimerService{
 		ticker:      time.NewTicker(d),
-		timerExists: make(map[time.Time]bool),
+		timerExists: make(map[windowing.WindowID]bool),
+		handler:     handler,
 	}
 	ret.start()
 	return ret
@@ -64,25 +69,25 @@ func NewProcessingTimerService(d time.Duration) *ProcessingTimerService {
 func (service *ProcessingTimerService) onProcessingTime(t time.Time) {
 	service.mu.Lock()
 	defer service.mu.Unlock()
-	for service.timerHeap.Top().T.Before(t) {
+	for service.timerHeap.Top().t.Before(t) {
 		item := heap.Pop(service.timerHeap).(TimerHeapItem)
-		if _, ok := service.timerExists[item.T]; ok {
-			delete(service.timerExists, item.T)
+		if _, ok := service.timerExists[item.wid]; ok {
+			delete(service.timerExists, item.wid)
 		}
-		item.Handler.onProcessingTime(item.T)
+		service.handler.onProcessingTime(item.wid, item.t)
 	}
 }
 
-func (service *ProcessingTimerService) RegisterProcessingTimer(t time.Time, handler TimerHandler) {
+func (service *ProcessingTimerService) RegisterProcessingTimer(wid windowing.WindowID, t time.Time) {
 	service.mu.Lock()
 	defer service.mu.Unlock()
-	if _, ok := service.timerExists[t]; ok {
+	if _, ok := service.timerExists[wid]; ok {
 		// already registered
 		return
 	}
 	heap.Push(service.timerHeap, &TimerHeapItem{
-		T:       t,
-		Handler: handler,
+		t:   t,
+		wid: wid,
 	})
 }
 
@@ -99,14 +104,17 @@ func (service *ProcessingTimerService) Stop() {
 }
 
 type EventTimerService struct {
+	handler          TimerHandler
 	timerHeap        *TimerHeap
 	timerExists      map[time.Time]bool
 	currentEventTime time.Time
 	mu               sync.Mutex
 }
 
-func NewEventTimerService() *EventTimerService {
+// NewEventTimerService create new timer service and band handler to it
+func NewEventTimerService(handler TimerHandler) *EventTimerService {
 	return &EventTimerService{
+		handler:     handler,
 		timerExists: make(map[time.Time]bool),
 	}
 }
@@ -122,7 +130,7 @@ func (service *EventTimerService) CurrentEventTime() time.Time {
 	return service.currentEventTime
 }
 
-func (service *EventTimerService) RegisterEventTimer(t time.Time, handler TimerHandler) {
+func (service *EventTimerService) RegisterEventTimer(wid windowing.WindowID, t time.Time) {
 	service.mu.Lock()
 	defer service.mu.Unlock()
 	if _, ok := service.timerExists[t]; ok {
@@ -130,19 +138,19 @@ func (service *EventTimerService) RegisterEventTimer(t time.Time, handler TimerH
 		return
 	}
 	heap.Push(service.timerHeap, &TimerHeapItem{
-		T:       t,
-		Handler: handler,
+		t:   t,
+		wid: wid,
 	})
 }
 
 func (service *EventTimerService) onEventTime(t time.Time) {
 	service.mu.Lock()
 	defer service.mu.Unlock()
-	for service.timerHeap.Top().T.Before(t) {
+	for service.timerHeap.Top().t.Before(t) {
 		item := heap.Pop(service.timerHeap).(TimerHeapItem)
-		if _, ok := service.timerExists[item.T]; ok {
-			delete(service.timerExists, item.T)
+		if _, ok := service.timerExists[item.t]; ok {
+			delete(service.timerExists, item.t)
 		}
-		item.Handler.onEventTime(item.T)
+		service.handler.onEventTime(item.wid, item.t)
 	}
 }
