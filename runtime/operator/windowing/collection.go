@@ -45,5 +45,6 @@ func (c *WindowCollection) Remove(e *list.Element) {
 	c.elements.Remove(e)
 }
 
-func (c *WindowCollection) Clear() {
+func (c *WindowCollection) Dispose() {
+	c.elements.Init()
 }

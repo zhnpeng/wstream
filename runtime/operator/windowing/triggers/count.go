@@ -19,23 +19,23 @@ func NewCountTrigger(maxCount int64) *CountTrigger {
 	}
 }
 
-func (t *CountTrigger) OnItem(item types.Item, timestamp time.Duration, window windows.Window, ctx *TriggerContext) TriggerSignal {
-	c := atomic.AddInt64(&t.count, 1)
-	if c >= t.maxCount {
+func (trigger *CountTrigger) OnItem(item types.Item, t time.Time, window windows.Window, ctx *TriggerContext) TriggerSignal {
+	c := atomic.AddInt64(&trigger.count, 1)
+	if c >= trigger.maxCount {
 		return FIRE
 	}
 	return CONTINUE
 }
 
-func (t *CountTrigger) OnProcessingTime(timestamp time.Duration, window windows.Window, ctx *TriggerContext) TriggerSignal {
+func (trigger *CountTrigger) OnProcessingTime(t time.Time, window windows.Window) TriggerSignal {
 	return CONTINUE
 }
 
-func (t *CountTrigger) OnEventTime(timestamp time.Duration, window windows.Window, ctx *TriggerContext) TriggerSignal {
+func (trigger *CountTrigger) OnEventTime(t time.Time, window windows.Window) TriggerSignal {
 	return CONTINUE
 }
 
-func (t *CountTrigger) Of(maxCount int64) *CountTrigger {
-	t.maxCount = maxCount
-	return t
+func (trigger *CountTrigger) Of(maxCount int64) *CountTrigger {
+	trigger.maxCount = maxCount
+	return trigger
 }

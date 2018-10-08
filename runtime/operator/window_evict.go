@@ -7,18 +7,21 @@ import (
 	"github.com/wandouz/wstream/runtime/execution"
 	"github.com/wandouz/wstream/runtime/operator/windowing"
 	"github.com/wandouz/wstream/runtime/operator/windowing/assigners"
+	"github.com/wandouz/wstream/runtime/operator/windowing/evictors"
 	"github.com/wandouz/wstream/runtime/operator/windowing/triggers"
 	"github.com/wandouz/wstream/runtime/operator/windowing/windows"
 	"github.com/wandouz/wstream/runtime/utils"
 	"github.com/wandouz/wstream/types"
 )
 
-// Window is window operator
+// EvictWindow is evictable window operator
 // assigner is due to assign windows for each record
 // trigger is due to judge timing to emit window records
-type Window struct {
+// evictor is due to evict records before or after window records are emitted
+type EvictWindow struct {
 	assigner assigners.WindowAssinger
 	trigger  triggers.Trigger
+	evictor  evictors.Evictor
 	out      utils.Emitter
 
 	windowsGroup map[windowing.WindowID]*windowing.WindowCollection
@@ -28,20 +31,22 @@ type Window struct {
 	triggerContext  *WindowContext
 }
 
-// NewWindow make a window operator object
-// default assigner is GlobalWindowAssigner
-// default trigger is assigner's default trigger
-// default evictor is nil
-func NewWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger) execution.Operator {
+// NewEvictWindow return evictable window object
+// evictor is necessary
+func NewEvictWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger, evictor evictors.Evictor) execution.Operator {
 	if assigner == nil {
 		assigner = assigners.NewGlobalWindow()
 	}
 	if trigger == nil {
 		trigger = assigner.GetDefaultTrigger()
 	}
-	w := &Window{
+	if evictor == nil {
+		panic("EvictWindow must has an evictor")
+	}
+	w := &EvictWindow{
 		assigner:     assigner,
 		trigger:      trigger,
+		evictor:      evictor,
 		windowsGroup: make(map[windowing.WindowID]*windowing.WindowCollection),
 	}
 	w.processingTimer = NewProcessingTimerService(w, time.Second)
@@ -51,12 +56,12 @@ func NewWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger) exec
 	return w
 }
 
-// New is a factory method to new an Window operator object
-func (w *Window) New() execution.Operator {
-	return NewWindow(w.assigner, w.trigger)
+// New is a factory method to new an EvictWindow operator object
+func (w *EvictWindow) New() execution.Operator {
+	return NewEvictWindow(w.assigner, w.trigger, w.evictor)
 }
 
-func (w *Window) handleRecord(record types.Record, out utils.Emitter) {
+func (w *EvictWindow) handleRecord(record types.Record, out utils.Emitter) {
 	assignedWindows := w.assigner.AssignWindows(record)
 
 	for _, window := range assignedWindows {
@@ -87,10 +92,16 @@ func (w *Window) handleRecord(record types.Record, out utils.Emitter) {
 	}
 }
 
-func (w *Window) emitWindow(contents *windowing.WindowCollection, out utils.Emitter) {
+func (w *EvictWindow) emitWindow(contents *windowing.WindowCollection, out utils.Emitter) {
+	// for TimeEvictor records without timestamp is invalid
+	// so for safty size should count only records with timestamp
+	w.evictor.EvictBefore(contents, int64(contents.Len()))
+
+	// TODO: implement window.apply reduce and aggregate
+	w.evictor.EvictAfter(contents, int64(contents.Len()))
 }
 
-func (w *Window) registerCleanupTimer(wid windowing.WindowID, window windows.Window) {
+func (w *EvictWindow) registerCleanupTimer(wid windowing.WindowID, window windows.Window) {
 	if window.MaxTimestamp().Equal(time.Unix(math.MaxInt64, 0)) {
 		return
 	}
@@ -101,19 +112,19 @@ func (w *Window) registerCleanupTimer(wid windowing.WindowID, window windows.Win
 	}
 }
 
-func (w *Window) isWindowLate(window windows.Window) bool {
+func (w *EvictWindow) isWindowLate(window windows.Window) bool {
 	return w.assigner.IsEventTime() && window.MaxTimestamp().Before(w.eventTimer.CurrentEventTime())
 }
 
-// Window operator don't emit watermark from upstream operator
+// EvictWindow operator don't emit watermark from upstream operator
 // and will emit new watermark when emit window
-func (w *Window) handleWatermark(wm *types.Watermark, out utils.Emitter) {
+func (w *EvictWindow) handleWatermark(wm *types.Watermark, out utils.Emitter) {
 	w.eventTimer.Drive(wm.Time())
 	// out.Emit(wm)
 }
 
 // onProcessingTime is callback for processing timer service
-func (w *Window) onProcessingTime(wid windowing.WindowID, t time.Time) {
+func (w *EvictWindow) onProcessingTime(wid windowing.WindowID, t time.Time) {
 	coll := w.windowsGroup[wid]
 	signal := w.trigger.OnProcessingTime(t, wid.Window())
 	if signal.IsFire() {
@@ -125,7 +136,7 @@ func (w *Window) onProcessingTime(wid windowing.WindowID, t time.Time) {
 }
 
 // onEventTIme is callback for event timer service
-func (w *Window) onEventTime(wid windowing.WindowID, t time.Time) {
+func (w *EvictWindow) onEventTime(wid windowing.WindowID, t time.Time) {
 	coll := w.windowsGroup[wid]
 	signal := w.trigger.OnProcessingTime(t, wid.Window())
 	if signal.IsFire() {
@@ -137,46 +148,7 @@ func (w *Window) onEventTime(wid windowing.WindowID, t time.Time) {
 }
 
 // Run this operator
-func (w *Window) Run(in *execution.Receiver, out utils.Emitter) {
+func (w *EvictWindow) Run(in *execution.Receiver, out utils.Emitter) {
 	w.out = out
 	consume(in, out, w)
-}
-
-// WindowContext is a factory
-// implement TriggerContext and bind processing/event timer service from window operator
-// use factory New(windowing.WindowID) *WindowContext to create a new context
-type WindowContext struct {
-	wid                    windowing.WindowID
-	processingTimerService *ProcessingTimerService
-	eventTimerService      *EventTimerService
-}
-
-// NewWindowContext make a context
-func NewWindowContext(wid windowing.WindowID, p *ProcessingTimerService, e *EventTimerService) *WindowContext {
-	return &WindowContext{
-		wid: wid,
-		processingTimerService: p,
-		eventTimerService:      e,
-	}
-}
-
-// New is factory method to create new WindowContext object with param WindowID
-func (c *WindowContext) New(wid windowing.WindowID) *WindowContext {
-	return &WindowContext{
-		wid: wid,
-		processingTimerService: c.processingTimerService,
-		eventTimerService:      c.eventTimerService,
-	}
-}
-
-func (c *WindowContext) RegisterProcessingTimer(t time.Time) {
-	c.processingTimerService.RegisterProcessingTimer(c.wid, t)
-}
-
-func (c *WindowContext) RegisterEventTimer(t time.Time) {
-	c.eventTimerService.RegisterEventTimer(c.wid, t)
-}
-
-func (c *WindowContext) GetCurrentEventTime() time.Time {
-	return c.eventTimerService.CurrentEventTime()
 }

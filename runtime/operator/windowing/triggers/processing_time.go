@@ -15,10 +15,10 @@ func (trigger *ProcessingTimeTrigger) OnItem(item types.Item, t time.Time, windo
 	return CONTINUE
 }
 
-func (trigger *ProcessingTimeTrigger) OnProcessingTime(t time.Time, window windows.Window, ctx TriggerContext) TriggerSignal {
+func (trigger *ProcessingTimeTrigger) OnProcessingTime(t time.Time, window windows.Window) TriggerSignal {
 	return FIRE
 }
 
-func (trigger *ProcessingTimeTrigger) OnEventTime(t time.Time, window windows.Window, ctx TriggerContext) TriggerSignal {
+func (trigger *ProcessingTimeTrigger) OnEventTime(t time.Time, window windows.Window) TriggerSignal {
 	return CONTINUE
 }

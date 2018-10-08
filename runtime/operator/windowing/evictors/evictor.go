@@ -3,7 +3,7 @@ package evictors
 import (
 	"time"
 
-	"github.com/wandouz/wstream/runtime/operator/windowing/windows"
+	"github.com/wandouz/wstream/runtime/operator/windowing"
 )
 
 type EvictorContext interface {
@@ -12,6 +12,6 @@ type EvictorContext interface {
 }
 
 type Evictor interface {
-	EvictBefore(windows.Window, EvictorContext)
-	EvictAfter(windows.Window, EvictorContext)
+	EvictBefore(coll *windowing.WindowCollection, size int64)
+	EvictAfter(coll *windowing.WindowCollection, size int64)
 }

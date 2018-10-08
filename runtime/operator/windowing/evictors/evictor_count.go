@@ -2,7 +2,6 @@ package evictors
 
 import (
 	"github.com/wandouz/wstream/runtime/operator/windowing"
-	"github.com/wandouz/wstream/runtime/operator/windowing/windows"
 )
 
 type CountEvictor struct {
@@ -17,19 +16,19 @@ func NewCountEvictor(count int64, doEvictAfter bool) *CountEvictor {
 	}
 }
 
-func (e *CountEvictor) EvictBefore(coll *windowing.WindowCollection, size int64, window windows.Window, ctx EvictorContext) {
+func (e *CountEvictor) EvictBefore(coll *windowing.WindowCollection, size int64) {
 	if !e.doEvictAfter {
-		e.evict(coll, size, ctx)
+		e.evict(coll, size)
 	}
 }
 
-func (e *CountEvictor) EvictAfter(coll *windowing.WindowCollection, size int64, window windows.Window, ctx EvictorContext) {
+func (e *CountEvictor) EvictAfter(coll *windowing.WindowCollection, size int64) {
 	if e.doEvictAfter {
-		e.evict(coll, size, ctx)
+		e.evict(coll, size)
 	}
 }
 
-func (e *CountEvictor) evict(coll *windowing.WindowCollection, size int64, ctx EvictorContext) {
+func (e *CountEvictor) evict(coll *windowing.WindowCollection, size int64) {
 	if size <= e.maxCount {
 		return
 	}

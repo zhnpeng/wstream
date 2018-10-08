@@ -10,7 +10,7 @@ import (
 type EventTimeTrigger struct {
 }
 
-func (trigger *EventTimeTrigger) OnItem(item types.Item, timestamp time.Duration, window windows.Window, ctx TriggerContext) TriggerSignal {
+func (trigger *EventTimeTrigger) OnItem(item types.Item, t time.Time, window windows.Window, ctx TriggerContext) TriggerSignal {
 	// TODO inplement me
 	if window.MaxTimestamp().Before(ctx.GetCurrentEventTime()) {
 		return FIRE
@@ -19,13 +19,13 @@ func (trigger *EventTimeTrigger) OnItem(item types.Item, timestamp time.Duration
 	return CONTINUE
 }
 
-func (trigger *EventTimeTrigger) OnProcessingTime(t time.Time, window windows.Window, ctx TriggerContext) TriggerSignal {
+func (trigger *EventTimeTrigger) OnProcessingTime(t time.Time, window windows.Window) TriggerSignal {
 	if t.After(window.MaxTimestamp()) {
 		return FIRE
 	}
 	return CONTINUE
 }
 
-func (trigger *EventTimeTrigger) OnEventTime(t time.Time, window windows.Window, ctx TriggerContext) TriggerSignal {
+func (trigger *EventTimeTrigger) OnEventTime(t time.Time, window windows.Window) TriggerSignal {
 	return CONTINUE
 }

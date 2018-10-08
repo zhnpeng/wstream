@@ -16,3 +16,7 @@ func NewWindowID(k utils.KeyID, w windows.Window) WindowID {
 		w: w,
 	}
 }
+
+func (wid WindowID) Window() windows.Window {
+	return wid.w
+}

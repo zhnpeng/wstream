@@ -21,11 +21,11 @@ func (t *NeverTrigger) OnItem(types.Item, time.Time, windows.Window, triggers.Tr
 	return triggers.CONTINUE
 }
 
-func (t *NeverTrigger) OnProcessingTime(time.Time, windows.Window, triggers.TriggerContext) triggers.TriggerSignal {
+func (t *NeverTrigger) OnProcessingTime(time.Time, windows.Window) triggers.TriggerSignal {
 	return triggers.CONTINUE
 }
 
-func (t *NeverTrigger) OnEventTime(time.Time, windows.Window, triggers.TriggerContext) triggers.TriggerSignal {
+func (t *NeverTrigger) OnEventTime(time.Time, windows.Window) triggers.TriggerSignal {
 	return triggers.CONTINUE
 }
 
