@@ -10,6 +10,10 @@ import (
 type EventTimeTrigger struct {
 }
 
+func NewEventTimeTrigger() *EventTimeTrigger {
+	return &EventTimeTrigger{}
+}
+
 func (trigger *EventTimeTrigger) OnItem(item types.Item, t time.Time, window windows.Window, ctx TriggerContext) TriggerSignal {
 	// TODO inplement me
 	if window.MaxTimestamp().Before(ctx.GetCurrentEventTime()) {
