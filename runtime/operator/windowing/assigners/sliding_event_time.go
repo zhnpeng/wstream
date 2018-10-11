@@ -42,5 +42,5 @@ func (a *SlidingEventTimeWindoww) GetDefaultTrigger() triggers.Trigger {
 }
 
 func (a *SlidingEventTimeWindoww) IsEventTime() bool {
-	return false
+	return true
 }
