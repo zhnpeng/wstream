@@ -4,6 +4,7 @@ import (
 	"math"
 	"time"
 
+	"github.com/wandouz/wstream/functions"
 	"github.com/wandouz/wstream/runtime/execution"
 	"github.com/wandouz/wstream/runtime/operator/windowing"
 	"github.com/wandouz/wstream/runtime/operator/windowing/assigners"
@@ -19,7 +20,10 @@ import (
 type Window struct {
 	assigner assigners.WindowAssinger
 	trigger  triggers.Trigger
-	out      utils.Emitter
+
+	applyFunc  functions.ApplyFunc
+	reduceFunc functions.ReduceFunc
+	out        utils.Emitter
 
 	windowsGroup map[windowing.WindowID]*windowing.WindowCollection
 
@@ -56,6 +60,14 @@ func (w *Window) New() execution.Operator {
 	return NewWindow(w.assigner, w.trigger)
 }
 
+func (w *Window) SetApplyFunc(f functions.ApplyFunc) {
+	w.applyFunc = f
+}
+
+func (w *Window) SetReduceFunc(f functions.ReduceFunc) {
+	w.reduceFunc = f
+}
+
 func (w *Window) handleRecord(record types.Record, out utils.Emitter) {
 	assignedWindows := w.assigner.AssignWindows(record)
 
@@ -77,7 +89,6 @@ func (w *Window) handleRecord(record types.Record, out utils.Emitter) {
 		ctx := w.triggerContext.New(wid)
 		signal := w.trigger.OnItem(record, record.Time(), window, ctx)
 		if signal.IsFire() {
-			// TODO: emit window
 			w.emitWindow(coll, out)
 		}
 		if signal.IsPurge() {

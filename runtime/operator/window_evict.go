@@ -4,6 +4,7 @@ import (
 	"math"
 	"time"
 
+	"github.com/wandouz/wstream/functions"
 	"github.com/wandouz/wstream/runtime/execution"
 	"github.com/wandouz/wstream/runtime/operator/windowing"
 	"github.com/wandouz/wstream/runtime/operator/windowing/assigners"
@@ -22,7 +23,10 @@ type EvictWindow struct {
 	assigner assigners.WindowAssinger
 	trigger  triggers.Trigger
 	evictor  evictors.Evictor
-	out      utils.Emitter
+
+	applyFunc  functions.ApplyFunc
+	reduceFunc functions.ReduceFunc
+	out        utils.Emitter
 
 	windowsGroup map[windowing.WindowID]*windowing.WindowCollection
 
@@ -59,6 +63,14 @@ func NewEvictWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger,
 // New is a factory method to new an EvictWindow operator object
 func (w *EvictWindow) New() execution.Operator {
 	return NewEvictWindow(w.assigner, w.trigger, w.evictor)
+}
+
+func (w *EvictWindow) SetApplyFunc(f functions.ApplyFunc) {
+	w.applyFunc = f
+}
+
+func (w *EvictWindow) SetReduceFunc(f functions.ReduceFunc) {
+	w.reduceFunc = f
 }
 
 func (w *EvictWindow) handleRecord(record types.Record, out utils.Emitter) {

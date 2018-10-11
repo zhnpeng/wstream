@@ -13,13 +13,11 @@ type CountTrigger struct {
 	count    int64
 }
 
-func NewCountTrigger(maxCount int64) *CountTrigger {
-	return &CountTrigger{
-		maxCount: maxCount,
-	}
+func NewCountTrigger() *CountTrigger {
+	return &CountTrigger{}
 }
 
-func (trigger *CountTrigger) OnItem(item types.Item, t time.Time, window windows.Window, ctx *TriggerContext) TriggerSignal {
+func (trigger *CountTrigger) OnItem(item types.Item, t time.Time, window windows.Window, ctx TriggerContext) TriggerSignal {
 	c := atomic.AddInt64(&trigger.count, 1)
 	if c >= trigger.maxCount {
 		return FIRE

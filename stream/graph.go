@@ -73,6 +73,16 @@ func (g *StreamGraph) AddStreamEdge(from, to Stream) error {
 	return g.graph.AddEdge(fromID, toID)
 }
 
+// LeftMergeStream join right strem to the left
+// right stream will not add to graph
+// any node connect to right stream will collect to the left
+func (g *StreamGraph) LeftMergeStream(left, right Stream) {
+	if !g.existsStream(left) {
+		g.AddStream(left)
+	}
+	right.SetStreamNode(left.GetStreamNode())
+}
+
 func (g *StreamGraph) existsStream(stm Stream) bool {
 	node := stm.GetStreamNode()
 	if node == nil {

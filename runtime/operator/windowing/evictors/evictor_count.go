@@ -9,11 +9,8 @@ type CountEvictor struct {
 	doEvictAfter bool
 }
 
-func NewCountEvictor(count int64, doEvictAfter bool) *CountEvictor {
-	return &CountEvictor{
-		maxCount:     count,
-		doEvictAfter: doEvictAfter,
-	}
+func NewCountEvictor() *CountEvictor {
+	return &CountEvictor{}
 }
 
 func (e *CountEvictor) EvictBefore(coll *windowing.WindowCollection, size int64) {
@@ -46,4 +43,14 @@ func (e *CountEvictor) evict(coll *windowing.WindowCollection, size int64) {
 			coll.Remove(element)
 		}
 	}
+}
+
+func (e *CountEvictor) DoEvictAfter() *CountEvictor {
+	e.doEvictAfter = true
+	return e
+}
+
+func (e *CountEvictor) Of(count int64) *CountEvictor {
+	e.maxCount = count
+	return e
 }
