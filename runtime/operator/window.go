@@ -29,7 +29,8 @@ type Window struct {
 
 	eventTimer      *EventTimerService
 	processingTimer *ProcessingTimerService
-	triggerContext  *WindowContext
+	triggerContext  *WindowTriggerContext
+	assignerContext *WindowAssignerContext
 }
 
 // NewWindow make a window operator object
@@ -51,7 +52,8 @@ func NewWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger) exec
 	w.processingTimer = NewProcessingTimerService(w, time.Second)
 	w.eventTimer = NewEventTimerService(w)
 	// bind this window to triggerContext factory
-	w.triggerContext = NewWindowContext(windowing.WindowID{}, w.processingTimer, w.eventTimer)
+	w.triggerContext = NewWindowTriggerContext(windowing.WindowID{}, w.processingTimer, w.eventTimer)
+	w.assignerContext = NewWindowAssignerContext(w.processingTimer)
 	return w
 }
 
@@ -69,7 +71,7 @@ func (w *Window) SetReduceFunc(f functions.ReduceFunc) {
 }
 
 func (w *Window) handleRecord(record types.Record, out utils.Emitter) {
-	assignedWindows := w.assigner.AssignWindows(record)
+	assignedWindows := w.assigner.AssignWindows(record, w.assignerContext)
 
 	for _, window := range assignedWindows {
 		if w.isWindowLate(window) {
@@ -153,41 +155,55 @@ func (w *Window) Run(in *execution.Receiver, out utils.Emitter) {
 	consume(in, out, w)
 }
 
-// WindowContext is a factory
+// WindowTriggerContext is a factory
 // implement TriggerContext and bind processing/event timer service from window operator
-// use factory New(windowing.WindowID) *WindowContext to create a new context
-type WindowContext struct {
+// use factory New(windowing.WindowID) *WindowTriggerContext to create a new context
+type WindowTriggerContext struct {
 	wid                    windowing.WindowID
 	processingTimerService *ProcessingTimerService
 	eventTimerService      *EventTimerService
 }
 
-// NewWindowContext make a context
-func NewWindowContext(wid windowing.WindowID, p *ProcessingTimerService, e *EventTimerService) *WindowContext {
-	return &WindowContext{
+// NewWindowTriggerContext make a context
+func NewWindowTriggerContext(wid windowing.WindowID, p *ProcessingTimerService, e *EventTimerService) *WindowTriggerContext {
+	return &WindowTriggerContext{
 		wid: wid,
 		processingTimerService: p,
 		eventTimerService:      e,
 	}
 }
 
-// New is factory method to create new WindowContext object with param WindowID
-func (c *WindowContext) New(wid windowing.WindowID) *WindowContext {
-	return &WindowContext{
+// New is factory method to create new WindowTriggerContext object with param WindowID
+func (c *WindowTriggerContext) New(wid windowing.WindowID) *WindowTriggerContext {
+	return &WindowTriggerContext{
 		wid: wid,
 		processingTimerService: c.processingTimerService,
 		eventTimerService:      c.eventTimerService,
 	}
 }
 
-func (c *WindowContext) RegisterProcessingTimer(t time.Time) {
+func (c *WindowTriggerContext) RegisterProcessingTimer(t time.Time) {
 	c.processingTimerService.RegisterProcessingTimer(c.wid, t)
 }
 
-func (c *WindowContext) RegisterEventTimer(t time.Time) {
+func (c *WindowTriggerContext) RegisterEventTimer(t time.Time) {
 	c.eventTimerService.RegisterEventTimer(c.wid, t)
 }
 
-func (c *WindowContext) GetCurrentEventTime() time.Time {
+func (c *WindowTriggerContext) GetCurrentEventTime() time.Time {
 	return c.eventTimerService.CurrentEventTime()
+}
+
+type WindowAssignerContext struct {
+	processingTimerService *ProcessingTimerService
+}
+
+func NewWindowAssignerContext(service *ProcessingTimerService) *WindowAssignerContext {
+	return &WindowAssignerContext{
+		processingTimerService: service,
+	}
+}
+
+func (c *WindowAssignerContext) GetCurrentProcessingTime() time.Time {
+	return c.processingTimerService.CurrentProcessingTime()
 }

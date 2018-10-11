@@ -32,7 +32,8 @@ type EvictWindow struct {
 
 	eventTimer      *EventTimerService
 	processingTimer *ProcessingTimerService
-	triggerContext  *WindowContext
+	triggerContext  *WindowTriggerContext
+	assignerContext *WindowAssignerContext
 }
 
 // NewEvictWindow return evictable window object
@@ -56,7 +57,8 @@ func NewEvictWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger,
 	w.processingTimer = NewProcessingTimerService(w, time.Second)
 	w.eventTimer = NewEventTimerService(w)
 	// bind this window to triggerContext factory
-	w.triggerContext = NewWindowContext(windowing.WindowID{}, w.processingTimer, w.eventTimer)
+	w.triggerContext = NewWindowTriggerContext(windowing.WindowID{}, w.processingTimer, w.eventTimer)
+	w.assignerContext = NewWindowAssignerContext(w.processingTimer)
 	return w
 }
 

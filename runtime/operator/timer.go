@@ -52,6 +52,7 @@ type ProcessingTimerService struct {
 	timerHeap   *TimerHeap
 	timerExists map[windowing.WindowID]bool
 	ticker      *time.Ticker
+	current     time.Time
 	mu          sync.Mutex
 }
 
@@ -91,9 +92,14 @@ func (service *ProcessingTimerService) RegisterProcessingTimer(wid windowing.Win
 	})
 }
 
+func (service *ProcessingTimerService) CurrentProcessingTime() time.Time {
+	return service.current
+}
+
 func (service *ProcessingTimerService) start() {
 	go func() {
 		for t := range service.ticker.C {
+			service.current = t
 			service.onProcessingTime(t)
 		}
 	}()
@@ -104,11 +110,11 @@ func (service *ProcessingTimerService) Stop() {
 }
 
 type EventTimerService struct {
-	handler          TimerHandler
-	timerHeap        *TimerHeap
-	timerExists      map[time.Time]bool
-	currentEventTime time.Time
-	mu               sync.Mutex
+	handler     TimerHandler
+	timerHeap   *TimerHeap
+	timerExists map[time.Time]bool
+	current     time.Time
+	mu          sync.Mutex
 }
 
 // NewEventTimerService create new timer service and bind handler to it
@@ -120,14 +126,14 @@ func NewEventTimerService(handler TimerHandler) *EventTimerService {
 }
 
 func (service *EventTimerService) Drive(t time.Time) {
-	if t.After(service.currentEventTime) {
-		service.currentEventTime = t
+	if t.After(service.current) {
+		service.current = t
 		service.onEventTime(t)
 	}
 }
 
 func (service *EventTimerService) CurrentEventTime() time.Time {
-	return service.currentEventTime
+	return service.current
 }
 
 func (service *EventTimerService) RegisterEventTimer(wid windowing.WindowID, t time.Time) {

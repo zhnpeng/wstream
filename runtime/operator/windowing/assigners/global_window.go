@@ -36,7 +36,7 @@ func (t *NeverTrigger) IsEventTime() bool {
 func (t *NeverTrigger) Dispose() {}
 
 // AssignWindows return all windows item was assigned to
-func (w *GlobalWindow) AssignWindows(item types.Item) []windows.Window {
+func (w *GlobalWindow) AssignWindows(item types.Item, ctx AssignerContext) []windows.Window {
 	return []windows.Window{windows.GetGlobalWindow()}
 }
 
