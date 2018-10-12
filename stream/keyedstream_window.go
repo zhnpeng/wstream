@@ -21,7 +21,9 @@ func (s *KeyedStream) Window(assigner assigners.WindowAssinger) *WindowedStream 
 	return newStream
 }
 
-// EventTimeWindow is tumbling time window
+// TimeWindow is tumbling time window
+// TODO: a flow can handle only processing time or event time
+// so need a global env to store it
 func (s *KeyedStream) TimeWindow(period int64) *WindowedStream {
 	return s.Window(assigners.NewTumblingEventTimeWindow(period, 0)).
 		Trigger(triggers.NewEventTimeTrigger())
@@ -31,16 +33,6 @@ func (s *KeyedStream) SlidingTimeWindow(period, every int64) *WindowedStream {
 	return s.Window(assigners.NewSlidingEventTimeWindoww(period, every, 0)).
 		Trigger(triggers.NewEventTimeTrigger())
 }
-
-// func (s *KeyedStream) ProcessingTimeWindow(period int64) *WindowedStream {
-// 	return s.Window(assigners.NewTumblingProcessingTimeWindow(period, 0)).
-// 		Trigger(triggers.NewProcessingTimeTrigger())
-// }
-
-// func (s *KeyedStream) SlidingProcessingTimeWindow(period, every int64) *WindowedStream {
-// 	return s.Window(assigners.NewSlidingProcessingTimeWindow(period, every, 0)).
-// 		Trigger(triggers.NewProcessingTimeTrigger())
-// }
 
 // CountWindow is tumbling cout window
 func (s *KeyedStream) CountWindow(period int64) *WindowedStream {
