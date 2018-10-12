@@ -10,11 +10,12 @@ import (
 )
 
 type WindowedStream struct {
-	name       string
-	parallel   int
-	assigner   assigners.WindowAssinger
-	trigger    triggers.Trigger
-	evictor    evictors.Evictor
+	name     string
+	parallel int
+	assigner assigners.WindowAssinger
+	trigger  triggers.Trigger
+	evictor  evictors.Evictor
+
 	applyFunc  functions.ApplyFunc
 	reduceFunc functions.ReduceFunc
 	operator   execution.Operator

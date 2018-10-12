@@ -76,7 +76,7 @@ func (w *EvictWindow) SetReduceFunc(f functions.ReduceFunc) {
 }
 
 func (w *EvictWindow) handleRecord(record types.Record, out utils.Emitter) {
-	assignedWindows := w.assigner.AssignWindows(record)
+	assignedWindows := w.assigner.AssignWindows(record, w.assignerContext)
 
 	for _, window := range assignedWindows {
 		if w.isWindowLate(window) {
