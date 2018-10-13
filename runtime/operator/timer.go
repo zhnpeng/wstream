@@ -18,6 +18,14 @@ type TimerHeapItem struct {
 	wid windowing.WindowID
 }
 
+func (t *TimerHeapItem) Time() time.Time {
+	return t.t
+}
+
+func (t *TimerHeapItem) WID() windowing.WindowID {
+	return t.wid
+}
+
 type TimerHeap []TimerHeapItem
 
 func (h TimerHeap) Len() int { return len(h) }
@@ -47,6 +55,7 @@ func (h *TimerHeap) Pop() interface{} {
 	return x
 }
 
+// ProcessingTimerService processing timer service
 type ProcessingTimerService struct {
 	handler     TimerHandler
 	timerHeap   *TimerHeap
@@ -63,7 +72,7 @@ func NewProcessingTimerService(handler TimerHandler, d time.Duration) *Processin
 		timerExists: make(map[windowing.WindowID]bool),
 		handler:     handler,
 	}
-	ret.start()
+	ret.Start()
 	return ret
 }
 
@@ -96,7 +105,7 @@ func (service *ProcessingTimerService) CurrentProcessingTime() time.Time {
 	return service.current
 }
 
-func (service *ProcessingTimerService) start() {
+func (service *ProcessingTimerService) Start() {
 	go func() {
 		for t := range service.ticker.C {
 			service.current = t
@@ -109,6 +118,8 @@ func (service *ProcessingTimerService) Stop() {
 	service.ticker.Stop()
 }
 
+// EventTimerService is event timer service
+// out is used to emit watermark after time drive forward
 type EventTimerService struct {
 	handler     TimerHandler
 	timerHeap   *TimerHeap
@@ -127,12 +138,17 @@ func NewEventTimerService(handler TimerHandler) *EventTimerService {
 
 func (service *EventTimerService) Drive(t time.Time) {
 	if t.After(service.current) {
-		service.current = t
 		service.onEventTime(t)
 	}
 }
 
+// CurrentEventTime is the same as CurrentWatermarkTime
+// TODO: remove this later
 func (service *EventTimerService) CurrentEventTime() time.Time {
+	return service.current
+}
+
+func (service *EventTimerService) CurrentWatermarkTime() time.Time {
 	return service.current
 }
 
@@ -154,6 +170,10 @@ func (service *EventTimerService) onEventTime(t time.Time) {
 	defer service.mu.Unlock()
 	for service.timerHeap.Top().t.Before(t) {
 		item := heap.Pop(service.timerHeap).(TimerHeapItem)
+		// push event time forward when window's time is after current event time
+		if item.Time().After(service.current) {
+			service.current = item.Time()
+		}
 		if _, ok := service.timerExists[item.t]; ok {
 			delete(service.timerExists, item.t)
 		}

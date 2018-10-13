@@ -1,7 +1,14 @@
 package functions
 
-import "github.com/wandouz/wstream/types"
+import (
+	"container/list"
+)
+
+type Iterator interface {
+	Next() *list.Element
+	Prev() *list.Element
+}
 
 type ApplyFunc interface {
-	Apply(records []types.Record, emitter Emitter) types.Record
+	Apply(records Iterator, emitter Emitter)
 }

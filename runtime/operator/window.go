@@ -4,6 +4,7 @@ import (
 	"math"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	"github.com/wandouz/wstream/functions"
 	"github.com/wandouz/wstream/runtime/execution"
 	"github.com/wandouz/wstream/runtime/operator/windowing"
@@ -13,6 +14,18 @@ import (
 	"github.com/wandouz/wstream/runtime/utils"
 	"github.com/wandouz/wstream/types"
 )
+
+type byPassApplyFunc struct{}
+
+func (*byPassApplyFunc) Apply(records functions.Iterator, out functions.Emitter) {
+	for {
+		element := records.Next()
+		if element == nil {
+			break
+		}
+		out.Emit(element.Value.(types.Item))
+	}
+}
 
 // Window is window operator
 // assigner is due to assign windows for each record
@@ -27,6 +40,7 @@ type Window struct {
 
 	windowsGroup map[windowing.WindowID]*windowing.WindowCollection
 
+	watermarkTime   time.Time
 	eventTimer      *EventTimerService
 	processingTimer *ProcessingTimerService
 	triggerContext  *WindowTriggerContext
@@ -48,6 +62,8 @@ func NewWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger) exec
 		assigner:     assigner,
 		trigger:      trigger,
 		windowsGroup: make(map[windowing.WindowID]*windowing.WindowCollection),
+
+		applyFunc: &byPassApplyFunc{},
 	}
 	w.processingTimer = NewProcessingTimerService(w, time.Second)
 	w.eventTimer = NewEventTimerService(w)
@@ -63,10 +79,18 @@ func (w *Window) New() execution.Operator {
 }
 
 func (w *Window) SetApplyFunc(f functions.ApplyFunc) {
+	if f == nil {
+		logrus.Warnf("Passing a nil apply function to window apply")
+		return
+	}
 	w.applyFunc = f
 }
 
 func (w *Window) SetReduceFunc(f functions.ReduceFunc) {
+	if f == nil {
+		logrus.Warnf("Passing a nil reduce function to window apply")
+		return
+	}
 	w.reduceFunc = f
 }
 
@@ -76,16 +100,17 @@ func (w *Window) handleRecord(record types.Record, out utils.Emitter) {
 	for _, window := range assignedWindows {
 		if w.isWindowLate(window) {
 			// drop window if it is event time and late
+			logrus.Warnf("drop late window %+v for record %+v", window, record)
 			continue
 		}
 		k := utils.HashSlice(record.Key())
 		wid := windowing.NewWindowID(k, window)
 		var coll *windowing.WindowCollection
 		if coll, ok := w.windowsGroup[wid]; ok {
-			coll.PushBack(record)
+			coll.Append(record)
 		} else {
-			coll = windowing.NewWindowCollection(window.MaxTimestamp(), record.Key())
-			coll.PushBack(record)
+			coll = windowing.NewWindowCollection(window, record.Time(), record.Key())
+			coll.Append(record)
 			w.windowsGroup[wid] = coll
 		}
 		ctx := w.triggerContext.New(wid)
@@ -100,11 +125,36 @@ func (w *Window) handleRecord(record types.Record, out utils.Emitter) {
 	}
 }
 
-func (w *Window) emitWindow(contents *windowing.WindowCollection, out utils.Emitter) {
+// WindowEmitter is proxy of normal emitter
+// used to overwrite record's time to window's start time
+// before record is emit to downstream operator
+type WindowEmitter struct {
+	t       time.Time
+	emitter utils.Emitter
+}
+
+func NewWindowEmitter(t time.Time, emitter utils.Emitter) *WindowEmitter {
+	return &WindowEmitter{
+		t:       t,
+		emitter: emitter,
+	}
+}
+
+func (e *WindowEmitter) Emit(item types.Item) error {
+	item.SetTime(e.t)
+	e.emitter.Emit(item)
+	return nil
+}
+
+func (w *Window) emitWindow(records *windowing.WindowCollection, out utils.Emitter) {
+	windowEmitter := NewWindowEmitter(records.Time(), out)
+	iterator := records.Iterator()
+	w.applyFunc.Apply(iterator, windowEmitter)
 }
 
 func (w *Window) registerCleanupTimer(wid windowing.WindowID, window windows.Window) {
 	if window.MaxTimestamp().Equal(time.Unix(math.MaxInt64, 0)) {
+		// ignore GlobalWindow
 		return
 	}
 	if w.assigner.IsEventTime() {
@@ -118,11 +168,11 @@ func (w *Window) isWindowLate(window windows.Window) bool {
 	return w.assigner.IsEventTime() && window.MaxTimestamp().Before(w.eventTimer.CurrentEventTime())
 }
 
-// Window operator don't emit watermark from upstream operator
-// and will emit new watermark when emit window
 func (w *Window) handleWatermark(wm *types.Watermark, out utils.Emitter) {
+	// EventTimerService emit watermark
+	// so Window Operator with CountAssigner won't
+	// emit watermark to down stream operator
 	w.eventTimer.Drive(wm.Time())
-	// out.Emit(wm)
 }
 
 // onProcessingTime is callback for processing timer service
@@ -147,10 +197,24 @@ func (w *Window) onEventTime(wid windowing.WindowID, t time.Time) {
 	if signal.IsPurge() {
 		coll.Dispose()
 	}
+	// reemit watermark after emit windows
+	w.likelyEmitWatermark()
+}
+
+// check if should emit new watermark
+func (w *Window) likelyEmitWatermark() {
+	eventTime := w.eventTimer.CurrentEventTime()
+	if w.watermarkTime.Equal(time.Time{}) {
+		w.watermarkTime = eventTime
+	} else if eventTime.After(w.watermarkTime) {
+		w.out.Emit(types.NewWatermark(w.watermarkTime))
+		w.watermarkTime = eventTime
+	}
 }
 
 // Run this operator
 func (w *Window) Run(in *execution.Receiver, out utils.Emitter) {
+	// FIXME: emitter may be property of operator
 	w.out = out
 	consume(in, out, w)
 }

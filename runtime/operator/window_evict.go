@@ -1,6 +1,7 @@
 package operator
 
 import (
+	"container/list"
 	"math"
 	"time"
 
@@ -30,6 +31,7 @@ type EvictWindow struct {
 
 	windowsGroup map[windowing.WindowID]*windowing.WindowCollection
 
+	watermarkTime   time.Time
 	eventTimer      *EventTimerService
 	processingTimer *ProcessingTimerService
 	triggerContext  *WindowTriggerContext
@@ -89,7 +91,7 @@ func (w *EvictWindow) handleRecord(record types.Record, out utils.Emitter) {
 		if coll, ok := w.windowsGroup[wid]; ok {
 			coll.PushBack(record)
 		} else {
-			coll = windowing.NewWindowCollection(window.MaxTimestamp(), record.Key())
+			coll = windowing.NewWindowCollection(window, record.Time(), record.Key())
 			coll.PushBack(record)
 			w.windowsGroup[wid] = coll
 		}
@@ -106,13 +108,31 @@ func (w *EvictWindow) handleRecord(record types.Record, out utils.Emitter) {
 	}
 }
 
-func (w *EvictWindow) emitWindow(contents *windowing.WindowCollection, out utils.Emitter) {
+func (w *EvictWindow) emitWindow(records *windowing.WindowCollection, out utils.Emitter) {
 	// for TimeEvictor records without timestamp is invalid
 	// so for safty size should count only records with timestamp
-	w.evictor.EvictBefore(contents, int64(contents.Len()))
+	w.evictor.EvictBefore(records, int64(records.Len()))
 
-	// TODO: implement window.apply reduce and aggregate
-	w.evictor.EvictAfter(contents, int64(contents.Len()))
+	windowEmitter := NewWindowEmitter(records.Time(), out)
+	iterator := records.Iterator()
+	if w.reduceFunc != nil {
+		acc := w.reduceFunc.InitialAccmulator()
+		for {
+			element := iterator.Next()
+			if element == nil {
+				break
+			}
+			acc = w.reduceFunc.Reduce(acc, element.Value.(types.Record))
+		}
+		iter := list.New()
+		iter.PushBack(acc)
+		// TODO: encapsulation this
+		w.applyFunc.Apply(iter.Front(), windowEmitter)
+	} else {
+		w.applyFunc.Apply(iterator, windowEmitter)
+	}
+
+	w.evictor.EvictAfter(records, int64(records.Len()))
 }
 
 func (w *EvictWindow) registerCleanupTimer(wid windowing.WindowID, window windows.Window) {
@@ -158,6 +178,19 @@ func (w *EvictWindow) onEventTime(wid windowing.WindowID, t time.Time) {
 	}
 	if signal.IsPurge() {
 		coll.Dispose()
+	}
+	// reemit watermark after emit windows
+	w.likelyEmitWatermark()
+}
+
+// check if should emit new watermark
+func (w *EvictWindow) likelyEmitWatermark() {
+	eventTime := w.eventTimer.CurrentEventTime()
+	if w.watermarkTime.Equal(time.Time{}) {
+		w.watermarkTime = eventTime
+	} else if eventTime.After(w.watermarkTime) {
+		w.out.Emit(types.NewWatermark(w.watermarkTime))
+		w.watermarkTime = eventTime
 	}
 }
 

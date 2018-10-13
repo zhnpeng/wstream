@@ -31,7 +31,7 @@ func (e *TimeEvictor) EvictAfter(coll *windowing.WindowCollection, size time.Dur
 func (e *TimeEvictor) evict(coll *windowing.WindowCollection, size time.Duration) {
 	// evict require elements in coll has timestamp
 	maxTime := e.getMaxTime(coll)
-	evictBeforeTime := maxTime.Add(-1 * size)
+	evictBeforeTime := maxTime.Add(-1 * e.size)
 	iterator := coll.Iterator()
 	for {
 		element := iterator.Next()
