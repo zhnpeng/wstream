@@ -5,7 +5,6 @@ import (
 	"encoding/gob"
 	"time"
 
-	"github.com/wandouz/wstream/runtime/execution"
 	"github.com/wandouz/wstream/runtime/utils"
 
 	"github.com/wandouz/wstream/functions"
@@ -25,7 +24,7 @@ func NewAssignTimestampWithPunctuatedWatermark(function functions.TimestampWithP
 	}
 }
 
-func (f *AssignTimestampWithPunctuatedWatermark) New() execution.Operator {
+func (f *AssignTimestampWithPunctuatedWatermark) New() utils.Operator {
 	encodedBytes := encodeFunction(f.function)
 	reader := bytes.NewReader(encodedBytes)
 	decoder := gob.NewDecoder(reader)
@@ -37,7 +36,7 @@ func (f *AssignTimestampWithPunctuatedWatermark) New() execution.Operator {
 	return NewAssignTimestampWithPunctuatedWatermark(udf)
 }
 
-func (f *AssignTimestampWithPunctuatedWatermark) handleRecord(record types.Record, out utils.Emitter) {
+func (f *AssignTimestampWithPunctuatedWatermark) handleRecord(record types.Record, out Emitter) {
 	extractedTimestamp := f.function.ExtractTimestamp(record, f.prevItemTimestamp)
 	f.prevItemTimestamp = extractedTimestamp
 	record.SetTime(time.Unix(extractedTimestamp, 0))
@@ -50,13 +49,13 @@ func (f *AssignTimestampWithPunctuatedWatermark) handleRecord(record types.Recor
 	}
 }
 
-func (f *AssignTimestampWithPunctuatedWatermark) handleWatermark(wm *types.Watermark, out utils.Emitter) {
+func (f *AssignTimestampWithPunctuatedWatermark) handleWatermark(wm *types.Watermark, out Emitter) {
 	if wm != nil && wm.After(f.prevWatermark) {
 		f.prevWatermark = wm
 		out.Emit(wm)
 	}
 }
 
-func (f *AssignTimestampWithPunctuatedWatermark) Run(in *execution.Receiver, out utils.Emitter) {
+func (f *AssignTimestampWithPunctuatedWatermark) Run(in Receiver, out Emitter) {
 	consume(in, out, f)
 }

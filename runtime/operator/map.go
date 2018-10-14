@@ -5,7 +5,6 @@ import (
 	"encoding/gob"
 
 	"github.com/wandouz/wstream/functions"
-	"github.com/wandouz/wstream/runtime/execution"
 	"github.com/wandouz/wstream/runtime/utils"
 	"github.com/wandouz/wstream/types"
 )
@@ -18,7 +17,7 @@ func NewMap(function functions.MapFunc) *Map {
 	return &Map{function}
 }
 
-func (m *Map) New() execution.Operator {
+func (m *Map) New() utils.Operator {
 	encodedBytes := encodeFunction(m.function)
 	reader := bytes.NewReader(encodedBytes)
 	decoder := gob.NewDecoder(reader)
@@ -30,14 +29,14 @@ func (m *Map) New() execution.Operator {
 	return NewMap(udf)
 }
 
-func (m *Map) handleRecord(record types.Record, out utils.Emitter) {
+func (m *Map) handleRecord(record types.Record, out Emitter) {
 	out.Emit(m.function.Map(record))
 }
 
-func (m *Map) handleWatermark(wm *types.Watermark, out utils.Emitter) {
+func (m *Map) handleWatermark(wm *types.Watermark, out Emitter) {
 	out.Emit(wm)
 }
 
-func (m *Map) Run(in *execution.Receiver, out utils.Emitter) {
+func (m *Map) Run(in Receiver, out Emitter) {
 	consume(in, out, m)
 }

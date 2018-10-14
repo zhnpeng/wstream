@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/wandouz/wstream/runtime/execution"
 	"github.com/wandouz/wstream/runtime/utils"
 
 	"github.com/wandouz/wstream/functions"
@@ -32,7 +31,7 @@ func NewAssignTimestampWithPeriodicWatermark(
 	}
 }
 
-func (f *AssignTimestampWithPeriodicWatermark) New() execution.Operator {
+func (f *AssignTimestampWithPeriodicWatermark) New() utils.Operator {
 	encodedBytes := encodeFunction(f.function)
 	reader := bytes.NewReader(encodedBytes)
 	decoder := gob.NewDecoder(reader)
@@ -44,21 +43,21 @@ func (f *AssignTimestampWithPeriodicWatermark) New() execution.Operator {
 	return NewAssignTimestampWithPeriodicWatermark(udf, f.period)
 }
 
-func (f *AssignTimestampWithPeriodicWatermark) handleRecord(record types.Record, out utils.Emitter) {
+func (f *AssignTimestampWithPeriodicWatermark) handleRecord(record types.Record, out Emitter) {
 	extractedTimestamp := f.function.ExtractTimestamp(record, f.prevItemTimestamp)
 	f.prevItemTimestamp = extractedTimestamp
 	record.SetTime(time.Unix(extractedTimestamp, 0))
 	out.Emit(record)
 }
 
-func (f *AssignTimestampWithPeriodicWatermark) handleWatermark(wm *types.Watermark, out utils.Emitter) {
+func (f *AssignTimestampWithPeriodicWatermark) handleWatermark(wm *types.Watermark, out Emitter) {
 	if wm != nil && wm.After(f.prevWatermark) {
 		f.prevWatermark = wm
 		out.Emit(wm)
 	}
 }
 
-func (f *AssignTimestampWithPeriodicWatermark) Run(in *execution.Receiver, out utils.Emitter) {
+func (f *AssignTimestampWithPeriodicWatermark) Run(in Receiver, out Emitter) {
 	var wg sync.WaitGroup
 	ctx, cancel := context.WithCancel(context.Background())
 

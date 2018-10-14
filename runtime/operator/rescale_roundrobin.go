@@ -3,7 +3,6 @@ package operator
 import (
 	"sync/atomic"
 
-	"github.com/wandouz/wstream/runtime/execution"
 	"github.com/wandouz/wstream/runtime/utils"
 	"github.com/wandouz/wstream/types"
 )
@@ -16,11 +15,11 @@ func NewRescaleRoundRobin() *RescaleRoundrobin {
 	return &RescaleRoundrobin{}
 }
 
-func (m *RescaleRoundrobin) New() execution.Operator {
+func (m *RescaleRoundrobin) New() utils.Operator {
 	return NewRescaleRoundRobin()
 }
 
-func (m *RescaleRoundrobin) handleRecord(record types.Record, out utils.Emitter) {
+func (m *RescaleRoundrobin) handleRecord(record types.Record, out Emitter) {
 	// TODO: refine this
 	// Round Robin way to emit item
 	// get key values, then calculate index, then emit to partition by index
@@ -29,10 +28,10 @@ func (m *RescaleRoundrobin) handleRecord(record types.Record, out utils.Emitter)
 	out.EmitTo(int(index), record)
 }
 
-func (m *RescaleRoundrobin) handleWatermark(wm *types.Watermark, out utils.Emitter) {
+func (m *RescaleRoundrobin) handleWatermark(wm *types.Watermark, out Emitter) {
 	out.Emit(wm)
 }
 
-func (m *RescaleRoundrobin) Run(in *execution.Receiver, out utils.Emitter) {
+func (m *RescaleRoundrobin) Run(in Receiver, out Emitter) {
 	consume(in, out, m)
 }

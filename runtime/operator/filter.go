@@ -5,7 +5,6 @@ import (
 	"encoding/gob"
 
 	"github.com/wandouz/wstream/functions"
-	"github.com/wandouz/wstream/runtime/execution"
 	"github.com/wandouz/wstream/runtime/utils"
 	"github.com/wandouz/wstream/types"
 )
@@ -18,7 +17,7 @@ func NewFilter(function functions.FilterFunc) *Filter {
 	return &Filter{function}
 }
 
-func (m *Filter) New() execution.Operator {
+func (m *Filter) New() utils.Operator {
 	encodedBytes := encodeFunction(m.function)
 	reader := bytes.NewReader(encodedBytes)
 	decoder := gob.NewDecoder(reader)
@@ -30,16 +29,16 @@ func (m *Filter) New() execution.Operator {
 	return NewFilter(udf)
 }
 
-func (m *Filter) handleRecord(record types.Record, out utils.Emitter) {
+func (m *Filter) handleRecord(record types.Record, out Emitter) {
 	if m.function.Filter(record) {
 		out.Emit(record)
 	}
 }
 
-func (m *Filter) handleWatermark(wm *types.Watermark, out utils.Emitter) {
+func (m *Filter) handleWatermark(wm *types.Watermark, out Emitter) {
 	out.Emit(wm)
 }
 
-func (m *Filter) Run(in *execution.Receiver, out utils.Emitter) {
+func (m *Filter) Run(in Receiver, out Emitter) {
 	consume(in, out, m)
 }

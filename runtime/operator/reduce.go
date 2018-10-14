@@ -5,7 +5,6 @@ import (
 	"encoding/gob"
 
 	"github.com/wandouz/wstream/functions"
-	"github.com/wandouz/wstream/runtime/execution"
 	"github.com/wandouz/wstream/runtime/utils"
 	"github.com/wandouz/wstream/types"
 )
@@ -23,7 +22,7 @@ func NewReduce(function functions.ReduceFunc) *Reduce {
 	}
 }
 
-func (m *Reduce) New() execution.Operator {
+func (m *Reduce) New() utils.Operator {
 	encodedBytes := encodeFunction(m.function)
 	reader := bytes.NewReader(encodedBytes)
 	decoder := gob.NewDecoder(reader)
@@ -35,7 +34,7 @@ func (m *Reduce) New() execution.Operator {
 	return NewReduce(udf)
 }
 
-func (m *Reduce) handleRecord(record types.Record, out utils.Emitter) {
+func (m *Reduce) handleRecord(record types.Record, out Emitter) {
 	keys := utils.HashSlice(record.Key())
 	if acc, ok := m.keyedAccumulator[keys]; ok {
 		ret := m.function.Reduce(acc, record)
@@ -47,10 +46,10 @@ func (m *Reduce) handleRecord(record types.Record, out utils.Emitter) {
 	out.Emit(m.keyedAccumulator[keys])
 }
 
-func (m *Reduce) handleWatermark(wm *types.Watermark, out utils.Emitter) {
+func (m *Reduce) handleWatermark(wm *types.Watermark, out Emitter) {
 	out.Emit(wm)
 }
 
-func (m *Reduce) Run(in *execution.Receiver, out utils.Emitter) {
+func (m *Reduce) Run(in Receiver, out Emitter) {
 	consume(in, out, m)
 }

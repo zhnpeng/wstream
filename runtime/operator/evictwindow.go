@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/wandouz/wstream/functions"
-	"github.com/wandouz/wstream/runtime/execution"
 	"github.com/wandouz/wstream/runtime/operator/windowing"
 	"github.com/wandouz/wstream/runtime/operator/windowing/assigners"
 	"github.com/wandouz/wstream/runtime/operator/windowing/evictors"
@@ -27,7 +26,7 @@ type EvictWindow struct {
 
 	applyFunc  functions.ApplyFunc
 	reduceFunc functions.ReduceFunc
-	out        utils.Emitter
+	out        Emitter
 
 	windowsGroup map[windowing.WindowID]*windowing.WindowCollection
 
@@ -40,7 +39,7 @@ type EvictWindow struct {
 
 // NewEvictWindow return evictable window object
 // evictor is necessary
-func NewEvictWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger, evictor evictors.Evictor) execution.Operator {
+func NewEvictWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger, evictor evictors.Evictor) utils.Operator {
 	if assigner == nil {
 		assigner = assigners.NewGlobalWindow()
 	}
@@ -65,7 +64,7 @@ func NewEvictWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger,
 }
 
 // New is a factory method to new an EvictWindow operator object
-func (w *EvictWindow) New() execution.Operator {
+func (w *EvictWindow) New() utils.Operator {
 	return NewEvictWindow(w.assigner, w.trigger, w.evictor)
 }
 
@@ -77,7 +76,7 @@ func (w *EvictWindow) SetReduceFunc(f functions.ReduceFunc) {
 	w.reduceFunc = f
 }
 
-func (w *EvictWindow) handleRecord(record types.Record, out utils.Emitter) {
+func (w *EvictWindow) handleRecord(record types.Record, out Emitter) {
 	assignedWindows := w.assigner.AssignWindows(record, w.assignerContext)
 
 	for _, window := range assignedWindows {
@@ -108,7 +107,7 @@ func (w *EvictWindow) handleRecord(record types.Record, out utils.Emitter) {
 	}
 }
 
-func (w *EvictWindow) emitWindow(records *windowing.WindowCollection, out utils.Emitter) {
+func (w *EvictWindow) emitWindow(records *windowing.WindowCollection, out Emitter) {
 	// for TimeEvictor records without timestamp is invalid
 	// so for safty size should count only records with timestamp
 	w.evictor.EvictBefore(records, int64(records.Len()))
@@ -152,7 +151,7 @@ func (w *EvictWindow) isWindowLate(window windows.Window) bool {
 
 // EvictWindow operator don't emit watermark from upstream operator
 // and will emit new watermark when emit window
-func (w *EvictWindow) handleWatermark(wm *types.Watermark, out utils.Emitter) {
+func (w *EvictWindow) handleWatermark(wm *types.Watermark, out Emitter) {
 	w.eventTimer.Drive(wm.Time())
 	// out.Emit(wm)
 }
@@ -195,7 +194,7 @@ func (w *EvictWindow) likelyEmitWatermark() {
 }
 
 // Run this operator
-func (w *EvictWindow) Run(in *execution.Receiver, out utils.Emitter) {
+func (w *EvictWindow) Run(in Receiver, out Emitter) {
 	w.out = out
 	consume(in, out, w)
 }

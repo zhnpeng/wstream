@@ -5,7 +5,6 @@ import (
 	"encoding/gob"
 
 	"github.com/wandouz/wstream/functions"
-	"github.com/wandouz/wstream/runtime/execution"
 	"github.com/wandouz/wstream/runtime/utils"
 	"github.com/wandouz/wstream/types"
 )
@@ -17,7 +16,7 @@ type FlatMap struct {
 func NewFlatMap(function functions.FlatMapFunc) *FlatMap {
 	return &FlatMap{function}
 }
-func (m *FlatMap) New() execution.Operator {
+func (m *FlatMap) New() utils.Operator {
 	encodedBytes := encodeFunction(m.function)
 	reader := bytes.NewReader(encodedBytes)
 	decoder := gob.NewDecoder(reader)
@@ -29,14 +28,14 @@ func (m *FlatMap) New() execution.Operator {
 	return NewFlatMap(udf)
 }
 
-func (m *FlatMap) handleRecord(record types.Record, out utils.Emitter) {
+func (m *FlatMap) handleRecord(record types.Record, out Emitter) {
 	m.function.FlatMap(record, out)
 }
 
-func (m *FlatMap) handleWatermark(wm *types.Watermark, out utils.Emitter) {
+func (m *FlatMap) handleWatermark(wm *types.Watermark, out Emitter) {
 	out.Emit(wm)
 }
 
-func (m *FlatMap) Run(in *execution.Receiver, out utils.Emitter) {
+func (m *FlatMap) Run(in Receiver, out Emitter) {
 	consume(in, out, m)
 }

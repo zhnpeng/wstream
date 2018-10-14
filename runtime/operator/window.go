@@ -6,7 +6,6 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/wandouz/wstream/functions"
-	"github.com/wandouz/wstream/runtime/execution"
 	"github.com/wandouz/wstream/runtime/operator/windowing"
 	"github.com/wandouz/wstream/runtime/operator/windowing/assigners"
 	"github.com/wandouz/wstream/runtime/operator/windowing/triggers"
@@ -36,7 +35,7 @@ type Window struct {
 
 	applyFunc  functions.ApplyFunc
 	reduceFunc functions.ReduceFunc
-	out        utils.Emitter
+	out        Emitter
 
 	windowsGroup map[windowing.WindowID]*windowing.WindowCollection
 
@@ -51,7 +50,7 @@ type Window struct {
 // default assigner is GlobalWindowAssigner
 // default trigger is assigner's default trigger
 // default evictor is nil
-func NewWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger) execution.Operator {
+func NewWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger) utils.Operator {
 	if assigner == nil {
 		assigner = assigners.NewGlobalWindow()
 	}
@@ -74,7 +73,7 @@ func NewWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger) exec
 }
 
 // New is a factory method to new an Window operator object
-func (w *Window) New() execution.Operator {
+func (w *Window) New() utils.Operator {
 	return NewWindow(w.assigner, w.trigger)
 }
 
@@ -94,7 +93,7 @@ func (w *Window) SetReduceFunc(f functions.ReduceFunc) {
 	w.reduceFunc = f
 }
 
-func (w *Window) handleRecord(record types.Record, out utils.Emitter) {
+func (w *Window) handleRecord(record types.Record, out Emitter) {
 	assignedWindows := w.assigner.AssignWindows(record, w.assignerContext)
 
 	for _, window := range assignedWindows {
@@ -130,10 +129,10 @@ func (w *Window) handleRecord(record types.Record, out utils.Emitter) {
 // before record is emit to downstream operator
 type WindowEmitter struct {
 	t       time.Time
-	emitter utils.Emitter
+	emitter Emitter
 }
 
-func NewWindowEmitter(t time.Time, emitter utils.Emitter) *WindowEmitter {
+func NewWindowEmitter(t time.Time, emitter Emitter) *WindowEmitter {
 	return &WindowEmitter{
 		t:       t,
 		emitter: emitter,
@@ -146,7 +145,7 @@ func (e *WindowEmitter) Emit(item types.Item) error {
 	return nil
 }
 
-func (w *Window) emitWindow(records *windowing.WindowCollection, out utils.Emitter) {
+func (w *Window) emitWindow(records *windowing.WindowCollection, out Emitter) {
 	windowEmitter := NewWindowEmitter(records.Time(), out)
 	iterator := records.Iterator()
 	w.applyFunc.Apply(iterator, windowEmitter)
@@ -168,7 +167,7 @@ func (w *Window) isWindowLate(window windows.Window) bool {
 	return w.assigner.IsEventTime() && window.MaxTimestamp().Before(w.eventTimer.CurrentEventTime())
 }
 
-func (w *Window) handleWatermark(wm *types.Watermark, out utils.Emitter) {
+func (w *Window) handleWatermark(wm *types.Watermark, out Emitter) {
 	// EventTimerService emit watermark
 	// so Window Operator with CountAssigner won't
 	// emit watermark to down stream operator
@@ -213,7 +212,7 @@ func (w *Window) likelyEmitWatermark() {
 }
 
 // Run this operator
-func (w *Window) Run(in *execution.Receiver, out utils.Emitter) {
+func (w *Window) Run(in Receiver, out Emitter) {
 	// FIXME: emitter may be property of operator
 	w.out = out
 	consume(in, out, w)
