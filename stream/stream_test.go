@@ -35,7 +35,7 @@ func Test_All_Stream_Graph(t *testing.T) {
 		Map(&mapFuncForStreamTest{}).
 		Reduce(&reduceFuncForStreamTest{}).
 		KeyBy("dimA", "dimB").
-		TimeWindow(time.Minute)
+		TimeWindow(60)
 	expected := 5
 	if graph.Length() != expected {
 		t.Errorf("graph length wrong got: %v, want: %v", graph.Length(), expected)
