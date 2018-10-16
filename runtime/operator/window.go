@@ -43,10 +43,19 @@ type Window struct {
 	assignerContext *WindowAssignerContext
 }
 
-// NewWindow make a window operator object
-// default assigner is GlobalWindowAssigner
-// default trigger is assigner's default trigger
-// default evictor is nil
+/*
+NewWindow make a window operator object
+params:
+	default assigner is GlobalWindowAssigner
+	default trigger is assigner's default trigger
+	default evictor is nil
+Some notices
+1. about watermark
+only when time charaacteristic is event time watermark make sences
+window will swallow all watermarks from upstream operator
+and regenerate new watermark to downstream according to window's fire time
+count window won't generate any watermark
+*/
 func NewWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger) utils.Operator {
 	if assigner == nil {
 		assigner = assigners.NewGlobalWindow()
@@ -144,8 +153,6 @@ func (e *WindowEmitter) Emit(item types.Item) error {
 
 func (w *Window) emitWindow(records *windowing.WindowCollection, out Emitter) {
 	windowEmitter := NewWindowEmitter(records.Time(), out)
-	logrus.Error(records.Len())
-
 	iterator := records.Iterator()
 	w.applyFunc.Apply(iterator, windowEmitter)
 }
@@ -163,7 +170,7 @@ func (w *Window) registerCleanupTimer(wid windowing.WindowID, window windows.Win
 }
 
 func (w *Window) isWindowLate(window windows.Window) bool {
-	return w.assigner.IsEventTime() && window.MaxTimestamp().Before(w.eventTimer.CurrentEventTime())
+	return w.assigner.IsEventTime() && window.MaxTimestamp().Before(w.eventTimer.CurrentWatermarkTime())
 }
 
 func (w *Window) handleWatermark(wm *types.Watermark, out Emitter) {
@@ -272,7 +279,7 @@ func (c *WindowTriggerContext) RegisterEventTimer(t time.Time) {
 }
 
 func (c *WindowTriggerContext) GetCurrentEventTime() time.Time {
-	return c.eventTimerService.CurrentEventTime()
+	return c.eventTimerService.CurrentWatermarkTime()
 }
 
 type WindowAssignerContext struct {

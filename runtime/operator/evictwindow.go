@@ -146,14 +146,13 @@ func (w *EvictWindow) registerCleanupTimer(wid windowing.WindowID, window window
 }
 
 func (w *EvictWindow) isWindowLate(window windows.Window) bool {
-	return w.assigner.IsEventTime() && window.MaxTimestamp().Before(w.eventTimer.CurrentEventTime())
+	return w.assigner.IsEventTime() && window.MaxTimestamp().Before(w.eventTimer.CurrentWatermarkTime())
 }
 
 // EvictWindow operator don't emit watermark from upstream operator
 // and will emit new watermark when emit window
 func (w *EvictWindow) handleWatermark(wm *types.Watermark, out Emitter) {
 	w.eventTimer.Drive(wm.Time())
-	// out.Emit(wm)
 }
 
 // onProcessingTime is callback for processing timer service
@@ -184,7 +183,7 @@ func (w *EvictWindow) onEventTime(wid windowing.WindowID, t time.Time) {
 
 // check if should emit new watermark
 func (w *EvictWindow) likelyEmitWatermark() {
-	eventTime := w.eventTimer.CurrentEventTime()
+	eventTime := w.eventTimer.CurrentWatermarkTime()
 	if w.watermarkTime.Equal(time.Time{}) {
 		w.watermarkTime = eventTime
 	} else if eventTime.After(w.watermarkTime) {

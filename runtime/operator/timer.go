@@ -149,13 +149,7 @@ func (service *EventTimerService) Drive(t time.Time) {
 	}
 }
 
-// CurrentEventTime is the same as CurrentWatermarkTime
-// TODO: remove this later
-func (service *EventTimerService) CurrentEventTime() time.Time {
-	return service.current
-}
-
-// CurrentWatermarkTime is window's watermark time
+// CurrentWatermarkTime is window's watermark time or event time
 func (service *EventTimerService) CurrentWatermarkTime() time.Time {
 	// add 1 second because current time is window's MaxTimestamp which -1 second always
 	// FIXME: this is not natural
