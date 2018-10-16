@@ -27,7 +27,7 @@ func (trigger *EventTimeTrigger) OnProcessingTime(t time.Time, window windows.Wi
 }
 
 func (trigger *EventTimeTrigger) OnEventTime(t time.Time, window windows.Window) TriggerSignal {
-	if t.After(window.MaxTimestamp()) {
+	if t.Equal(window.MaxTimestamp()) {
 		return FIRE
 	}
 	return CONTINUE

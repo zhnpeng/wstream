@@ -90,7 +90,7 @@ func (w *EvictWindow) handleRecord(record types.Record, out Emitter) {
 		if coll, ok := w.windowsGroup[wid]; ok {
 			coll.PushBack(record)
 		} else {
-			coll = windowing.NewWindowCollection(window, record.Time(), record.Key())
+			coll = windowing.NewWindowCollection(window, record.Time(), record.Key(), w.reduceFunc)
 			coll.PushBack(record)
 			w.windowsGroup[wid] = coll
 		}
@@ -115,7 +115,7 @@ func (w *EvictWindow) emitWindow(records *windowing.WindowCollection, out Emitte
 	windowEmitter := NewWindowEmitter(records.Time(), out)
 	iterator := records.Iterator()
 	if w.reduceFunc != nil {
-		acc := w.reduceFunc.InitialAccmulator()
+		acc := iterator.Value.(types.Record)
 		for {
 			element := iterator.Next()
 			if element == nil {
@@ -171,7 +171,7 @@ func (w *EvictWindow) onProcessingTime(wid windowing.WindowID, t time.Time) {
 // onEventTIme is callback for event timer service
 func (w *EvictWindow) onEventTime(wid windowing.WindowID, t time.Time) {
 	coll := w.windowsGroup[wid]
-	signal := w.trigger.OnProcessingTime(t, wid.Window())
+	signal := w.trigger.OnEventTime(t, wid.Window())
 	if signal.IsFire() {
 		w.emitWindow(coll, w.out)
 	}

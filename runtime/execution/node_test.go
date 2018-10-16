@@ -14,7 +14,7 @@ import (
 type doNothingOperatorForTest struct {
 }
 
-func (o *doNothingOperatorForTest) New() Operator {
+func (o *doNothingOperatorForTest) New() utils.Operator {
 	return &doNothingOperatorForTest{}
 }
 
@@ -26,7 +26,7 @@ func (o *doNothingOperatorForTest) handleWatermark(watermark *types.Watermark, o
 	out.Emit(watermark)
 }
 
-func (o *doNothingOperatorForTest) Run(in *Receiver, out utils.Emitter) {
+func (o *doNothingOperatorForTest) Run(in utils.Receiver, out utils.Emitter) {
 	for {
 		item, ok := <-in.Next()
 		if !ok {

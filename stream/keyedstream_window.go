@@ -1,7 +1,7 @@
 package stream
 
 import (
-	"github.com/wandouz/wstream/global"
+	"github.com/wandouz/wstream/env"
 	"github.com/wandouz/wstream/runtime/operator/windowing/evictors"
 
 	"github.com/wandouz/wstream/runtime/operator/windowing/triggers"
@@ -24,9 +24,9 @@ func (s *KeyedStream) Window(assigner assigners.WindowAssinger) *WindowedStream 
 
 // TimeWindow is tumbling time window
 func (s *KeyedStream) TimeWindow(period int64) *WindowedStream {
-	if global.ENV.TimeCharacteristic == global.IsEventTime {
+	if env.ENV.TimeCharacteristic == env.IsEventTime {
 		// a flow can handle only processing time or event time
-		// so need to hold it in a global env
+		// so need to hold it in a env env
 		return s.Window(assigners.NewTumblingEventTimeWindow(period, 0)).
 			Trigger(triggers.NewEventTimeTrigger())
 	} else {
@@ -36,7 +36,7 @@ func (s *KeyedStream) TimeWindow(period int64) *WindowedStream {
 }
 
 func (s *KeyedStream) SlidingTimeWindow(period, every int64) *WindowedStream {
-	if global.ENV.TimeCharacteristic == global.IsEventTime {
+	if env.ENV.TimeCharacteristic == env.IsEventTime {
 		return s.Window(assigners.NewSlidingEventTimeWindoww(period, every, 0)).
 			Trigger(triggers.NewEventTimeTrigger())
 	} else {

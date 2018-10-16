@@ -6,24 +6,19 @@ import (
 	"time"
 )
 
-type GlobalWindow struct {
+func NewGlobalWindow() *Window {
+	return &Window{
+		end: time.Unix(math.MaxInt64, 0),
+	}
 }
 
-func NewGlobalWindow() *GlobalWindow {
-	return &GlobalWindow{}
-}
-
-func (w *GlobalWindow) MaxTimestamp() time.Time {
-	return time.Unix(math.MaxInt64, 0)
-}
-
-var singletonGlobalWindow *GlobalWindow
+var singletonGlobalWindow *Window
 var once sync.Once
 
 // GetGlobalWindow return a singleton GlobalWindow object
-func GetGlobalWindow() *GlobalWindow {
+func GetGlobalWindow() Window {
 	once.Do(func() {
 		singletonGlobalWindow = NewGlobalWindow()
 	})
-	return singletonGlobalWindow
+	return *singletonGlobalWindow
 }

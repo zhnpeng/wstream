@@ -18,14 +18,16 @@ type WindowCollection struct {
 
 // NewWindowCollection if window is a TimeWindow collection's T is window's start ts
 // else is the first record's time
-func NewWindowCollection(window windows.Window, t time.Time, k []interface{}) *WindowCollection {
-	if w, ok := window.(*windows.TimeWindow); ok {
-		t = w.Start()
+func NewWindowCollection(window windows.Window, t time.Time, k []interface{}, reduceFunc functions.ReduceFunc) *WindowCollection {
+	if !window.Start().Equal(time.Time{}) {
+		// if window is not global window
+		t = window.Start()
 	}
 	return &WindowCollection{
-		t:        t,
-		k:        k,
-		elements: list.New(),
+		t:          t,
+		k:          k,
+		elements:   list.New(),
+		reduceFunc: reduceFunc,
 	}
 }
 
@@ -57,15 +59,14 @@ func (c *WindowCollection) Append(record types.Record) {
 		var acc types.Record
 		element := c.elements.Front()
 		if element == nil {
-			acc = c.reduceFunc.InitialAccmulator()
-			// Inherit Key
-			acc.Inherit(record)
+			acc = record
+			c.PushBack(acc)
 		} else {
 			acc = element.Value.(types.Record)
+			acc = c.reduceFunc.Reduce(acc, record)
+			c.Remove(element)
+			c.PushBack(acc)
 		}
-		nacc := c.reduceFunc.Reduce(acc, record)
-		c.Remove(element)
-		c.PushBack(nacc)
 	}
 }
 

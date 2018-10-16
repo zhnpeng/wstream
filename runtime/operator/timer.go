@@ -57,20 +57,21 @@ func (h *TimerHeap) Pop() interface{} {
 
 // ProcessingTimerService processing timer service
 type ProcessingTimerService struct {
-	handler     TimerHandler
-	timerHeap   *TimerHeap
-	timerExists map[windowing.WindowID]bool
-	ticker      *time.Ticker
-	current     time.Time
-	mu          sync.Mutex
+	handler   TimerHandler
+	timerHeap *TimerHeap
+	timerMap  map[windowing.WindowID]bool
+	ticker    *time.Ticker
+	current   time.Time
+	mu        sync.Mutex
 }
 
 // NewProcessingTimerService bind handler
 func NewProcessingTimerService(handler TimerHandler, d time.Duration) *ProcessingTimerService {
 	ret := &ProcessingTimerService{
-		ticker:      time.NewTicker(d),
-		timerExists: make(map[windowing.WindowID]bool),
-		handler:     handler,
+		ticker:    time.NewTicker(d),
+		timerHeap: &TimerHeap{},
+		timerMap:  make(map[windowing.WindowID]bool),
+		handler:   handler,
 	}
 	ret.Start()
 	return ret
@@ -79,23 +80,28 @@ func NewProcessingTimerService(handler TimerHandler, d time.Duration) *Processin
 func (service *ProcessingTimerService) onProcessingTime(t time.Time) {
 	service.mu.Lock()
 	defer service.mu.Unlock()
-	for service.timerHeap.Top().t.Before(t) {
-		item := heap.Pop(service.timerHeap).(TimerHeapItem)
-		if _, ok := service.timerExists[item.wid]; ok {
-			delete(service.timerExists, item.wid)
+	for service.timerHeap.Len() > 0 {
+		if service.timerHeap.Top().t.Before(t) {
+			item := heap.Pop(service.timerHeap).(TimerHeapItem)
+			if _, ok := service.timerMap[item.wid]; ok {
+				delete(service.timerMap, item.wid)
+			}
+			service.handler.onProcessingTime(item.wid, item.t)
+		} else {
+			break
 		}
-		service.handler.onProcessingTime(item.wid, item.t)
 	}
 }
 
 func (service *ProcessingTimerService) RegisterProcessingTimer(wid windowing.WindowID, t time.Time) {
 	service.mu.Lock()
 	defer service.mu.Unlock()
-	if _, ok := service.timerExists[wid]; ok {
+	if _, ok := service.timerMap[wid]; ok {
 		// already registered
 		return
 	}
-	heap.Push(service.timerHeap, &TimerHeapItem{
+	service.timerMap[wid] = true
+	heap.Push(service.timerHeap, TimerHeapItem{
 		t:   t,
 		wid: wid,
 	})
@@ -121,18 +127,19 @@ func (service *ProcessingTimerService) Stop() {
 // EventTimerService is event timer service
 // out is used to emit watermark after time drive forward
 type EventTimerService struct {
-	handler     TimerHandler
-	timerHeap   *TimerHeap
-	timerExists map[time.Time]bool
-	current     time.Time
-	mu          sync.Mutex
+	handler   TimerHandler
+	timerHeap *TimerHeap
+	timerMap  map[windowing.WindowID]bool
+	current   time.Time
+	mu        sync.Mutex
 }
 
 // NewEventTimerService create new timer service and bind handler to it
 func NewEventTimerService(handler TimerHandler) *EventTimerService {
 	return &EventTimerService{
-		handler:     handler,
-		timerExists: make(map[time.Time]bool),
+		handler:   handler,
+		timerHeap: &TimerHeap{},
+		timerMap:  make(map[windowing.WindowID]bool),
 	}
 }
 
@@ -148,18 +155,22 @@ func (service *EventTimerService) CurrentEventTime() time.Time {
 	return service.current
 }
 
+// CurrentWatermarkTime is window's watermark time
 func (service *EventTimerService) CurrentWatermarkTime() time.Time {
-	return service.current
+	// add 1 second because current time is window's MaxTimestamp which -1 second always
+	// FIXME: this is not natural
+	return service.current.Add(1 * time.Second)
 }
 
 func (service *EventTimerService) RegisterEventTimer(wid windowing.WindowID, t time.Time) {
 	service.mu.Lock()
 	defer service.mu.Unlock()
-	if _, ok := service.timerExists[t]; ok {
+	if _, ok := service.timerMap[wid]; ok {
 		// already registered
 		return
 	}
-	heap.Push(service.timerHeap, &TimerHeapItem{
+	service.timerMap[wid] = true
+	heap.Push(service.timerHeap, TimerHeapItem{
 		t:   t,
 		wid: wid,
 	})
@@ -168,15 +179,19 @@ func (service *EventTimerService) RegisterEventTimer(wid windowing.WindowID, t t
 func (service *EventTimerService) onEventTime(t time.Time) {
 	service.mu.Lock()
 	defer service.mu.Unlock()
-	for service.timerHeap.Top().t.Before(t) {
-		item := heap.Pop(service.timerHeap).(TimerHeapItem)
-		// push event time forward when window's time is after current event time
-		if item.Time().After(service.current) {
-			service.current = item.Time()
+	for service.timerHeap.Len() > 0 {
+		if service.timerHeap.Top().t.Before(t) {
+			item := heap.Pop(service.timerHeap).(TimerHeapItem)
+			// push event time forward when window's time is after current event time
+			if item.Time().After(service.current) {
+				service.current = item.Time()
+			}
+			if _, ok := service.timerMap[item.wid]; ok {
+				delete(service.timerMap, item.wid)
+			}
+			service.handler.onEventTime(item.wid, item.t)
+		} else {
+			break
 		}
-		if _, ok := service.timerExists[item.t]; ok {
-			delete(service.timerExists, item.t)
-		}
-		service.handler.onEventTime(item.wid, item.t)
 	}
 }

@@ -1,12 +1,10 @@
 package stream
 
-import (
-	"github.com/wandouz/wstream/runtime/execution"
-)
+import "github.com/wandouz/wstream/runtime/utils"
 
 type Stream interface {
 	Parallelism() int
-	Operator() execution.Operator
+	Operator() utils.Operator
 	SetStreamNode(node *StreamNode)
 	GetStreamNode() (node *StreamNode)
 }

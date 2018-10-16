@@ -1,13 +1,13 @@
 package stream
 
 import (
-	"github.com/wandouz/wstream/runtime/execution"
+	"github.com/wandouz/wstream/runtime/utils"
 )
 
 type DataStream struct {
 	name     string
 	parallel int
-	operator execution.Operator
+	operator utils.Operator
 
 	// graph reference
 	streamNode *StreamNode
@@ -26,7 +26,7 @@ func NewDataStream(name string, graph *StreamGraph, parallel int) *DataStream {
 	}
 }
 
-func (s *DataStream) Operator() execution.Operator {
+func (s *DataStream) Operator() utils.Operator {
 	return s.operator.New()
 }
 

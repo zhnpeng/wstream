@@ -1,13 +1,24 @@
 package windows
 
-import (
-	"time"
-)
+import "time"
 
-// Window does not store any items but identify a window
-// using window's max timestamp, each window should
-// has an unique max timestamp
-type Window interface {
-	// MaxTimestamp is the ID of a window
-	MaxTimestamp() time.Time
+type Window struct {
+	start time.Time
+	end   time.Time
+}
+
+func NewWindow(start, end time.Time) Window {
+	return Window{start, end}
+}
+
+func (w Window) Start() time.Time {
+	return w.start
+}
+
+func (w Window) End() time.Time {
+	return w.end
+}
+
+func (w Window) MaxTimestamp() time.Time {
+	return w.end.Add(-1 * time.Second)
 }

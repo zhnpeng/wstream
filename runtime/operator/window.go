@@ -1,6 +1,7 @@
 package operator
 
 import (
+	"container/list"
 	"math"
 	"time"
 
@@ -16,13 +17,9 @@ import (
 
 type byPassApplyFunc struct{}
 
-func (*byPassApplyFunc) Apply(records functions.Iterator, out functions.Emitter) {
-	for {
-		element := records.Next()
-		if element == nil {
-			break
-		}
-		out.Emit(element.Value.(types.Item))
+func (*byPassApplyFunc) Apply(records *list.Element, out functions.Emitter) {
+	for elem := records; elem != nil; elem = elem.Next() {
+		out.Emit(elem.Value.(types.Item))
 	}
 }
 
@@ -108,7 +105,7 @@ func (w *Window) handleRecord(record types.Record, out Emitter) {
 		if coll, ok := w.windowsGroup[wid]; ok {
 			coll.Append(record)
 		} else {
-			coll = windowing.NewWindowCollection(window, record.Time(), record.Key())
+			coll = windowing.NewWindowCollection(window, record.Time(), record.Key(), w.reduceFunc)
 			coll.Append(record)
 			w.windowsGroup[wid] = coll
 		}
@@ -147,6 +144,8 @@ func (e *WindowEmitter) Emit(item types.Item) error {
 
 func (w *Window) emitWindow(records *windowing.WindowCollection, out Emitter) {
 	windowEmitter := NewWindowEmitter(records.Time(), out)
+	logrus.Error(records.Len())
+
 	iterator := records.Iterator()
 	w.applyFunc.Apply(iterator, windowEmitter)
 }
@@ -176,33 +175,52 @@ func (w *Window) handleWatermark(wm *types.Watermark, out Emitter) {
 
 // onProcessingTime is callback for processing timer service
 func (w *Window) onProcessingTime(wid windowing.WindowID, t time.Time) {
-	coll := w.windowsGroup[wid]
+	coll, ok := w.windowsGroup[wid]
+	if !ok {
+		return
+	}
 	signal := w.trigger.OnProcessingTime(t, wid.Window())
 	if signal.IsFire() {
 		w.emitWindow(coll, w.out)
 	}
 	if signal.IsPurge() {
 		coll.Dispose()
+	}
+	if !w.assigner.IsEventTime() && w.isCleanupTime(wid.Window(), t) {
+		coll.Dispose()
+		delete(w.windowsGroup, wid)
 	}
 }
 
 // onEventTIme is callback for event timer service
 func (w *Window) onEventTime(wid windowing.WindowID, t time.Time) {
-	coll := w.windowsGroup[wid]
-	signal := w.trigger.OnProcessingTime(t, wid.Window())
+	coll, ok := w.windowsGroup[wid]
+	if !ok {
+		return
+	}
+	signal := w.trigger.OnEventTime(t, wid.Window())
 	if signal.IsFire() {
 		w.emitWindow(coll, w.out)
 	}
 	if signal.IsPurge() {
 		coll.Dispose()
 	}
+	if w.assigner.IsEventTime() && w.isCleanupTime(wid.Window(), t) {
+		// clean window
+		coll.Dispose()
+		delete(w.windowsGroup, wid)
+	}
 	// reemit watermark after emit windows
 	w.likelyEmitWatermark()
 }
 
+func (w *Window) isCleanupTime(window windows.Window, t time.Time) bool {
+	return t.Equal(window.MaxTimestamp())
+}
+
 // check if should emit new watermark
 func (w *Window) likelyEmitWatermark() {
-	eventTime := w.eventTimer.CurrentEventTime()
+	eventTime := w.eventTimer.CurrentWatermarkTime()
 	if w.watermarkTime.Equal(time.Time{}) {
 		w.watermarkTime = eventTime
 	} else if eventTime.After(w.watermarkTime) {

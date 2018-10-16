@@ -1,11 +1,12 @@
-package global
+package env
 
 // Environment is for global varialbe
 type Environment struct {
 	TimeCharacteristic TypeTimeCharacteristic
 }
 
-func NewEnvironment() *Environment {
+// New an Environment
+func New() *Environment {
 	return &Environment{}
 }
 

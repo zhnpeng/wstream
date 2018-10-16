@@ -23,3 +23,18 @@ func (s TriggerSignal) IsPurge() bool {
 	}
 	return false
 }
+
+func (s TriggerSignal) String() string {
+	switch s {
+	case FIRE:
+		return "Fire"
+	case PURGE:
+		return "Purge"
+	case FIREANDPURGE:
+		return "Fire And Purge"
+	case CONTINUE:
+		return "Continue"
+	default:
+		return "Invalid Signal"
+	}
+}

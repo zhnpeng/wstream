@@ -37,11 +37,10 @@ func (m *Reduce) New() utils.Operator {
 func (m *Reduce) handleRecord(record types.Record, out Emitter) {
 	keys := utils.HashSlice(record.Key())
 	if acc, ok := m.keyedAccumulator[keys]; ok {
-		ret := m.function.Reduce(acc, record)
-		m.keyedAccumulator[keys] = ret.Inherit(record)
+		acc = m.function.Reduce(acc, record)
+		m.keyedAccumulator[keys] = acc.Inherit(record)
 	} else {
-		ret := m.function.Reduce(m.function.InitialAccmulator(), record)
-		m.keyedAccumulator[keys] = ret.Inherit(record)
+		m.keyedAccumulator[keys] = record
 	}
 	out.Emit(m.keyedAccumulator[keys])
 }
