@@ -151,9 +151,7 @@ func (service *EventTimerService) Drive(t time.Time) {
 
 // CurrentWatermarkTime is window's watermark time or event time
 func (service *EventTimerService) CurrentWatermarkTime() time.Time {
-	// add 1 second because current time is window's MaxTimestamp which -1 second always
-	// FIXME: this is not natural
-	return service.current.Add(1 * time.Second)
+	return service.current
 }
 
 func (service *EventTimerService) RegisterEventTimer(wid windowing.WindowID, t time.Time) {
@@ -177,8 +175,9 @@ func (service *EventTimerService) onEventTime(t time.Time) {
 		if service.timerHeap.Top().t.Before(t) {
 			item := heap.Pop(service.timerHeap).(TimerHeapItem)
 			// push event time forward when window's time is after current event time
-			if item.Time().After(service.current) {
-				service.current = item.Time()
+			start := item.wid.Window().Start()
+			if start.After(service.current) {
+				service.current = start
 			}
 			if _, ok := service.timerMap[item.wid]; ok {
 				delete(service.timerMap, item.wid)

@@ -155,6 +155,9 @@ func TestEvictWindow_Run_Tumbling_EventTime_Window(t *testing.T) {
 	wg.Wait()
 
 	want := []types.Item{
+		types.NewWatermark(
+			helpers.TimeParse("2018-10-15 18:00:00"),
+		),
 		types.NewMapRecord(
 			helpers.TimeParse("2018-10-15 18:00:00"),
 			map[string]interface{}{
@@ -162,15 +165,15 @@ func TestEvictWindow_Run_Tumbling_EventTime_Window(t *testing.T) {
 				"B": 7,
 			},
 		),
+		types.NewWatermark(
+			helpers.TimeParse("2018-10-15 18:01:00"),
+		),
 		types.NewMapRecord(
 			helpers.TimeParse("2018-10-15 18:01:00"),
 			map[string]interface{}{
 				"A": 5,
 				"B": 5,
 			},
-		),
-		types.NewWatermark(
-			helpers.TimeParse("2018-10-15 18:01:00"),
 		),
 	}
 
@@ -284,6 +287,134 @@ func TestEvictWindow_Run_Tumbling_Count_Window(t *testing.T) {
 			map[string]interface{}{
 				"A": 4,
 				"B": 7,
+			},
+		),
+	}
+
+	if diff := cmp.Diff(got, want); diff != "" {
+		t.Error(diff)
+	}
+}
+
+func TestEvictWindow_Run_Sliding_Count_Window(t *testing.T) {
+	items := []types.Item{
+		types.NewWatermark(
+			helpers.TimeParse("2018-10-15 18:00:00"),
+		),
+		types.NewMapRecord(
+			helpers.TimeParse("2018-10-15 18:00:00"),
+			map[string]interface{}{
+				"A": 1,
+				"B": 1,
+			},
+		),
+		types.NewMapRecord(
+			helpers.TimeParse("2018-10-15 18:00:01"),
+			map[string]interface{}{
+				"A": 2,
+				"B": 2,
+			},
+		),
+		types.NewMapRecord(
+			helpers.MilliTimeParse("2018-10-15 18:00:59.999"),
+			map[string]interface{}{
+				"A": 3,
+				"B": 3,
+			},
+		),
+		types.NewWatermark(
+			helpers.TimeParse("2018-10-15 18:01:00"),
+		),
+		types.NewMapRecord(
+			helpers.TimeParse("2018-10-15 18:01:00"),
+			map[string]interface{}{
+				"A": 4,
+				"B": 4,
+			},
+		),
+		types.NewMapRecord(
+			helpers.MilliTimeParse("2018-10-15 18:01:59.999"),
+			map[string]interface{}{
+				"A": 5,
+				"B": 5,
+			},
+		),
+		types.NewWatermark(
+			helpers.TimeParse("2018-10-15 18:02:00"),
+		),
+	}
+	input := make(chan types.Item)
+	output := make(chan types.Item)
+
+	receiver := &evictWindowTestReceiver{
+		ch: input,
+	}
+
+	emitter := &evictWindowTestEmitter{
+		ch: output,
+	}
+
+	env.ENV.TimeCharacteristic = env.IsEventTime
+	assigner := assigners.NewGlobalWindow()
+	trigger := triggers.NewCountTrigger().Of(2)
+	evictor := evictors.NewCountEvictor().Of(1, true)
+	w := NewEvictWindow(assigner, trigger, evictor).(*EvictWindow)
+	w.SetReduceFunc(&evictWindowTestReduceFunc{})
+
+	var wg sync.WaitGroup
+
+	go func() {
+		for _, record := range items {
+			input <- record
+		}
+		close(input)
+	}()
+
+	var got []types.Item
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			i, ok := <-output
+			if !ok {
+				break
+			}
+			got = append(got, i)
+		}
+	}()
+
+	// wait until all item is emit to output
+	w.Run(receiver, emitter)
+	close(output)
+	wg.Wait()
+
+	want := []types.Item{
+		types.NewMapRecord(
+			helpers.TimeParse("2018-10-15 18:00:00"),
+			map[string]interface{}{
+				"A": 2,
+				"B": 3,
+			},
+		),
+		types.NewMapRecord(
+			helpers.TimeParse("2018-10-15 18:00:01"),
+			map[string]interface{}{
+				"A": 3,
+				"B": 5,
+			},
+		),
+		types.NewMapRecord(
+			helpers.MilliTimeParse("2018-10-15 18:00:59.999"),
+			map[string]interface{}{
+				"A": 4,
+				"B": 7,
+			},
+		),
+		types.NewMapRecord(
+			helpers.TimeParse("2018-10-15 18:01:00"),
+			map[string]interface{}{
+				"A": 5,
+				"B": 9,
 			},
 		),
 	}

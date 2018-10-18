@@ -187,6 +187,9 @@ func (w *EvictWindow) onEventTime(wid windowing.WindowID, t time.Time) {
 	if !ok {
 		return
 	}
+
+	w.likelyEmitWatermark()
+
 	signal := w.trigger.OnEventTime(t, wid.Window())
 	if signal.IsFire() {
 		w.emitWindow(coll, w.out)
@@ -199,8 +202,6 @@ func (w *EvictWindow) onEventTime(wid windowing.WindowID, t time.Time) {
 		coll.Dispose()
 		delete(w.windowsGroup, wid)
 	}
-	// reemit watermark after emit windows
-	w.likelyEmitWatermark()
 }
 
 func (w *EvictWindow) isCleanupTime(window windows.Window, t time.Time) bool {
@@ -210,10 +211,8 @@ func (w *EvictWindow) isCleanupTime(window windows.Window, t time.Time) bool {
 // check if should emit new watermark
 func (w *EvictWindow) likelyEmitWatermark() {
 	eventTime := w.eventTimer.CurrentWatermarkTime()
-	if w.watermarkTime.Equal(time.Time{}) {
-		w.watermarkTime = eventTime
-	} else if eventTime.After(w.watermarkTime) {
-		w.out.Emit(types.NewWatermark(w.watermarkTime))
+	if eventTime.After(w.watermarkTime) {
+		w.out.Emit(types.NewWatermark(eventTime))
 		w.watermarkTime = eventTime
 	}
 }

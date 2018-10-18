@@ -144,12 +144,18 @@ func TestWindow_Run_Tumbling_EventTime_Window(t *testing.T) {
 	wg.Wait()
 
 	want := []types.Item{
+		types.NewWatermark(
+			helpers.TimeParse("2018-10-15 18:00:00"),
+		),
 		types.NewMapRecord(
 			helpers.TimeParse("2018-10-15 18:00:00"),
 			map[string]interface{}{
 				"A": 3,
 				"B": 6,
 			},
+		),
+		types.NewWatermark(
+			helpers.TimeParse("2018-10-15 18:01:00"),
 		),
 		types.NewMapRecord(
 			helpers.TimeParse("2018-10-15 18:01:00"),
@@ -158,8 +164,144 @@ func TestWindow_Run_Tumbling_EventTime_Window(t *testing.T) {
 				"B": 9,
 			},
 		),
+	}
+
+	if diff := cmp.Diff(got, want); diff != "" {
+		t.Error(diff)
+	}
+}
+
+func TestWindow_Run_Sliding_EventTime_Window(t *testing.T) {
+	items := []types.Item{
 		types.NewWatermark(
-			helpers.TimeParse("2018-10-15 18:01:00"),
+			helpers.TimeParse("2018-10-15 18:00:00"),
+		),
+		types.NewMapRecord(
+			helpers.TimeParse("2018-10-15 18:00:00"),
+			map[string]interface{}{
+				"A": 1,
+				"B": 1,
+			},
+		),
+		types.NewMapRecord(
+			helpers.TimeParse("2018-10-15 18:00:01"),
+			map[string]interface{}{
+				"A": 2,
+				"B": 2,
+			},
+		),
+		types.NewMapRecord(
+			helpers.TimeParse("2018-10-15 18:00:02"),
+			map[string]interface{}{
+				"A": 3,
+				"B": 3,
+			},
+		),
+		types.NewMapRecord(
+			helpers.TimeParse("2018-10-15 18:00:03"),
+			map[string]interface{}{
+				"A": 4,
+				"B": 4,
+			},
+		),
+		types.NewWatermark(
+			helpers.TimeParse("2018-10-15 18:00:06"),
+		),
+	}
+	input := make(chan types.Item)
+	output := make(chan types.Item)
+
+	receiver := &windowTestReceiver{
+		ch: input,
+	}
+
+	emitter := &windowtestEmitter{
+		ch: output,
+	}
+
+	env.ENV.TimeCharacteristic = env.IsEventTime
+	assigner := assigners.NewSlidingEventTimeWindoww(2, 1, 0)
+	trigger := triggers.NewEventTimeTrigger()
+	w := NewWindow(assigner, trigger).(*Window)
+	w.SetReduceFunc(&windowTestReduceFunc{})
+
+	var wg sync.WaitGroup
+
+	go func() {
+		for _, record := range items {
+			input <- record
+		}
+		close(input)
+	}()
+
+	var got []types.Item
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			i, ok := <-output
+			if !ok {
+				break
+			}
+			got = append(got, i)
+		}
+	}()
+
+	// wait until all item is emit to output
+	w.Run(receiver, emitter)
+	close(output)
+	wg.Wait()
+
+	want := []types.Item{
+		types.NewWatermark(
+			helpers.TimeParse("2018-10-15 17:59:59"),
+		),
+		types.NewMapRecord(
+			helpers.TimeParse("2018-10-15 17:59:59"),
+			map[string]interface{}{
+				"A": 1,
+				"B": 1,
+			},
+		),
+		types.NewWatermark(
+			helpers.TimeParse("2018-10-15 18:00:00"),
+		),
+		types.NewMapRecord(
+			helpers.TimeParse("2018-10-15 18:00:00"),
+			map[string]interface{}{
+				"A": 2,
+				"B": 3,
+			},
+		),
+		types.NewWatermark(
+			helpers.TimeParse("2018-10-15 18:00:01"),
+		),
+		types.NewMapRecord(
+			helpers.TimeParse("2018-10-15 18:00:01"),
+			map[string]interface{}{
+				"A": 3,
+				"B": 5,
+			},
+		),
+		types.NewWatermark(
+			helpers.TimeParse("2018-10-15 18:00:02"),
+		),
+		types.NewMapRecord(
+			helpers.TimeParse("2018-10-15 18:00:02"),
+			map[string]interface{}{
+				"A": 4,
+				"B": 7,
+			},
+		),
+		types.NewWatermark(
+			helpers.TimeParse("2018-10-15 18:00:03"),
+		),
+		types.NewMapRecord(
+			helpers.TimeParse("2018-10-15 18:00:03"),
+			map[string]interface{}{
+				"A": 4,
+				"B": 4,
+			},
 		),
 	}
 
