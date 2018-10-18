@@ -72,6 +72,7 @@ func NewProcessingTimerService(handler TimerHandler, d time.Duration) *Processin
 		timerHeap: &TimerHeap{},
 		timerMap:  make(map[windowing.WindowID]bool),
 		handler:   handler,
+		current:   time.Now(),
 	}
 	ret.Start()
 	return ret
