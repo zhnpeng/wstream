@@ -73,7 +73,7 @@ func NewWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger) util
 	w.processingTimer = NewProcessingTimerService(w, time.Second)
 	w.eventTimer = NewEventTimerService(w)
 	// bind this window to triggerContext factory
-	w.triggerContext = NewWindowTriggerContext(windowing.WindowID{}, w.processingTimer, w.eventTimer)
+	w.triggerContext = NewWindowTriggerContext(w.processingTimer, w.eventTimer)
 	w.assignerContext = NewWindowAssignerContext(w.processingTimer)
 	return w
 }
@@ -111,14 +111,15 @@ func (w *Window) handleRecord(record types.Record, out Emitter) {
 		k := utils.HashSlice(record.Key())
 		wid := windowing.NewWindowID(k, window)
 		var coll *windowing.WindowCollection
-		if coll, ok := w.windowsGroup[wid]; ok {
+		if c, ok := w.windowsGroup[wid]; ok {
 			coll.Append(record)
+			coll = c
 		} else {
 			coll = windowing.NewWindowCollection(window, record.Time(), record.Key(), w.reduceFunc)
 			coll.Append(record)
 			w.windowsGroup[wid] = coll
 		}
-		ctx := w.triggerContext.New(wid)
+		ctx := w.triggerContext.New(wid, coll.Len())
 		signal := w.trigger.OnItem(record, record.Time(), window, ctx)
 		if signal.IsFire() {
 			w.emitWindow(coll, out)
@@ -130,31 +131,10 @@ func (w *Window) handleRecord(record types.Record, out Emitter) {
 	}
 }
 
-// WindowEmitter is proxy of normal emitter
-// used to overwrite record's time to window's start time
-// before record is emit to downstream operator
-type WindowEmitter struct {
-	t       time.Time
-	emitter Emitter
-}
-
-func NewWindowEmitter(t time.Time, emitter Emitter) *WindowEmitter {
-	return &WindowEmitter{
-		t:       t,
-		emitter: emitter,
-	}
-}
-
-func (e *WindowEmitter) Emit(item types.Item) error {
-	item.SetTime(e.t)
-	e.emitter.Emit(item)
-	return nil
-}
-
 func (w *Window) emitWindow(records *windowing.WindowCollection, out Emitter) {
-	windowEmitter := NewWindowEmitter(records.Time(), out)
+	emitter := NewWindowEmitter(records.Time(), out)
 	iterator := records.Iterator()
-	w.applyFunc.Apply(iterator, windowEmitter)
+	w.applyFunc.Apply(iterator, emitter)
 }
 
 func (w *Window) registerCleanupTimer(wid windowing.WindowID, window windows.Window) {
@@ -247,39 +227,44 @@ func (w *Window) Run(in Receiver, out Emitter) {
 // implement TriggerContext and bind processing/event timer service from window operator
 // use factory New(windowing.WindowID) *WindowTriggerContext to create a new context
 type WindowTriggerContext struct {
-	wid                    windowing.WindowID
-	processingTimerService *ProcessingTimerService
-	eventTimerService      *EventTimerService
+	wid  windowing.WindowID
+	size int
+	ets  *EventTimerService
+	pts  *ProcessingTimerService
 }
 
 // NewWindowTriggerContext make a context
-func NewWindowTriggerContext(wid windowing.WindowID, p *ProcessingTimerService, e *EventTimerService) *WindowTriggerContext {
+func NewWindowTriggerContext(p *ProcessingTimerService, e *EventTimerService) *WindowTriggerContext {
 	return &WindowTriggerContext{
-		wid: wid,
-		processingTimerService: p,
-		eventTimerService:      e,
+		pts: p,
+		ets: e,
 	}
 }
 
 // New is factory method to create new WindowTriggerContext object with param WindowID
-func (c *WindowTriggerContext) New(wid windowing.WindowID) *WindowTriggerContext {
+func (c *WindowTriggerContext) New(wid windowing.WindowID, size int) *WindowTriggerContext {
 	return &WindowTriggerContext{
-		wid: wid,
-		processingTimerService: c.processingTimerService,
-		eventTimerService:      c.eventTimerService,
+		wid:  wid,
+		size: size,
+		pts:  c.pts,
+		ets:  c.ets,
 	}
 }
 
+func (c *WindowTriggerContext) WindowSize() int {
+	return c.size
+}
+
 func (c *WindowTriggerContext) RegisterProcessingTimer(t time.Time) {
-	c.processingTimerService.RegisterProcessingTimer(c.wid, t)
+	c.pts.RegisterProcessingTimer(c.wid, t)
 }
 
 func (c *WindowTriggerContext) RegisterEventTimer(t time.Time) {
-	c.eventTimerService.RegisterEventTimer(c.wid, t)
+	c.ets.RegisterEventTimer(c.wid, t)
 }
 
 func (c *WindowTriggerContext) GetCurrentEventTime() time.Time {
-	return c.eventTimerService.CurrentWatermarkTime()
+	return c.ets.CurrentWatermarkTime()
 }
 
 type WindowAssignerContext struct {

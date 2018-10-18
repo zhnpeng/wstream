@@ -26,31 +26,19 @@ func (e *CountEvictor) EvictAfter(coll *windowing.WindowCollection, size int64) 
 }
 
 func (e *CountEvictor) evict(coll *windowing.WindowCollection, size int64) {
-	if size <= e.maxCount {
-		return
-	}
 	var evictedCount int64
-	iterator := coll.Iterator()
-	for {
-		element := iterator.Next()
-		if element == nil {
-			break
-		}
+	for iter := coll.Iterator(); iter != nil; {
+		// RemoveN remove element and return its next
+		iter = coll.RemoveN(iter)
 		evictedCount++
-		if evictedCount > (size - e.maxCount) {
+		if evictedCount >= e.maxCount {
 			break
-		} else {
-			coll.Remove(element)
 		}
 	}
 }
 
-func (e *CountEvictor) DoEvictAfter() *CountEvictor {
-	e.doEvictAfter = true
-	return e
-}
-
-func (e *CountEvictor) Of(count int64) *CountEvictor {
+func (e *CountEvictor) Of(count int64, doEvictAfter bool) *CountEvictor {
 	e.maxCount = count
+	e.doEvictAfter = doEvictAfter
 	return e
 }

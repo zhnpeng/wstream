@@ -19,12 +19,8 @@ type WindowCollection struct {
 // NewWindowCollection if window is a TimeWindow collection's T is window's start ts
 // else is the first record's time
 func NewWindowCollection(window windows.Window, t time.Time, k []interface{}, reduceFunc functions.ReduceFunc) *WindowCollection {
-	if !window.Start().Equal(time.Time{}) {
-		// if window is not global window
-		t = window.Start()
-	}
 	return &WindowCollection{
-		t:          t,
+		t:          window.Start(),
 		k:          k,
 		elements:   list.New(),
 		reduceFunc: reduceFunc,
@@ -35,8 +31,18 @@ func (c *WindowCollection) Keys() []interface{} {
 	return c.k
 }
 
+// Time return window collection time
+// for a GlobalWindow return collection's first element's time
 func (c *WindowCollection) Time() time.Time {
-	return c.t
+	if !c.t.Equal(time.Time{}) {
+		return c.t
+	}
+	t := c.t
+	first := c.elements.Front()
+	if first != nil {
+		t = first.Value.(types.Item).Time()
+	}
+	return t
 }
 
 func (c *WindowCollection) Len() int {
@@ -70,8 +76,18 @@ func (c *WindowCollection) Append(record types.Record) {
 	}
 }
 
+// Remove element from collection
 func (c *WindowCollection) Remove(e *list.Element) {
 	c.elements.Remove(e)
+}
+
+// RemoveN remove element and return element's next element
+// list will set element's next to nil after Remove(element)
+// so we get next element before remove and return to caller
+func (c *WindowCollection) RemoveN(e *list.Element) (next *list.Element) {
+	next = e.Next()
+	c.elements.Remove(e)
+	return
 }
 
 func (c *WindowCollection) Dispose() {

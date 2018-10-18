@@ -1,7 +1,6 @@
 package triggers
 
 import (
-	"sync/atomic"
 	"time"
 
 	"github.com/wandouz/wstream/runtime/operator/windowing/windows"
@@ -9,8 +8,7 @@ import (
 )
 
 type CountTrigger struct {
-	maxCount int64
-	count    int64
+	maxCount int
 }
 
 func NewCountTrigger() *CountTrigger {
@@ -18,7 +16,7 @@ func NewCountTrigger() *CountTrigger {
 }
 
 func (trigger *CountTrigger) OnItem(item types.Item, t time.Time, window windows.Window, ctx TriggerContext) TriggerSignal {
-	c := atomic.AddInt64(&trigger.count, 1)
+	c := ctx.WindowSize()
 	if c >= trigger.maxCount {
 		return FIRE
 	}
@@ -33,7 +31,7 @@ func (trigger *CountTrigger) OnEventTime(t time.Time, window windows.Window) Tri
 	return CONTINUE
 }
 
-func (trigger *CountTrigger) Of(maxCount int64) *CountTrigger {
+func (trigger *CountTrigger) Of(maxCount int) *CountTrigger {
 	trigger.maxCount = maxCount
 	return trigger
 }

@@ -46,7 +46,7 @@ type windowTestReduceFunc struct {
 
 func (f *windowTestReduceFunc) Reduce(x types.Record, y types.Record) types.Record {
 	ret := map[string]interface{}{
-		"A": math.Max(cast.ToFloat64(x.Get("A")), cast.ToFloat64(y.Get("A"))),
+		"A": int(math.Max(cast.ToFloat64(x.Get("A")), cast.ToFloat64(y.Get("A")))),
 		"B": cast.ToInt(x.Get("B")) + cast.ToInt(y.Get("B")),
 	}
 	return types.NewMapRecord(time.Time{}, ret)
@@ -147,14 +147,14 @@ func TestWindow_Run_Tumbling_EventTime_Window(t *testing.T) {
 		types.NewMapRecord(
 			helpers.TimeParse("2018-10-15 18:00:00"),
 			map[string]interface{}{
-				"A": float64(3),
+				"A": 3,
 				"B": 6,
 			},
 		),
 		types.NewMapRecord(
 			helpers.TimeParse("2018-10-15 18:01:00"),
 			map[string]interface{}{
-				"A": float64(5),
+				"A": 5,
 				"B": 9,
 			},
 		),
