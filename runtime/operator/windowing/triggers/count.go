@@ -8,7 +8,7 @@ import (
 )
 
 type CountTrigger struct {
-	maxCount int
+	maxCount int64
 }
 
 func NewCountTrigger() *CountTrigger {
@@ -17,7 +17,7 @@ func NewCountTrigger() *CountTrigger {
 
 func (trigger *CountTrigger) OnItem(item types.Item, t time.Time, window windows.Window, ctx TriggerContext) TriggerSignal {
 	c := ctx.WindowSize()
-	if c >= trigger.maxCount {
+	if int64(c) >= trigger.maxCount {
 		return FIRE
 	}
 	return CONTINUE
@@ -31,7 +31,7 @@ func (trigger *CountTrigger) OnEventTime(t time.Time, window windows.Window) Tri
 	return CONTINUE
 }
 
-func (trigger *CountTrigger) Of(maxCount int) *CountTrigger {
+func (trigger *CountTrigger) Of(maxCount int64) *CountTrigger {
 	trigger.maxCount = maxCount
 	return trigger
 }

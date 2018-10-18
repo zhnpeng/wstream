@@ -112,8 +112,8 @@ func (w *Window) handleRecord(record types.Record, out Emitter) {
 		wid := windowing.NewWindowID(k, window)
 		var coll *windowing.WindowCollection
 		if c, ok := w.windowsGroup[wid]; ok {
-			coll.Append(record)
 			coll = c
+			coll.Append(record)
 		} else {
 			coll = windowing.NewWindowCollection(window, record.Time(), record.Key(), w.reduceFunc)
 			coll.Append(record)

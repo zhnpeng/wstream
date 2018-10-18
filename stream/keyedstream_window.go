@@ -49,11 +49,11 @@ func (s *KeyedStream) SlidingTimeWindow(period, every int64) *WindowedStream {
 func (s *KeyedStream) CountWindow(period int64) *WindowedStream {
 	return s.Window(assigners.NewGlobalWindow()).
 		Trigger(triggers.NewCountTrigger().Of(period)).
-		Evict(evictors.NewCountEvictor().Of(period))
+		Evict(evictors.NewCountEvictor().Of(period, true))
 }
 
 func (s *KeyedStream) SlidingCountWindow(period, every int64) *WindowedStream {
 	return s.Window(assigners.NewGlobalWindow()).
 		Trigger(triggers.NewCountTrigger().Of(period)).
-		Evict(evictors.NewCountEvictor().Of(every))
+		Evict(evictors.NewCountEvictor().Of(every, true))
 }
