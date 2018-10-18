@@ -65,7 +65,7 @@ func (c *WindowCollection) Append(record types.Record) {
 		var acc types.Record
 		element := c.elements.Front()
 		if element == nil {
-			acc = record
+			acc = record.Copy()
 			c.PushBack(acc)
 		} else {
 			acc = element.Value.(types.Record)

@@ -357,7 +357,7 @@ func TestWindow_Run_Tumbling_ProcessingTime_Window(t *testing.T) {
 	go func() {
 		for _, record := range items {
 			input <- record
-			time.Sleep(time.Second + 200*time.Millisecond)
+			time.Sleep(time.Second + 50*time.Millisecond)
 		}
 		close(input)
 	}()
@@ -400,6 +400,117 @@ func TestWindow_Run_Tumbling_ProcessingTime_Window(t *testing.T) {
 			map[string]interface{}{
 				"A": 3,
 				"B": 3,
+			},
+		),
+	}
+
+	if len(got) != 3 {
+		t.Errorf("length of got not right got %d, want %d", len(got), 3)
+	}
+	for i, g := range got {
+		if g.Time().Equal(want[i].Time()) {
+			logrus.Errorf("got items should not has time: %v", g.Time())
+		}
+		g.SetTime(time.Time{})
+		if diff := cmp.Diff(g, want[i]); diff != "" {
+			t.Error(diff)
+		}
+	}
+}
+
+func TestWindow_Run_Sliding_ProcessingTime_Window(t *testing.T) {
+	items := []types.Item{
+		types.NewMapRecord(
+			time.Time{},
+			map[string]interface{}{
+				"A": 1,
+				"B": 1,
+			},
+		),
+		types.NewMapRecord(
+			time.Time{},
+			map[string]interface{}{
+				"A": 2,
+				"B": 2,
+			},
+		),
+		types.NewMapRecord(
+			time.Time{},
+			map[string]interface{}{
+				"A": 3,
+				"B": 3,
+			},
+		),
+	}
+	input := make(chan types.Item)
+	output := make(chan types.Item)
+
+	receiver := &windowTestReceiver{
+		ch: input,
+	}
+
+	emitter := &windowtestEmitter{
+		ch: output,
+	}
+
+	env.ENV.TimeCharacteristic = env.IsEventTime
+	assigner := assigners.NewSlidingProcessingTimeWindow(2, 1, 0)
+	trigger := triggers.NewProcessingTimeTrigger()
+	w := NewWindow(assigner, trigger).(*Window)
+	w.SetReduceFunc(&windowTestReduceFunc{})
+
+	var wg sync.WaitGroup
+
+	go func() {
+		for _, record := range items {
+			input <- record
+			time.Sleep(time.Second + 50*time.Millisecond)
+		}
+		close(input)
+	}()
+
+	var got []types.Item
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			i, ok := <-output
+			if !ok {
+				break
+			}
+			got = append(got, i)
+		}
+	}()
+
+	// wait until all item is emit to output
+	w.Run(receiver, emitter)
+	close(output)
+	wg.Wait()
+
+	// for _, g := range got {
+	// 	logrus.Info(g)
+	// }
+
+	want := []types.Item{
+		types.NewMapRecord(
+			time.Time{},
+			map[string]interface{}{
+				"A": 1,
+				"B": 1,
+			},
+		),
+		types.NewMapRecord(
+			time.Time{},
+			map[string]interface{}{
+				"A": 2,
+				"B": 3,
+			},
+		),
+		types.NewMapRecord(
+			time.Time{},
+			map[string]interface{}{
+				"A": 3,
+				"B": 5,
 			},
 		),
 	}

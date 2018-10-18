@@ -115,6 +115,7 @@ func (service *ProcessingTimerService) CurrentProcessingTime() time.Time {
 func (service *ProcessingTimerService) Start() {
 	go func() {
 		for t := range service.ticker.C {
+			t = t.Truncate(time.Second)
 			service.current = t
 			service.onProcessingTime(t)
 		}
