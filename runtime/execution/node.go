@@ -5,7 +5,6 @@ import (
 	"sync"
 
 	"github.com/wandouz/wstream/intfs"
-	"github.com/wandouz/wstream/types"
 )
 
 // type Node interface {
@@ -15,21 +14,18 @@ import (
 // }
 
 type Node struct {
+	ctx      context.Context
 	operator intfs.Operator
-
-	in  *Receiver
-	out *Emitter
-
-	watermark types.Watermark
-	ctx       context.Context
+	in       *Receiver
+	out      *Emitter
 }
 
-func NewNode(in *Receiver, out *Emitter, operator intfs.Operator, ctx context.Context) *Node {
+func NewNode(ctx context.Context, operator intfs.Operator, in *Receiver, out *Emitter) *Node {
 	return &Node{
+		ctx:      ctx,
+		operator: operator,
 		in:       in,
 		out:      out,
-		operator: operator,
-		ctx:      ctx,
 	}
 }
 

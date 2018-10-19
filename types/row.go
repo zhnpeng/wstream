@@ -25,26 +25,17 @@ func (r Row) Type() ItemType {
 func (r Row) AsMapRecord() (MapRecord, error) {
 	mr := MapRecord{}
 	_, err := mr.UnmarshalMsg(r.item)
-	if err != nil {
-		return mr, err
-	}
-	return mr, nil
+	return mr, err
 }
 
 func (r Row) AsTupleRecord() (TupleRecord, error) {
 	tr := TupleRecord{}
 	_, err := tr.UnmarshalMsg(r.item)
-	if err != nil {
-		return tr, err
-	}
-	return tr, nil
+	return tr, err
 }
 
 func (r Row) AsWatermark() (Watermark, error) {
 	wm := Watermark{}
 	_, err := wm.UnmarshalMsg(r.item)
-	if err != nil {
-		return wm, err
-	}
-	return wm, nil
+	return wm, err
 }

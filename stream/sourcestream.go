@@ -8,8 +8,7 @@ import (
 // SourceStream accept channels as inputs
 type SourceStream struct {
 	DataStream
-	parallel int
-	Inputs   []chan types.Item
+	Inputs []chan types.Item
 }
 
 func NewSourceStream(name string) *SourceStream {

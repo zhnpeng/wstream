@@ -21,8 +21,7 @@ func NewWindowEmitter(t time.Time, emitter Emitter) *WindowEmitter {
 	}
 }
 
-func (e *WindowEmitter) Emit(item types.Item) error {
+func (e *WindowEmitter) Emit(item types.Item) {
 	item.SetTime(e.t)
 	e.emitter.Emit(item)
-	return nil
 }

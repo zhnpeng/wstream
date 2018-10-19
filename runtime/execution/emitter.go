@@ -23,11 +23,10 @@ func (e *Emitter) Add(ch OutEdge) {
 }
 
 // Emit emit item to all output channels
-func (e *Emitter) Emit(item types.Item) error {
+func (e *Emitter) Emit(item types.Item) {
 	for _, channel := range e.outEdges {
 		channel <- item
 	}
-	return nil
 }
 
 // EmitTo emit item to one output channel

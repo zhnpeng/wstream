@@ -16,7 +16,6 @@ type Receiver struct {
 	inEdges        []InEdge
 	watermarkChans []WatermarkChan
 	output         Edge
-	watermark      types.Watermark
 	running        bool
 }
 

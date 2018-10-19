@@ -33,9 +33,8 @@ func (e *windowtestEmitter) Length() int {
 	return 1
 }
 
-func (e *windowtestEmitter) Emit(item types.Item) error {
+func (e *windowtestEmitter) Emit(item types.Item) {
 	e.ch <- item
-	return nil
 }
 
 func (e *windowtestEmitter) EmitTo(index int, item types.Item) error {

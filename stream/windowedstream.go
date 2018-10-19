@@ -1,7 +1,6 @@
 package stream
 
 import (
-	"github.com/wandouz/wstream/functions"
 	"github.com/wandouz/wstream/intfs"
 	"github.com/wandouz/wstream/runtime/operator"
 	"github.com/wandouz/wstream/runtime/operator/windowing/assigners"
@@ -16,9 +15,7 @@ type WindowedStream struct {
 	trigger  triggers.Trigger
 	evictor  evictors.Evictor
 
-	applyFunc  functions.ApplyFunc
-	reduceFunc functions.ReduceFunc
-	operator   intfs.Operator
+	operator intfs.Operator
 
 	graph      *StreamGraph
 	streamNode *StreamNode

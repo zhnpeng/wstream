@@ -19,8 +19,5 @@ func EncodeRow(row Row) ([]byte, error) {
 func DecodeRow(encodedBytes []byte) (Row, error) {
 	row := Row{}
 	_, err := row.UnmarshalMsg(encodedBytes)
-	if err != nil {
-		return row, err
-	}
-	return row, nil
+	return row, err
 }

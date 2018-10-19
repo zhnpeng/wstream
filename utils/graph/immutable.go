@@ -60,18 +60,18 @@ func build(g Iterator, transpose bool) *Immutable {
 			return
 		})
 		sort.Slice(h.outEdges[v], func(i, j int) bool {
-			if e := h.outEdges[v]; e[i].vertex == e[j].vertex {
+			e := h.outEdges[v]
+			if e[i].vertex == e[j].vertex {
 				return e[i].cost < e[j].cost
-			} else {
-				return e[i].vertex < e[j].vertex
 			}
+			return e[i].vertex < e[j].vertex
 		})
 		sort.Slice(h.inEdges[v], func(i, j int) bool {
-			if e := h.inEdges[v]; e[i].vertex == e[j].vertex {
+			e := h.inEdges[v]
+			if e[i].vertex == e[j].vertex {
 				return e[i].cost < e[j].cost
-			} else {
-				return e[i].vertex < e[j].vertex
 			}
+			return e[i].vertex < e[j].vertex
 		})
 	}
 	// stats outEdges only cause inEdges are redundance
