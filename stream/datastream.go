@@ -5,24 +5,22 @@ import (
 )
 
 type DataStream struct {
-	name     string
 	parallel int
 	operator intfs.Operator
 
-	// graph reference
+	// flow reference
 	streamNode *StreamNode
-	graph      *StreamGraph
+	flow       *Flow
 }
 
 /*
 DataStream API
 */
 
-func NewDataStream(name string, graph *StreamGraph, parallel int) *DataStream {
+func NewDataStream(flow *Flow, parallel int) *DataStream {
 	return &DataStream{
-		name:     name,
 		parallel: parallel,
-		graph:    graph,
+		flow:     flow,
 	}
 }
 
@@ -34,10 +32,9 @@ func (s *DataStream) Parallelism() int {
 	return s.parallel
 }
 
-func (s *DataStream) clone(name string) *DataStream {
+func (s *DataStream) clone() *DataStream {
 	return &DataStream{
-		name:     name,
-		graph:    s.graph,
+		flow:     s.flow,
 		parallel: s.parallel,
 	}
 }
@@ -55,6 +52,10 @@ func (s *DataStream) GetStreamNode() (node *StreamNode) {
 	return s.streamNode
 }
 
+func (s *DataStream) toKeyedStream(keys ...interface{}) *KeyedStream {
+	return NewKeyedStream(s.flow, s.parallel, keys)
+}
+
 func (s *DataStream) connect(stream Stream) {
-	s.graph.AddStreamEdge(s, stream)
+	s.flow.AddStreamEdge(s, stream)
 }

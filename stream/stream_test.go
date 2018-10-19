@@ -24,11 +24,11 @@ func (trf *reduceFuncForStreamTest) Reduce(a, b types.Record) types.Record {
 	return b
 }
 
-func Test_All_Stream_Graph(t *testing.T) {
+func Test_All_Stream_Flow(t *testing.T) {
 
 	input1 := make(chan types.Item)
 	input2 := make(chan types.Item)
-	source := NewSourceStream("channels")
+	flow, source := New("test")
 	source.Channels(input1, input2).
 		SetPartition(4).
 		Map(&mapFuncForStreamTest{}).
@@ -36,11 +36,10 @@ func Test_All_Stream_Graph(t *testing.T) {
 		KeyBy("dimA", "dimB").
 		TimeWindow(60)
 	expected := 5
-	graph := source.graph
-	if graph.Length() != expected {
-		t.Errorf("graph length wrong got: %v, want: %v", graph.Length(), expected)
+	if flow.Length() != expected {
+		t.Errorf("flow length wrong got: %v, want: %v", flow.Length(), expected)
 	}
-	if _, ok := graph.GetStream(0).(*SourceStream); !ok {
-		t.Errorf("got unexpected stram type %+v", graph.GetStream(0))
+	if _, ok := flow.GetStream(0).(*SourceStream); !ok {
+		t.Errorf("got unexpected stram type %+v", flow.GetStream(0))
 	}
 }

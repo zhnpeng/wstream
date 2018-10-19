@@ -11,16 +11,14 @@ type SourceStream struct {
 	Inputs []chan types.Item
 }
 
-func NewSourceStream(name string) *SourceStream {
-	graph := NewStreamGraph()
+func NewSourceStream(flow *Flow) *SourceStream {
 	stm := &SourceStream{
 		DataStream: DataStream{
-			name:     name,
-			graph:    graph,
+			flow:     flow,
 			operator: operator.NewRescaleRoundRobin(),
 		},
 	}
-	graph.AddStream(stm)
+	flow.AddStream(stm)
 	return stm
 }
 

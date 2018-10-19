@@ -12,8 +12,7 @@ func (s *DataStream) TimestampWithPeriodicWatermark(
 	function functions.TimestampWithPeriodicWatermark,
 	period time.Duration,
 ) *DataStream {
-	name := "assignTimestampWithPeriodicWatermark"
-	stream := s.clone(name)
+	stream := s.clone()
 	stream.operator = operator.NewAssignTimestampWithPeriodicWatermark(function, period)
 	s.connect(stream)
 	return stream
@@ -22,8 +21,7 @@ func (s *DataStream) TimestampWithPeriodicWatermark(
 func (s *DataStream) TimestampWithPuncatuatedWatermark(
 	function functions.TimestampWithPunctuatedWatermar,
 ) *DataStream {
-	name := "assignTimestampWithPuncatuatedWatermark"
-	stream := s.clone(name)
+	stream := s.clone()
 	stream.operator = operator.NewAssignTimestampWithPunctuatedWatermark(function)
 	s.connect(stream)
 	return stream

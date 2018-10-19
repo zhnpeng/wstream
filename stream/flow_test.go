@@ -29,14 +29,13 @@ func (trf *reduceFuncForGraphTest) Reduce(a, b types.Record) types.Record {
 func TestStreamGraph_Run(t *testing.T) {
 	input1 := make(chan types.Item)
 	input2 := make(chan types.Item)
-	source := NewSourceStream("source")
-	gph := source.graph
+	flow, source := New("test")
 	source.Channels(input1, input2).SetPartition(4).
 		Map(&mapFuncForGraphTest{}).
 		KeyBy("A", "B").
 		Reduce(&reduceFuncForGraphTest{time.Now()}).
 		Map(&mapFuncForGraphTest{})
-	gph.Transform()
+	flow.Transform()
 	// debug
 	// gph.BFSBoth(0, func(v, w int, c int64) {
 	// 	fmt.Println(reflect.TypeOf(gph.GetStream(w)))
@@ -46,7 +45,7 @@ func TestStreamGraph_Run(t *testing.T) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		gph.Run()
+		flow.Run()
 	}()
 	wg.Add(1)
 	go func() {

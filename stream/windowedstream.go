@@ -9,20 +9,18 @@ import (
 )
 
 type WindowedStream struct {
-	name       string
 	parallel   int
 	assigner   assigners.WindowAssinger
 	trigger    triggers.Trigger
 	evictor    evictors.Evictor
 	operator   intfs.Operator
-	graph      *StreamGraph
+	flow       *Flow
 	streamNode *StreamNode
 }
 
-func NewWindowedStream(name string, graph *StreamGraph, parallel int) *WindowedStream {
+func NewWindowedStream(flow *Flow, parallel int) *WindowedStream {
 	return &WindowedStream{
-		name:     name,
-		graph:    graph,
+		flow:     flow,
 		parallel: parallel,
 	}
 }
@@ -57,15 +55,11 @@ func (s *WindowedStream) GetStreamNode() (node *StreamNode) {
 	return s.streamNode
 }
 
-func (s *WindowedStream) toDataStream(name string) *DataStream {
-	return NewDataStream(
-		name,
-		s.graph,
-		s.parallel,
-	)
+func (s *WindowedStream) toDataStream() *DataStream {
+	return NewDataStream(s.flow, s.parallel)
 }
 
 // left merge new stream to windowed stream and then return new stream
 func (s *WindowedStream) leftMerge(stream Stream) {
-	s.graph.LeftMergeStream(s, stream)
+	s.flow.LeftMergeStream(s, stream)
 }

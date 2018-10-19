@@ -6,8 +6,7 @@ import (
 )
 
 func (s *KeyedStream) Reduce(reduceFunc functions.ReduceFunc) *DataStream {
-	name := "reduce"
-	stream := s.toDataStream(name)
+	stream := s.toDataStream()
 	stream.operator = operator.NewReduce(reduceFunc)
 	s.connect(stream)
 	return stream

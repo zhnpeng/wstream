@@ -9,17 +9,17 @@ import (
 )
 
 // Transform stream to executable
-func (g *StreamGraph) Transform() {
-	graph.BFSAll(g.graph, 0, func(v, w int, c int64) {
-		fromNode := g.GetStreamNode(v)
-		toNode := g.GetStreamNode(w)
+func (f *Flow) Transform() {
+	graph.BFSAll(f.graph, 0, func(v, w int, c int64) {
+		fromNode := f.GetStreamNode(v)
+		toNode := f.GetStreamNode(w)
 		if fromNode.Task == nil {
 			//Create executable
-			fromNode.Task = g.StreamToTask(fromNode.stream)
+			fromNode.Task = f.StreamToTask(fromNode.stream)
 		}
 		if toNode.Task == nil {
 			//Create executable
-			toNode.Task = g.StreamToTask(toNode.stream)
+			toNode.Task = f.StreamToTask(toNode.stream)
 		}
 		if len(toNode.Task.RescaleNodes) == 0 {
 			// is a broadcast node
@@ -40,23 +40,23 @@ func (g *StreamGraph) Transform() {
 	})
 }
 
-func (g *StreamGraph) StreamToTask(stm Stream) *execution.Task {
+func (f *Flow) StreamToTask(stm Stream) *execution.Task {
 	switch stm.(type) {
 	case *KeyedStream:
-		return g.KeyedStreamToTask(stm.(*KeyedStream))
+		return f.KeyedStreamToTask(stm.(*KeyedStream))
 	case *DataStream:
-		return g.DataStreamToTask(stm.(*DataStream))
+		return f.DataStreamToTask(stm.(*DataStream))
 	case *WindowedStream:
-		return g.WindowedStreamToTask(stm.(*WindowedStream))
+		return f.WindowedStreamToTask(stm.(*WindowedStream))
 	case *SourceStream:
-		return g.SourceStreamToTask(stm.(*SourceStream))
+		return f.SourceStreamToTask(stm.(*SourceStream))
 	default:
 		logrus.Errorf("got unexpected stream: %+v", stm)
 	}
 	return nil
 }
 
-func (g *StreamGraph) KeyedStreamToTask(stm *KeyedStream) (task *execution.Task) {
+func (f *Flow) KeyedStreamToTask(stm *KeyedStream) (task *execution.Task) {
 	rescaleNode := execution.NewNode(
 		context.Background(),
 		stm.Operator(),
@@ -83,7 +83,7 @@ func (g *StreamGraph) KeyedStreamToTask(stm *KeyedStream) (task *execution.Task)
 	return
 }
 
-func (g *StreamGraph) DataStreamToTask(stm *DataStream) (task *execution.Task) {
+func (f *Flow) DataStreamToTask(stm *DataStream) (task *execution.Task) {
 	broadcastNodes := make([]*execution.Node, 0, stm.Parallelism())
 	for i := 0; i < stm.Parallelism(); i++ {
 		node := execution.NewNode(
@@ -100,7 +100,7 @@ func (g *StreamGraph) DataStreamToTask(stm *DataStream) (task *execution.Task) {
 	return
 }
 
-func (g *StreamGraph) WindowedStreamToTask(stm *WindowedStream) (task *execution.Task) {
+func (f *Flow) WindowedStreamToTask(stm *WindowedStream) (task *execution.Task) {
 	broadcastNodes := make([]*execution.Node, 0, stm.Parallelism())
 	for i := 0; i < stm.Parallelism(); i++ {
 		node := execution.NewNode(
@@ -117,7 +117,7 @@ func (g *StreamGraph) WindowedStreamToTask(stm *WindowedStream) (task *execution
 	return
 }
 
-func (g *StreamGraph) SourceStreamToTask(stm *SourceStream) (task *execution.Task) {
+func (f *Flow) SourceStreamToTask(stm *SourceStream) (task *execution.Task) {
 	rescaleNode := execution.NewNode(
 		context.Background(),
 		stm.Operator(),

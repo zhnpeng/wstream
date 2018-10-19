@@ -6,8 +6,7 @@ import (
 )
 
 func (s *DataStream) Output(outputFunc functions.OutputFunc) *DataStream {
-	name := "output"
-	stream := s.clone(name)
+	stream := s.clone()
 	stream.operator = operator.NewOutput(outputFunc)
 	s.connect(stream)
 	return stream

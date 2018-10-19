@@ -269,6 +269,7 @@ func (c *WindowTriggerContext) GetCurrentEventTime() time.Time {
 	return c.ets.CurrentWatermarkTime()
 }
 
+// WindowAssignerContext is context passing to window assigner
 type WindowAssignerContext struct {
 	processingTimerService *ProcessingTimerService
 }

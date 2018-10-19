@@ -12,8 +12,7 @@ import (
 
 // Window allow user custom Window behavior
 func (s *KeyedStream) Window(assigner assigners.WindowAssinger) *WindowedStream {
-	name := "window"
-	stream := s.toWindowedStream(name)
+	stream := s.toWindowedStream()
 	stream.assigner = assigner
 	stream.operator = operator.NewWindow(assigner, nil)
 	s.connect(stream)

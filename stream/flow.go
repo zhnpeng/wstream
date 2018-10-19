@@ -3,21 +3,31 @@ package stream
 import (
 	"sync"
 
+	"github.com/wandouz/wstream/intfs"
 	"github.com/wandouz/wstream/runtime/execution"
 	"github.com/wandouz/wstream/utils/graph"
 )
 
+type Stream interface {
+	Parallelism() int
+	Operator() intfs.Operator
+	SetStreamNode(node *StreamNode)
+	GetStreamNode() (node *StreamNode)
+}
+
 /*
-StreamGraph is a DAG graph organized with streams
+Flow is a DAG graph organized with streams
 */
-type StreamGraph struct {
+type Flow struct {
+	name     string
 	vertices map[int]*StreamNode
 	graph    *graph.Mutable
 }
 
-// New a StreamGraph
-func NewStreamGraph() *StreamGraph {
-	return &StreamGraph{
+// New a Flow
+func NewFlow(name string) *Flow {
+	return &Flow{
+		name:     name,
 		vertices: make(map[int]*StreamNode),
 		graph:    graph.New(0),
 	}
@@ -38,7 +48,7 @@ func newStreamNode(id int, stm Stream) *StreamNode {
 	}
 }
 
-func (g *StreamGraph) GetStream(id int) (stm Stream) {
+func (g *Flow) GetStream(id int) (stm Stream) {
 	if StreamNode, ok := g.vertices[id]; ok {
 		stm = StreamNode.stream
 	}
@@ -46,12 +56,12 @@ func (g *StreamGraph) GetStream(id int) (stm Stream) {
 }
 
 // Length return numbers of vertices of graph
-func (g *StreamGraph) Length() int {
+func (g *Flow) Length() int {
 	return len(g.vertices)
 }
 
 // AddStream add a stream vertex to graph
-func (g *StreamGraph) AddStream(stm Stream) {
+func (g *Flow) AddStream(stm Stream) {
 	id := g.graph.AddVertex()
 	StreamNode := newStreamNode(id, stm)
 	stm.SetStreamNode(StreamNode)
@@ -59,7 +69,7 @@ func (g *StreamGraph) AddStream(stm Stream) {
 }
 
 // AddStreamEdge add directed edge between two stream
-func (g *StreamGraph) AddStreamEdge(from, to Stream) error {
+func (g *Flow) AddStreamEdge(from, to Stream) error {
 	if !g.existsStream(from) {
 		g.AddStream(from)
 	}
@@ -74,14 +84,14 @@ func (g *StreamGraph) AddStreamEdge(from, to Stream) error {
 // LeftMergeStream join right strem to the left
 // right stream will not add to graph
 // any StreamNode connect to right stream will collect to the left
-func (g *StreamGraph) LeftMergeStream(left, right Stream) {
+func (g *Flow) LeftMergeStream(left, right Stream) {
 	if !g.existsStream(left) {
 		g.AddStream(left)
 	}
 	right.SetStreamNode(left.GetStreamNode())
 }
 
-func (g *StreamGraph) existsStream(stm Stream) bool {
+func (g *Flow) existsStream(stm Stream) bool {
 	StreamNode := stm.GetStreamNode()
 	if StreamNode == nil {
 		return false
@@ -92,15 +102,15 @@ func (g *StreamGraph) existsStream(stm Stream) bool {
 	return false
 }
 
-func (g *StreamGraph) GetStreamNode(id int) (StreamNode *StreamNode) {
+func (g *Flow) GetStreamNode(id int) (StreamNode *StreamNode) {
 	return g.vertices[id]
 }
 
-func (g *StreamGraph) BFSBoth(v int, do func(v, w int, c int64)) {
+func (g *Flow) BFSBoth(v int, do func(v, w int, c int64)) {
 	graph.BFSAll(g.graph, v, do)
 }
 
-func (g *StreamGraph) Run() {
+func (g *Flow) Run() {
 	var wg sync.WaitGroup
 	start := g.GetStreamNode(0)
 	wg.Add(1)

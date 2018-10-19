@@ -6,8 +6,7 @@ import (
 )
 
 func (s *DataStream) Reduce(reduceFunc functions.ReduceFunc) *DataStream {
-	name := "reduce"
-	stream := s.clone(name)
+	stream := s.clone()
 	stream.operator = operator.NewReduce(reduceFunc)
 	s.connect(stream)
 	return stream

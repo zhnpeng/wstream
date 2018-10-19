@@ -5,8 +5,7 @@ import (
 )
 
 func (s *WindowedStream) Reduce(reduceFunc functions.ReduceFunc) *DataStream {
-	name := "reduce"
-	stream := s.toDataStream(name)
+	stream := s.toDataStream()
 	operator := s.Operator().(WindowOperator)
 	operator.SetReduceFunc(reduceFunc)
 	s.leftMerge(stream)

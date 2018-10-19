@@ -6,8 +6,7 @@ import (
 )
 
 func (s *DataStream) Map(mapFunc functions.MapFunc) *DataStream {
-	name := "map"
-	stream := s.clone(name)
+	stream := s.clone()
 	stream.operator = operator.NewMap(mapFunc)
 	s.connect(stream)
 	return stream

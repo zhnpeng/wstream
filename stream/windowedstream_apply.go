@@ -11,8 +11,7 @@ type WindowOperator interface {
 }
 
 func (s *WindowedStream) Apply(applyFunc functions.ApplyFunc) *DataStream {
-	name := "reduce"
-	stream := s.toDataStream(name)
+	stream := s.toDataStream()
 	operator := s.operator.(WindowOperator)
 	operator.SetApplyFunc(applyFunc)
 	s.leftMerge(stream)

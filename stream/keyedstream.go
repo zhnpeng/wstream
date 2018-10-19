@@ -6,17 +6,15 @@ import (
 )
 
 type KeyedStream struct {
-	name     string
 	parallel int
 	operator intfs.Operator
 
-	graph      *StreamGraph
+	graph      *Flow
 	streamNode *StreamNode
 }
 
-func NewKeyedStream(name string, graph *StreamGraph, parallel int, keys []interface{}) *KeyedStream {
+func NewKeyedStream(graph *Flow, parallel int, keys []interface{}) *KeyedStream {
 	return &KeyedStream{
-		name:     name,
 		graph:    graph,
 		parallel: parallel,
 		operator: operator.NewKeyBy(keys),
@@ -44,20 +42,12 @@ func (s *KeyedStream) GetStreamNode() (node *StreamNode) {
 	return s.streamNode
 }
 
-func (s *KeyedStream) toDataStream(name string) *DataStream {
-	return NewDataStream(
-		name,
-		s.graph,
-		s.parallel,
-	)
+func (s *KeyedStream) toDataStream() *DataStream {
+	return NewDataStream(s.graph, s.parallel)
 }
 
-func (s *KeyedStream) toWindowedStream(name string) *WindowedStream {
-	return NewWindowedStream(
-		name,
-		s.graph,
-		s.parallel,
-	)
+func (s *KeyedStream) toWindowedStream() *WindowedStream {
+	return NewWindowedStream(s.graph, s.parallel)
 }
 
 func (s *KeyedStream) connect(stream Stream) {
