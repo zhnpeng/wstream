@@ -1,0 +1,22 @@
+{
+    "Disable": [
+        "gas",
+        "ineffassign",
+        "gotype",
+        "interfacer"
+    ],
+    "Exclude": [
+        "_test.go",
+        "_string.go",
+        "configparser",
+        "comment",
+        "type name will be used as",
+        "struct .* could have size",
+        "(struct|type|method) .* should be",
+        "func name will be used as",
+        "cyclomatic complexity",
+        "other occurrence",
+        "debug.* is unused"
+    ],
+    "Deadline": "60s"
+}
