@@ -7,13 +7,14 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/wandouz/wstream/functions"
+	"github.com/wandouz/wstream/intfs"
 	"github.com/wandouz/wstream/runtime/operator/windowing"
 	"github.com/wandouz/wstream/runtime/operator/windowing/assigners"
 	"github.com/wandouz/wstream/runtime/operator/windowing/evictors"
 	"github.com/wandouz/wstream/runtime/operator/windowing/triggers"
 	"github.com/wandouz/wstream/runtime/operator/windowing/windows"
-	"github.com/wandouz/wstream/runtime/utils"
 	"github.com/wandouz/wstream/types"
+	"github.com/wandouz/wstream/utils"
 )
 
 // EvictWindow is evictable window operator
@@ -40,7 +41,7 @@ type EvictWindow struct {
 
 // NewEvictWindow return evictable window object
 // evictor is necessary
-func NewEvictWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger, evictor evictors.Evictor) utils.Operator {
+func NewEvictWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger, evictor evictors.Evictor) intfs.Operator {
 	if assigner == nil {
 		assigner = assigners.NewGlobalWindow()
 	}
@@ -67,7 +68,7 @@ func NewEvictWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger,
 }
 
 // New is a factory method to new an EvictWindow operator object
-func (w *EvictWindow) New() utils.Operator {
+func (w *EvictWindow) New() intfs.Operator {
 	return NewEvictWindow(w.assigner, w.trigger, w.evictor)
 }
 

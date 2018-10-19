@@ -1,4 +1,4 @@
-package utils
+package intfs
 
 import "github.com/wandouz/wstream/types"
 

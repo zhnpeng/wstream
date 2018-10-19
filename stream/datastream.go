@@ -1,13 +1,11 @@
 package stream
 
-import (
-	"github.com/wandouz/wstream/runtime/utils"
-)
+import "github.com/wandouz/wstream/intfs"
 
 type DataStream struct {
 	name     string
 	parallel int
-	operator utils.Operator
+	operator intfs.Operator
 
 	// graph reference
 	streamNode *StreamNode
@@ -26,7 +24,7 @@ func NewDataStream(name string, graph *StreamGraph, parallel int) *DataStream {
 	}
 }
 
-func (s *DataStream) Operator() utils.Operator {
+func (s *DataStream) Operator() intfs.Operator {
 	return s.operator.New()
 }
 

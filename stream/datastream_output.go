@@ -1,6 +1,9 @@
 package stream
 
-import "github.com/wandouz/wstream/runtime/operator"
+import (
+	"github.com/wandouz/wstream/functions"
+	"github.com/wandouz/wstream/runtime/operator"
+)
 
 func (s *DataStream) Output(outputFunc functions.OutputFunc) *DataStream {
 	name := "output"
@@ -8,6 +11,6 @@ func (s *DataStream) Output(outputFunc functions.OutputFunc) *DataStream {
 	newStream := s.Copy(name)
 	graph.AddStreamEdge(s, newStream)
 
-	newStream.operator = operator.NewMap(outputFunc)
+	newStream.operator = operator.NewOutput(outputFunc)
 	return newStream
 }

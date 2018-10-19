@@ -5,8 +5,9 @@ import (
 	"encoding/gob"
 
 	"github.com/wandouz/wstream/functions"
-	"github.com/wandouz/wstream/runtime/utils"
+	"github.com/wandouz/wstream/intfs"
 	"github.com/wandouz/wstream/types"
+	"github.com/wandouz/wstream/utils"
 )
 
 // Reduce is a rolling reduce in datastream and keyedstream
@@ -22,7 +23,7 @@ func NewReduce(function functions.ReduceFunc) *Reduce {
 	}
 }
 
-func (m *Reduce) New() utils.Operator {
+func (m *Reduce) New() intfs.Operator {
 	encodedBytes := encodeFunction(m.function)
 	reader := bytes.NewReader(encodedBytes)
 	decoder := gob.NewDecoder(reader)

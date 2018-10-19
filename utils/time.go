@@ -1,8 +1,9 @@
-package helpers
+package utils
 
 import "time"
 
-func TimeParse(value string) time.Time {
+// ParseTime parse time in string format "2006-01-02 15:04:05"
+func ParseTime(value string) time.Time {
 	tsLayout := "2006-01-02 15:04:05"
 	ts, err := time.ParseInLocation(tsLayout, value, time.Local)
 	if err != nil {
@@ -11,7 +12,8 @@ func TimeParse(value string) time.Time {
 	return ts
 }
 
-func MilliTimeParse(value string) time.Time {
+// ParseTimeMilli parse time in string format "2006-01-02 15:04:05.000"
+func ParseTimeMilli(value string) time.Time {
 	tsLayout := "2006-01-02 15:04:05.000"
 	ts, err := time.ParseInLocation(tsLayout, value, time.Local)
 	if err != nil {

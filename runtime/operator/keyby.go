@@ -1,8 +1,9 @@
 package operator
 
 import (
-	"github.com/wandouz/wstream/runtime/utils"
+	"github.com/wandouz/wstream/intfs"
 	"github.com/wandouz/wstream/types"
+	"github.com/wandouz/wstream/utils"
 )
 
 // KeyBy is a rescaling node
@@ -13,7 +14,7 @@ type KeyBy struct {
 func NewKeyBy(keys []interface{}) *KeyBy {
 	return &KeyBy{keys}
 }
-func (m *KeyBy) New() utils.Operator {
+func (m *KeyBy) New() intfs.Operator {
 	return NewKeyBy(m.keys)
 }
 

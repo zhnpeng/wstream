@@ -1,14 +1,14 @@
 package stream
 
 import (
+	"github.com/wandouz/wstream/intfs"
 	"github.com/wandouz/wstream/runtime/operator"
-	"github.com/wandouz/wstream/runtime/utils"
 )
 
 type KeyedStream struct {
 	name     string
 	parallel int
-	operator utils.Operator
+	operator intfs.Operator
 
 	graph      *StreamGraph
 	streamNode *StreamNode
@@ -23,7 +23,7 @@ func NewKeyedStream(name string, graph *StreamGraph, parallel int, keys []interf
 	}
 }
 
-func (s *KeyedStream) Operator() utils.Operator {
+func (s *KeyedStream) Operator() intfs.Operator {
 	return s.operator.New()
 }
 

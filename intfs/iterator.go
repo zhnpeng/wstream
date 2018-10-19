@@ -1,4 +1,4 @@
-package utils
+package intfs
 
 type Iterator interface {
 	Next() Iterator

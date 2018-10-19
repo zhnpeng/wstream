@@ -5,9 +5,8 @@ import (
 	"encoding/gob"
 	"time"
 
-	"github.com/wandouz/wstream/runtime/utils"
-
 	"github.com/wandouz/wstream/functions"
+	"github.com/wandouz/wstream/intfs"
 	"github.com/wandouz/wstream/types"
 )
 
@@ -24,7 +23,7 @@ func NewAssignTimestampWithPunctuatedWatermark(function functions.TimestampWithP
 	}
 }
 
-func (f *AssignTimestampWithPunctuatedWatermark) New() utils.Operator {
+func (f *AssignTimestampWithPunctuatedWatermark) New() intfs.Operator {
 	encodedBytes := encodeFunction(f.function)
 	reader := bytes.NewReader(encodedBytes)
 	decoder := gob.NewDecoder(reader)

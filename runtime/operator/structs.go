@@ -1,7 +1,9 @@
 package operator
 
-import "github.com/wandouz/wstream/runtime/utils"
+import (
+	"github.com/wandouz/wstream/intfs"
+)
 
-type Receiver = utils.Receiver
-type Emitter = utils.Emitter
-type Iterator = utils.Iterator
+type Receiver = intfs.Receiver
+type Emitter = intfs.Emitter
+type Iterator = intfs.Iterator

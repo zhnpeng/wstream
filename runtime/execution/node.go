@@ -4,7 +4,7 @@ import (
 	"context"
 	"sync"
 
-	"github.com/wandouz/wstream/runtime/utils"
+	"github.com/wandouz/wstream/intfs"
 	"github.com/wandouz/wstream/types"
 )
 
@@ -15,7 +15,7 @@ import (
 // }
 
 type Node struct {
-	operator utils.Operator
+	operator intfs.Operator
 
 	in  *Receiver
 	out *Emitter
@@ -24,7 +24,7 @@ type Node struct {
 	ctx       context.Context
 }
 
-func NewNode(in *Receiver, out *Emitter, operator utils.Operator, ctx context.Context) *Node {
+func NewNode(in *Receiver, out *Emitter, operator intfs.Operator, ctx context.Context) *Node {
 	return &Node{
 		in:       in,
 		out:      out,

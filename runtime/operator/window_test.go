@@ -11,10 +11,10 @@ import (
 
 	"github.com/spf13/cast"
 	"github.com/wandouz/wstream/env"
-	"github.com/wandouz/wstream/helpers"
 	"github.com/wandouz/wstream/runtime/operator/windowing/assigners"
 	"github.com/wandouz/wstream/runtime/operator/windowing/triggers"
 	"github.com/wandouz/wstream/types"
+	"github.com/wandouz/wstream/utils"
 )
 
 type windowTestReceiver struct {
@@ -56,48 +56,48 @@ func (f *windowTestReduceFunc) Reduce(x types.Record, y types.Record) types.Reco
 func TestWindow_Run_Tumbling_EventTime_Window(t *testing.T) {
 	items := []types.Item{
 		types.NewWatermark(
-			helpers.TimeParse("2018-10-15 18:00:00"),
+			utils.ParseTime("2018-10-15 18:00:00"),
 		),
 		types.NewMapRecord(
-			helpers.TimeParse("2018-10-15 18:00:00"),
+			utils.ParseTime("2018-10-15 18:00:00"),
 			map[string]interface{}{
 				"A": 1,
 				"B": 1,
 			},
 		),
 		types.NewMapRecord(
-			helpers.TimeParse("2018-10-15 18:00:01"),
+			utils.ParseTime("2018-10-15 18:00:01"),
 			map[string]interface{}{
 				"A": 2,
 				"B": 2,
 			},
 		),
 		types.NewMapRecord(
-			helpers.MilliTimeParse("2018-10-15 18:00:59.999"),
+			utils.ParseTimeMilli("2018-10-15 18:00:59.999"),
 			map[string]interface{}{
 				"A": 3,
 				"B": 3,
 			},
 		),
 		types.NewWatermark(
-			helpers.TimeParse("2018-10-15 18:01:00"),
+			utils.ParseTime("2018-10-15 18:01:00"),
 		),
 		types.NewMapRecord(
-			helpers.TimeParse("2018-10-15 18:01:00"),
+			utils.ParseTime("2018-10-15 18:01:00"),
 			map[string]interface{}{
 				"A": 4,
 				"B": 4,
 			},
 		),
 		types.NewMapRecord(
-			helpers.MilliTimeParse("2018-10-15 18:01:59.999"),
+			utils.ParseTimeMilli("2018-10-15 18:01:59.999"),
 			map[string]interface{}{
 				"A": 5,
 				"B": 5,
 			},
 		),
 		types.NewWatermark(
-			helpers.TimeParse("2018-10-15 18:02:00"),
+			utils.ParseTime("2018-10-15 18:02:00"),
 		),
 	}
 	input := make(chan types.Item)
@@ -146,20 +146,20 @@ func TestWindow_Run_Tumbling_EventTime_Window(t *testing.T) {
 
 	want := []types.Item{
 		types.NewWatermark(
-			helpers.TimeParse("2018-10-15 18:00:00"),
+			utils.ParseTime("2018-10-15 18:00:00"),
 		),
 		types.NewMapRecord(
-			helpers.TimeParse("2018-10-15 18:00:00"),
+			utils.ParseTime("2018-10-15 18:00:00"),
 			map[string]interface{}{
 				"A": 3,
 				"B": 6,
 			},
 		),
 		types.NewWatermark(
-			helpers.TimeParse("2018-10-15 18:01:00"),
+			utils.ParseTime("2018-10-15 18:01:00"),
 		),
 		types.NewMapRecord(
-			helpers.TimeParse("2018-10-15 18:01:00"),
+			utils.ParseTime("2018-10-15 18:01:00"),
 			map[string]interface{}{
 				"A": 5,
 				"B": 9,
@@ -175,38 +175,38 @@ func TestWindow_Run_Tumbling_EventTime_Window(t *testing.T) {
 func TestWindow_Run_Sliding_EventTime_Window(t *testing.T) {
 	items := []types.Item{
 		types.NewWatermark(
-			helpers.TimeParse("2018-10-15 18:00:00"),
+			utils.ParseTime("2018-10-15 18:00:00"),
 		),
 		types.NewMapRecord(
-			helpers.TimeParse("2018-10-15 18:00:00"),
+			utils.ParseTime("2018-10-15 18:00:00"),
 			map[string]interface{}{
 				"A": 1,
 				"B": 1,
 			},
 		),
 		types.NewMapRecord(
-			helpers.TimeParse("2018-10-15 18:00:01"),
+			utils.ParseTime("2018-10-15 18:00:01"),
 			map[string]interface{}{
 				"A": 2,
 				"B": 2,
 			},
 		),
 		types.NewMapRecord(
-			helpers.TimeParse("2018-10-15 18:00:02"),
+			utils.ParseTime("2018-10-15 18:00:02"),
 			map[string]interface{}{
 				"A": 3,
 				"B": 3,
 			},
 		),
 		types.NewMapRecord(
-			helpers.TimeParse("2018-10-15 18:00:03"),
+			utils.ParseTime("2018-10-15 18:00:03"),
 			map[string]interface{}{
 				"A": 4,
 				"B": 4,
 			},
 		),
 		types.NewWatermark(
-			helpers.TimeParse("2018-10-15 18:00:06"),
+			utils.ParseTime("2018-10-15 18:00:06"),
 		),
 	}
 	input := make(chan types.Item)
@@ -255,50 +255,50 @@ func TestWindow_Run_Sliding_EventTime_Window(t *testing.T) {
 
 	want := []types.Item{
 		types.NewWatermark(
-			helpers.TimeParse("2018-10-15 17:59:59"),
+			utils.ParseTime("2018-10-15 17:59:59"),
 		),
 		types.NewMapRecord(
-			helpers.TimeParse("2018-10-15 17:59:59"),
+			utils.ParseTime("2018-10-15 17:59:59"),
 			map[string]interface{}{
 				"A": 1,
 				"B": 1,
 			},
 		),
 		types.NewWatermark(
-			helpers.TimeParse("2018-10-15 18:00:00"),
+			utils.ParseTime("2018-10-15 18:00:00"),
 		),
 		types.NewMapRecord(
-			helpers.TimeParse("2018-10-15 18:00:00"),
+			utils.ParseTime("2018-10-15 18:00:00"),
 			map[string]interface{}{
 				"A": 2,
 				"B": 3,
 			},
 		),
 		types.NewWatermark(
-			helpers.TimeParse("2018-10-15 18:00:01"),
+			utils.ParseTime("2018-10-15 18:00:01"),
 		),
 		types.NewMapRecord(
-			helpers.TimeParse("2018-10-15 18:00:01"),
+			utils.ParseTime("2018-10-15 18:00:01"),
 			map[string]interface{}{
 				"A": 3,
 				"B": 5,
 			},
 		),
 		types.NewWatermark(
-			helpers.TimeParse("2018-10-15 18:00:02"),
+			utils.ParseTime("2018-10-15 18:00:02"),
 		),
 		types.NewMapRecord(
-			helpers.TimeParse("2018-10-15 18:00:02"),
+			utils.ParseTime("2018-10-15 18:00:02"),
 			map[string]interface{}{
 				"A": 4,
 				"B": 7,
 			},
 		),
 		types.NewWatermark(
-			helpers.TimeParse("2018-10-15 18:00:03"),
+			utils.ParseTime("2018-10-15 18:00:03"),
 		),
 		types.NewMapRecord(
-			helpers.TimeParse("2018-10-15 18:00:03"),
+			utils.ParseTime("2018-10-15 18:00:03"),
 			map[string]interface{}{
 				"A": 4,
 				"B": 4,

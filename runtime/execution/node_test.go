@@ -6,27 +6,27 @@ import (
 	"testing"
 	"time"
 
-	"github.com/wandouz/wstream/helpers"
-	"github.com/wandouz/wstream/runtime/utils"
+	"github.com/wandouz/wstream/intfs"
 	"github.com/wandouz/wstream/types"
+	"github.com/wandouz/wstream/utils"
 )
 
 type doNothingOperatorForTest struct {
 }
 
-func (o *doNothingOperatorForTest) New() utils.Operator {
+func (o *doNothingOperatorForTest) New() intfs.Operator {
 	return &doNothingOperatorForTest{}
 }
 
-func (o *doNothingOperatorForTest) handleRecord(record types.Record, out utils.Emitter) {
+func (o *doNothingOperatorForTest) handleRecord(record types.Record, out intfs.Emitter) {
 	out.Emit(record)
 }
 
-func (o *doNothingOperatorForTest) handleWatermark(watermark *types.Watermark, out utils.Emitter) {
+func (o *doNothingOperatorForTest) handleWatermark(watermark *types.Watermark, out intfs.Emitter) {
 	out.Emit(watermark)
 }
 
-func (o *doNothingOperatorForTest) Run(in utils.Receiver, out utils.Emitter) {
+func (o *doNothingOperatorForTest) Run(in intfs.Receiver, out intfs.Emitter) {
 	for {
 		item, ok := <-in.Next()
 		if !ok {
@@ -83,7 +83,7 @@ func TestNode_Run_Single_Source_Watermark_Only(t *testing.T) {
 	nodeB0.AddOutEdge(sinkB0.Out())
 	nodeB1.AddOutEdge(sinkB1.Out())
 
-	tm := helpers.TimeParse("2018-08-17 10:00:00")
+	tm := utils.ParseTime("2018-08-17 10:00:00")
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
@@ -208,7 +208,7 @@ func TestNode_Run_Multiple_Source_Watermark_Only(t *testing.T) {
 	nodeB0.AddOutEdge(sinkB0.Out())
 	nodeB1.AddOutEdge(sinkB1.Out())
 
-	tm := helpers.TimeParse("2018-08-17 10:00:00")
+	tm := utils.ParseTime("2018-08-17 10:00:00")
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {

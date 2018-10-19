@@ -5,7 +5,7 @@ import (
 	"encoding/gob"
 
 	"github.com/wandouz/wstream/functions"
-	"github.com/wandouz/wstream/runtime/utils"
+	"github.com/wandouz/wstream/intfs"
 	"github.com/wandouz/wstream/types"
 )
 
@@ -17,7 +17,7 @@ func NewOutput(function functions.OutputFunc) *Output {
 	return &Output{function}
 }
 
-func (m *Output) New() utils.Operator {
+func (m *Output) New() intfs.Operator {
 	encodedBytes := encodeFunction(m.function)
 	reader := bytes.NewReader(encodedBytes)
 	decoder := gob.NewDecoder(reader)

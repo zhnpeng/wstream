@@ -2,11 +2,11 @@ package stream
 
 import (
 	"github.com/wandouz/wstream/functions"
+	"github.com/wandouz/wstream/intfs"
 	"github.com/wandouz/wstream/runtime/operator"
 	"github.com/wandouz/wstream/runtime/operator/windowing/assigners"
 	"github.com/wandouz/wstream/runtime/operator/windowing/evictors"
 	"github.com/wandouz/wstream/runtime/operator/windowing/triggers"
-	"github.com/wandouz/wstream/runtime/utils"
 )
 
 type WindowedStream struct {
@@ -18,7 +18,7 @@ type WindowedStream struct {
 
 	applyFunc  functions.ApplyFunc
 	reduceFunc functions.ReduceFunc
-	operator   utils.Operator
+	operator   intfs.Operator
 
 	graph      *StreamGraph
 	streamNode *StreamNode
@@ -46,7 +46,7 @@ func (s *WindowedStream) Evict(evictor evictors.Evictor) *WindowedStream {
 	return s
 }
 
-func (s *WindowedStream) Operator() utils.Operator {
+func (s *WindowedStream) Operator() intfs.Operator {
 	return s.operator.New()
 }
 

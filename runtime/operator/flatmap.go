@@ -5,7 +5,7 @@ import (
 	"encoding/gob"
 
 	"github.com/wandouz/wstream/functions"
-	"github.com/wandouz/wstream/runtime/utils"
+	"github.com/wandouz/wstream/intfs"
 	"github.com/wandouz/wstream/types"
 )
 
@@ -16,7 +16,7 @@ type FlatMap struct {
 func NewFlatMap(function functions.FlatMapFunc) *FlatMap {
 	return &FlatMap{function}
 }
-func (m *FlatMap) New() utils.Operator {
+func (m *FlatMap) New() intfs.Operator {
 	encodedBytes := encodeFunction(m.function)
 	reader := bytes.NewReader(encodedBytes)
 	decoder := gob.NewDecoder(reader)

@@ -7,12 +7,13 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/wandouz/wstream/functions"
+	"github.com/wandouz/wstream/intfs"
 	"github.com/wandouz/wstream/runtime/operator/windowing"
 	"github.com/wandouz/wstream/runtime/operator/windowing/assigners"
 	"github.com/wandouz/wstream/runtime/operator/windowing/triggers"
 	"github.com/wandouz/wstream/runtime/operator/windowing/windows"
-	"github.com/wandouz/wstream/runtime/utils"
 	"github.com/wandouz/wstream/types"
+	"github.com/wandouz/wstream/utils"
 )
 
 type byPassApplyFunc struct{}
@@ -56,7 +57,7 @@ window will swallow all watermarks from upstream operator
 and regenerate new watermark to downstream according to window's fire time
 count window won't generate any watermark
 */
-func NewWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger) utils.Operator {
+func NewWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger) intfs.Operator {
 	if assigner == nil {
 		assigner = assigners.NewGlobalWindow()
 	}
@@ -79,7 +80,7 @@ func NewWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger) util
 }
 
 // New is a factory method to new an Window operator object
-func (w *Window) New() utils.Operator {
+func (w *Window) New() intfs.Operator {
 	return NewWindow(w.assigner, w.trigger)
 }
 

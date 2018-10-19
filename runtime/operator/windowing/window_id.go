@@ -2,7 +2,7 @@ package windowing
 
 import (
 	"github.com/wandouz/wstream/runtime/operator/windowing/windows"
-	"github.com/wandouz/wstream/runtime/utils"
+	"github.com/wandouz/wstream/utils"
 )
 
 type WindowID struct {

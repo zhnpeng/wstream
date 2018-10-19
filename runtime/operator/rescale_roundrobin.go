@@ -3,7 +3,7 @@ package operator
 import (
 	"sync/atomic"
 
-	"github.com/wandouz/wstream/runtime/utils"
+	"github.com/wandouz/wstream/intfs"
 	"github.com/wandouz/wstream/types"
 )
 
@@ -15,7 +15,7 @@ func NewRescaleRoundRobin() *RescaleRoundrobin {
 	return &RescaleRoundrobin{}
 }
 
-func (m *RescaleRoundrobin) New() utils.Operator {
+func (m *RescaleRoundrobin) New() intfs.Operator {
 	return NewRescaleRoundRobin()
 }
 

@@ -5,7 +5,7 @@ import (
 	"encoding/gob"
 
 	"github.com/wandouz/wstream/functions"
-	"github.com/wandouz/wstream/runtime/utils"
+	"github.com/wandouz/wstream/intfs"
 	"github.com/wandouz/wstream/types"
 )
 
@@ -17,7 +17,7 @@ func NewFilter(function functions.FilterFunc) *Filter {
 	return &Filter{function}
 }
 
-func (m *Filter) New() utils.Operator {
+func (m *Filter) New() intfs.Operator {
 	encodedBytes := encodeFunction(m.function)
 	reader := bytes.NewReader(encodedBytes)
 	decoder := gob.NewDecoder(reader)
