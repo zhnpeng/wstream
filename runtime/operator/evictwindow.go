@@ -221,5 +221,6 @@ func (w *EvictWindow) likelyEmitWatermark() {
 // Run this operator
 func (w *EvictWindow) Run(in Receiver, out Emitter) {
 	w.out = out
+	w.processingTimer.Start()
 	consume(in, out, w)
 }

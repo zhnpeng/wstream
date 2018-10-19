@@ -29,8 +29,8 @@ func (trf *reduceFuncForGraphTest) Reduce(a, b types.Record) types.Record {
 func TestStreamGraph_Run(t *testing.T) {
 	input1 := make(chan types.Item)
 	input2 := make(chan types.Item)
-	gph := NewStreamGraph()
-	source := NewSourceStream("source", gph)
+	source := NewSourceStream("source")
+	gph := source.graph
 	source.Channels(input1, input2).SetPartition(4).
 		Map(&mapFuncForGraphTest{}).
 		KeyBy("A", "B").

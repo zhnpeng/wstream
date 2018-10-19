@@ -2,14 +2,12 @@ package stream
 
 func (s *DataStream) KeyBy(keys ...interface{}) *KeyedStream {
 	name := "keyby"
-	graph := s.graph
-	newStream := s.ToKeyedStream(name, keys)
-	graph.AddStreamEdge(s, newStream)
-
-	return newStream
+	stream := s.toKeyedStream(name, keys)
+	s.connect(stream)
+	return stream
 }
 
 // ToKeyedStream TODO: refine this
-func (s *DataStream) ToKeyedStream(name string, keys []interface{}) *KeyedStream {
+func (s *DataStream) toKeyedStream(name string, keys []interface{}) *KeyedStream {
 	return NewKeyedStream(name, s.graph, s.parallel, keys)
 }

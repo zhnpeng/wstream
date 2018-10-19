@@ -12,7 +12,8 @@ type SourceStream struct {
 	Inputs   []chan types.Item
 }
 
-func NewSourceStream(name string, graph *StreamGraph) *SourceStream {
+func NewSourceStream(name string) *SourceStream {
+	graph := NewStreamGraph()
 	stm := &SourceStream{
 		DataStream: DataStream{
 			name:     name,

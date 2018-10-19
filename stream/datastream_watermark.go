@@ -13,22 +13,18 @@ func (s *DataStream) TimestampWithPeriodicWatermark(
 	period time.Duration,
 ) *DataStream {
 	name := "assignTimestampWithPeriodicWatermark"
-	graph := s.graph
-	newStream := s.Copy(name)
-	graph.AddStreamEdge(s, newStream)
-
-	newStream.operator = operator.NewAssignTimestampWithPeriodicWatermark(function, period)
-	return newStream
+	stream := s.clone(name)
+	stream.operator = operator.NewAssignTimestampWithPeriodicWatermark(function, period)
+	s.connect(stream)
+	return stream
 }
 
 func (s *DataStream) TimestampWithPuncatuatedWatermark(
 	function functions.TimestampWithPunctuatedWatermar,
 ) *DataStream {
 	name := "assignTimestampWithPuncatuatedWatermark"
-	graph := s.graph
-	newStream := s.Copy(name)
-	graph.AddStreamEdge(s, newStream)
-
-	newStream.operator = operator.NewAssignTimestampWithPunctuatedWatermark(function)
-	return newStream
+	stream := s.clone(name)
+	stream.operator = operator.NewAssignTimestampWithPunctuatedWatermark(function)
+	s.connect(stream)
+	return stream
 }

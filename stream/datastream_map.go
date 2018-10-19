@@ -7,10 +7,8 @@ import (
 
 func (s *DataStream) Map(mapFunc functions.MapFunc) *DataStream {
 	name := "map"
-	graph := s.graph
-	newStream := s.Copy(name)
-	graph.AddStreamEdge(s, newStream)
-
-	newStream.operator = operator.NewMap(mapFunc)
-	return newStream
+	stream := s.clone(name)
+	stream.operator = operator.NewMap(mapFunc)
+	s.connect(stream)
+	return stream
 }

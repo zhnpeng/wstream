@@ -6,11 +6,9 @@ import (
 
 func (s *WindowedStream) Reduce(reduceFunc functions.ReduceFunc) *DataStream {
 	name := "reduce"
-	graph := s.graph
-	newStream := s.ToDataStream(name)
-	wo := s.operator.(WindowOperator)
-	wo.SetReduceFunc(reduceFunc)
-	graph.LeftMergeStream(s, newStream)
-
-	return newStream
+	stream := s.toDataStream(name)
+	operator := s.Operator().(WindowOperator)
+	operator.SetReduceFunc(reduceFunc)
+	s.leftMerge(stream)
+	return stream
 }

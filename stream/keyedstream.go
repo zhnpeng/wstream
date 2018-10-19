@@ -44,7 +44,7 @@ func (s *KeyedStream) GetStreamNode() (node *StreamNode) {
 	return s.streamNode
 }
 
-func (s *KeyedStream) ToDataStream(name string) *DataStream {
+func (s *KeyedStream) toDataStream(name string) *DataStream {
 	return NewDataStream(
 		name,
 		s.graph,
@@ -52,10 +52,14 @@ func (s *KeyedStream) ToDataStream(name string) *DataStream {
 	)
 }
 
-func (s *KeyedStream) ToWindowedStream(name string) *WindowedStream {
+func (s *KeyedStream) toWindowedStream(name string) *WindowedStream {
 	return NewWindowedStream(
 		name,
 		s.graph,
 		s.parallel,
 	)
+}
+
+func (s *KeyedStream) connect(stream Stream) {
+	s.graph.AddStreamEdge(s, stream)
 }

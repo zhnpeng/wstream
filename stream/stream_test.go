@@ -28,8 +28,7 @@ func Test_All_Stream_Graph(t *testing.T) {
 
 	input1 := make(chan types.Item)
 	input2 := make(chan types.Item)
-	graph := NewStreamGraph()
-	source := NewSourceStream("channels", graph)
+	source := NewSourceStream("channels")
 	source.Channels(input1, input2).
 		SetPartition(4).
 		Map(&mapFuncForStreamTest{}).
@@ -37,6 +36,7 @@ func Test_All_Stream_Graph(t *testing.T) {
 		KeyBy("dimA", "dimB").
 		TimeWindow(60)
 	expected := 5
+	graph := source.graph
 	if graph.Length() != expected {
 		t.Errorf("graph length wrong got: %v, want: %v", graph.Length(), expected)
 	}

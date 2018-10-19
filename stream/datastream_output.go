@@ -7,10 +7,8 @@ import (
 
 func (s *DataStream) Output(outputFunc functions.OutputFunc) *DataStream {
 	name := "output"
-	graph := s.graph
-	newStream := s.Copy(name)
-	graph.AddStreamEdge(s, newStream)
-
-	newStream.operator = operator.NewOutput(outputFunc)
-	return newStream
+	stream := s.clone(name)
+	stream.operator = operator.NewOutput(outputFunc)
+	s.connect(stream)
+	return stream
 }

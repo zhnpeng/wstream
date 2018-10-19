@@ -1,6 +1,8 @@
 package stream
 
-import "github.com/wandouz/wstream/intfs"
+import (
+	"github.com/wandouz/wstream/intfs"
+)
 
 type DataStream struct {
 	name     string
@@ -32,7 +34,7 @@ func (s *DataStream) Parallelism() int {
 	return s.parallel
 }
 
-func (s *DataStream) Copy(name string) *DataStream {
+func (s *DataStream) clone(name string) *DataStream {
 	return &DataStream{
 		name:     name,
 		graph:    s.graph,
@@ -51,4 +53,8 @@ func (s *DataStream) SetStreamNode(node *StreamNode) {
 
 func (s *DataStream) GetStreamNode() (node *StreamNode) {
 	return s.streamNode
+}
+
+func (s *DataStream) connect(stream Stream) {
+	s.graph.AddStreamEdge(s, stream)
 }

@@ -12,12 +12,9 @@ type WindowOperator interface {
 
 func (s *WindowedStream) Apply(applyFunc functions.ApplyFunc) *DataStream {
 	name := "reduce"
-	graph := s.graph
-	newStream := s.ToDataStream(name)
-	wo := s.operator.(WindowOperator)
-	wo.SetApplyFunc(applyFunc)
-	// left merge new stream to windowed stream and then return new stream
-	graph.LeftMergeStream(s, newStream)
-
-	return newStream
+	stream := s.toDataStream(name)
+	operator := s.operator.(WindowOperator)
+	operator.SetApplyFunc(applyFunc)
+	s.leftMerge(stream)
+	return stream
 }

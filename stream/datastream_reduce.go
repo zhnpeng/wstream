@@ -7,10 +7,8 @@ import (
 
 func (s *DataStream) Reduce(reduceFunc functions.ReduceFunc) *DataStream {
 	name := "reduce"
-	graph := s.graph
-	newStream := s.Copy(name)
-	graph.AddStreamEdge(s, newStream)
-
-	newStream.operator = operator.NewReduce(reduceFunc)
-	return newStream
+	stream := s.clone(name)
+	stream.operator = operator.NewReduce(reduceFunc)
+	s.connect(stream)
+	return stream
 }

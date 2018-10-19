@@ -111,7 +111,7 @@ func TestWindow_Run_Tumbling_EventTime_Window(t *testing.T) {
 		ch: output,
 	}
 
-	env.ENV.TimeCharacteristic = env.IsEventTime
+	env.Env().TimeCharacteristic = env.IsEventTime
 	assigner := assigners.NewTumblingEventTimeWindow(60, 0)
 	trigger := triggers.NewEventTimeTrigger()
 	w := NewWindow(assigner, trigger).(*Window)
@@ -220,7 +220,7 @@ func TestWindow_Run_Sliding_EventTime_Window(t *testing.T) {
 		ch: output,
 	}
 
-	env.ENV.TimeCharacteristic = env.IsEventTime
+	env.Env().TimeCharacteristic = env.IsEventTime
 	assigner := assigners.NewSlidingEventTimeWindoww(2, 1, 0)
 	trigger := triggers.NewEventTimeTrigger()
 	w := NewWindow(assigner, trigger).(*Window)
@@ -346,7 +346,7 @@ func TestWindow_Run_Tumbling_ProcessingTime_Window(t *testing.T) {
 		ch: output,
 	}
 
-	env.ENV.TimeCharacteristic = env.IsEventTime
+	env.Env().TimeCharacteristic = env.IsEventTime
 	assigner := assigners.NewTumblingProcessingTimeWindow(1, 0)
 	trigger := triggers.NewProcessingTimeTrigger()
 	w := NewWindow(assigner, trigger).(*Window)
@@ -453,7 +453,7 @@ func TestWindow_Run_Sliding_ProcessingTime_Window(t *testing.T) {
 		ch: output,
 	}
 
-	env.ENV.TimeCharacteristic = env.IsEventTime
+	env.Env().TimeCharacteristic = env.IsEventTime
 	assigner := assigners.NewSlidingProcessingTimeWindow(2, 1, 0)
 	trigger := triggers.NewProcessingTimeTrigger()
 	w := NewWindow(assigner, trigger).(*Window)

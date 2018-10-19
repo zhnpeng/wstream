@@ -221,6 +221,7 @@ func (w *Window) likelyEmitWatermark() {
 func (w *Window) Run(in Receiver, out Emitter) {
 	// FIXME: emitter may be property of operator
 	w.out = out
+	w.processingTimer.Start()
 	consume(in, out, w)
 }
 

@@ -13,36 +13,32 @@ import (
 // Window allow user custom Window behavior
 func (s *KeyedStream) Window(assigner assigners.WindowAssinger) *WindowedStream {
 	name := "window"
-	graph := s.graph
-	newStream := s.ToWindowedStream(name)
-	graph.AddStreamEdge(s, newStream)
-	newStream.assigner = assigner
-	newStream.operator = operator.NewWindow(assigner, nil)
-
-	return newStream
+	stream := s.toWindowedStream(name)
+	stream.assigner = assigner
+	stream.operator = operator.NewWindow(assigner, nil)
+	s.connect(stream)
+	return stream
 }
 
 // TimeWindow is tumbling time window
 func (s *KeyedStream) TimeWindow(period int64) *WindowedStream {
-	if env.ENV.TimeCharacteristic == env.IsEventTime {
+	if env.Env().TimeCharacteristic == env.IsEventTime {
 		// a flow can handle only processing time or event time
 		// so need to hold it in a env env
 		return s.Window(assigners.NewTumblingEventTimeWindow(period, 0)).
 			Trigger(triggers.NewEventTimeTrigger())
-	} else {
-		return s.Window(assigners.NewTumblingProcessingTimeWindow(period, 0)).
-			Trigger(triggers.NewProcessingTimeTrigger())
 	}
+	return s.Window(assigners.NewTumblingProcessingTimeWindow(period, 0)).
+		Trigger(triggers.NewProcessingTimeTrigger())
 }
 
 func (s *KeyedStream) SlidingTimeWindow(period, every int64) *WindowedStream {
-	if env.ENV.TimeCharacteristic == env.IsEventTime {
+	if env.Env().TimeCharacteristic == env.IsEventTime {
 		return s.Window(assigners.NewSlidingEventTimeWindoww(period, every, 0)).
 			Trigger(triggers.NewEventTimeTrigger())
-	} else {
-		return s.Window(assigners.NewSlidingProcessingTimeWindow(period, every, 0)).
-			Trigger(triggers.NewProcessingTimeTrigger())
 	}
+	return s.Window(assigners.NewSlidingProcessingTimeWindow(period, every, 0)).
+		Trigger(triggers.NewProcessingTimeTrigger())
 }
 
 // CountWindow is tumbling cout window

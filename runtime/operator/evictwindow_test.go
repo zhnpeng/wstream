@@ -119,7 +119,7 @@ func TestEvictWindow_Run_Tumbling_EventTime_Window(t *testing.T) {
 		ch: output,
 	}
 
-	env.ENV.TimeCharacteristic = env.IsEventTime
+	env.Env().TimeCharacteristic = env.IsEventTime
 	assigner := assigners.NewTumblingEventTimeWindow(60, 0)
 	trigger := triggers.NewEventTimeTrigger()
 	// time evictor evict records
@@ -240,7 +240,7 @@ func TestEvictWindow_Run_Tumbling_Count_Window(t *testing.T) {
 		ch: output,
 	}
 
-	env.ENV.TimeCharacteristic = env.IsEventTime
+	env.Env().TimeCharacteristic = env.IsEventTime
 	assigner := assigners.NewGlobalWindow()
 	trigger := triggers.NewCountTrigger().Of(2)
 	evictor := evictors.NewCountEvictor().Of(2, true)
@@ -354,7 +354,7 @@ func TestEvictWindow_Run_Sliding_Count_Window(t *testing.T) {
 		ch: output,
 	}
 
-	env.ENV.TimeCharacteristic = env.IsEventTime
+	env.Env().TimeCharacteristic = env.IsEventTime
 	assigner := assigners.NewGlobalWindow()
 	trigger := triggers.NewCountTrigger().Of(2)
 	evictor := evictors.NewCountEvictor().Of(1, true)

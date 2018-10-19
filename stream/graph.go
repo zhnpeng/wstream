@@ -7,11 +7,15 @@ import (
 	"github.com/wandouz/wstream/utils/graph"
 )
 
+/*
+StreamGraph is a DAG graph organized with streams
+*/
 type StreamGraph struct {
 	vertices map[int]*StreamNode
 	graph    *graph.Mutable
 }
 
+// New a StreamGraph
 func NewStreamGraph() *StreamGraph {
 	return &StreamGraph{
 		vertices: make(map[int]*StreamNode),
@@ -19,7 +23,8 @@ func NewStreamGraph() *StreamGraph {
 	}
 }
 
-// StreamNode bind stream with id
+// StreamNode assign unique for each stream
+// and combine stream with execution task
 type StreamNode struct {
 	id     int
 	stream Stream
@@ -34,15 +39,8 @@ func newStreamNode(id int, stm Stream) *StreamNode {
 }
 
 func (g *StreamGraph) GetStream(id int) (stm Stream) {
-	if node, ok := g.vertices[id]; ok {
-		stm = node.stream
-	}
-	return
-}
-
-func (g *StreamGraph) GetTask(id int) (task *execution.Task) {
-	if node, ok := g.vertices[id]; ok {
-		task = node.Task
+	if StreamNode, ok := g.vertices[id]; ok {
+		stm = StreamNode.stream
 	}
 	return
 }
@@ -55,9 +53,9 @@ func (g *StreamGraph) Length() int {
 // AddStream add a stream vertex to graph
 func (g *StreamGraph) AddStream(stm Stream) {
 	id := g.graph.AddVertex()
-	node := newStreamNode(id, stm)
-	stm.SetStreamNode(node)
-	g.vertices[id] = node
+	StreamNode := newStreamNode(id, stm)
+	stm.SetStreamNode(StreamNode)
+	g.vertices[id] = StreamNode
 }
 
 // AddStreamEdge add directed edge between two stream
@@ -75,7 +73,7 @@ func (g *StreamGraph) AddStreamEdge(from, to Stream) error {
 
 // LeftMergeStream join right strem to the left
 // right stream will not add to graph
-// any node connect to right stream will collect to the left
+// any StreamNode connect to right stream will collect to the left
 func (g *StreamGraph) LeftMergeStream(left, right Stream) {
 	if !g.existsStream(left) {
 		g.AddStream(left)
@@ -84,17 +82,17 @@ func (g *StreamGraph) LeftMergeStream(left, right Stream) {
 }
 
 func (g *StreamGraph) existsStream(stm Stream) bool {
-	node := stm.GetStreamNode()
-	if node == nil {
+	StreamNode := stm.GetStreamNode()
+	if StreamNode == nil {
 		return false
 	}
-	if _, ok := g.vertices[node.id]; ok {
+	if _, ok := g.vertices[StreamNode.id]; ok {
 		return true
 	}
 	return false
 }
 
-func (g *StreamGraph) GetStreamNode(id int) (node *StreamNode) {
+func (g *StreamGraph) GetStreamNode(id int) (StreamNode *StreamNode) {
 	return g.vertices[id]
 }
 
@@ -104,11 +102,11 @@ func (g *StreamGraph) BFSBoth(v int, do func(v, w int, c int64)) {
 
 func (g *StreamGraph) Run() {
 	var wg sync.WaitGroup
-	begin := g.GetStreamNode(0)
+	start := g.GetStreamNode(0)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		begin.Task.Run()
+		start.Task.Run()
 	}()
 	graph.BFSBoth(g.graph, 0, func(v, w int, c int64) {
 		task := g.GetStreamNode(w).Task

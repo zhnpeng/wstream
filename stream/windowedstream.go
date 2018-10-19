@@ -62,10 +62,15 @@ func (s *WindowedStream) GetStreamNode() (node *StreamNode) {
 	return s.streamNode
 }
 
-func (s *WindowedStream) ToDataStream(name string) *DataStream {
+func (s *WindowedStream) toDataStream(name string) *DataStream {
 	return NewDataStream(
 		name,
 		s.graph,
 		s.parallel,
 	)
+}
+
+// left merge new stream to windowed stream and then return new stream
+func (s *WindowedStream) leftMerge(stream Stream) {
+	s.graph.LeftMergeStream(s, stream)
 }

@@ -74,7 +74,6 @@ func NewProcessingTimerService(handler TimerHandler, d time.Duration) *Processin
 		handler:   handler,
 		current:   time.Now(),
 	}
-	ret.Start()
 	return ret
 }
 

@@ -7,7 +7,7 @@ type Window struct {
 	end   time.Time
 }
 
-func NewWindow(start, end time.Time) Window {
+func New(start, end time.Time) Window {
 	return Window{start, end}
 }
 
