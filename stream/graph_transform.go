@@ -8,84 +8,6 @@ import (
 	"github.com/wandouz/wstream/utils/graph"
 )
 
-func stream2task(stream Stream) (task *execution.Task) {
-	// TODO: refine me, tranformation may implement by each stream operator
-	// transform stream to executable node
-	switch stream.(type) {
-	case *KeyedStream:
-		stm := stream.(*KeyedStream)
-		rescaleNode := execution.NewNode(
-			context.Background(),
-			stm.Operator(),
-			execution.NewReceiver(),
-			execution.NewEmitter(),
-		)
-		broadcastNodes := make([]*execution.Node, 0, stm.Parallelism())
-		for i := 0; i < stm.Parallelism(); i++ {
-			broadcastNode := execution.NewNode(
-				context.Background(),
-				stm.Operator(),
-				execution.NewReceiver(),
-				execution.NewEmitter(),
-			)
-			edge := make(execution.Edge)
-			rescaleNode.AddOutEdge(edge.Out())
-			broadcastNode.AddInEdge(edge.In())
-			broadcastNodes = append(broadcastNodes, broadcastNode)
-		}
-		task = &execution.Task{
-			RescaleNodes:   []*execution.Node{rescaleNode},
-			BroadcastNodes: broadcastNodes,
-		}
-	case *DataStream:
-		stm := stream.(*DataStream)
-		broadcastNodes := make([]*execution.Node, 0, stm.Parallelism())
-		for i := 0; i < stm.Parallelism(); i++ {
-			node := execution.NewNode(
-				context.Background(),
-				stm.Operator(),
-				execution.NewReceiver(),
-				execution.NewEmitter(),
-			)
-			broadcastNodes = append(broadcastNodes, node)
-		}
-		task = &execution.Task{
-			BroadcastNodes: broadcastNodes,
-		}
-	case *SourceStream:
-		stm := stream.(*SourceStream)
-		rescaleNode := execution.NewNode(
-			context.Background(),
-			stm.Operator(),
-			execution.NewReceiver(),
-			execution.NewEmitter(),
-		)
-		for _, input := range stm.Inputs {
-			rescaleNode.AddInEdge(execution.Edge(input).In())
-		}
-		broadcastNodes := make([]*execution.Node, 0, stm.Parallelism())
-		for i := 0; i < stm.Parallelism(); i++ {
-			broadcastNode := execution.NewNode(
-				context.Background(),
-				stm.Operator(),
-				execution.NewReceiver(),
-				execution.NewEmitter(),
-			)
-			edge := make(execution.Edge)
-			rescaleNode.AddOutEdge(edge.Out())
-			broadcastNode.AddInEdge(edge.In())
-			broadcastNodes = append(broadcastNodes, broadcastNode)
-		}
-		task = &execution.Task{
-			RescaleNodes:   []*execution.Node{rescaleNode},
-			BroadcastNodes: broadcastNodes,
-		}
-	default:
-		logrus.Errorf("got unexpected stream: %+v", stream)
-	}
-	return
-}
-
 // Transform stream to executable
 func (g *StreamGraph) Transform() {
 	graph.BFSAll(g.graph, 0, func(v, w int, c int64) {
@@ -93,14 +15,14 @@ func (g *StreamGraph) Transform() {
 		toNode := g.GetStreamNode(w)
 		if fromNode.Task == nil {
 			//Create executable
-			fromNode.Task = stream2task(fromNode.stream)
+			fromNode.Task = g.StreamToTask(fromNode.stream)
 		}
 		if toNode.Task == nil {
 			//Create executable
-			toNode.Task = stream2task(toNode.stream)
+			toNode.Task = g.StreamToTask(toNode.stream)
 		}
 		if len(toNode.Task.RescaleNodes) == 0 {
-			// is not a rescale node
+			// is a broadcast node
 			for i, n := range fromNode.Task.BroadcastNodes {
 				edge := make(execution.Edge)
 				n.AddOutEdge(edge.Out())
@@ -116,4 +38,111 @@ func (g *StreamGraph) Transform() {
 			}
 		}
 	})
+}
+
+func (g *StreamGraph) StreamToTask(stm Stream) *execution.Task {
+	switch stm.(type) {
+	case *KeyedStream:
+		return g.KeyedStreamToTask(stm.(*KeyedStream))
+	case *DataStream:
+		return g.DataStreamToTask(stm.(*DataStream))
+	case *WindowedStream:
+		return g.WindowedStreamToTask(stm.(*WindowedStream))
+	case *SourceStream:
+		return g.SourceStreamToTask(stm.(*SourceStream))
+	default:
+		logrus.Errorf("got unexpected stream: %+v", stm)
+	}
+	return nil
+}
+
+func (g *StreamGraph) KeyedStreamToTask(stm *KeyedStream) (task *execution.Task) {
+	rescaleNode := execution.NewNode(
+		context.Background(),
+		stm.Operator(),
+		execution.NewReceiver(),
+		execution.NewEmitter(),
+	)
+	broadcastNodes := make([]*execution.Node, 0, stm.Parallelism())
+	for i := 0; i < stm.Parallelism(); i++ {
+		broadcastNode := execution.NewNode(
+			context.Background(),
+			stm.Operator(),
+			execution.NewReceiver(),
+			execution.NewEmitter(),
+		)
+		edge := make(execution.Edge)
+		rescaleNode.AddOutEdge(edge.Out())
+		broadcastNode.AddInEdge(edge.In())
+		broadcastNodes = append(broadcastNodes, broadcastNode)
+	}
+	task = &execution.Task{
+		RescaleNodes:   []*execution.Node{rescaleNode},
+		BroadcastNodes: broadcastNodes,
+	}
+	return
+}
+
+func (g *StreamGraph) DataStreamToTask(stm *DataStream) (task *execution.Task) {
+	broadcastNodes := make([]*execution.Node, 0, stm.Parallelism())
+	for i := 0; i < stm.Parallelism(); i++ {
+		node := execution.NewNode(
+			context.Background(),
+			stm.Operator(),
+			execution.NewReceiver(),
+			execution.NewEmitter(),
+		)
+		broadcastNodes = append(broadcastNodes, node)
+	}
+	task = &execution.Task{
+		BroadcastNodes: broadcastNodes,
+	}
+	return
+}
+
+func (g *StreamGraph) WindowedStreamToTask(stm *WindowedStream) (task *execution.Task) {
+	broadcastNodes := make([]*execution.Node, 0, stm.Parallelism())
+	for i := 0; i < stm.Parallelism(); i++ {
+		node := execution.NewNode(
+			context.Background(),
+			stm.Operator(),
+			execution.NewReceiver(),
+			execution.NewEmitter(),
+		)
+		broadcastNodes = append(broadcastNodes, node)
+	}
+	task = &execution.Task{
+		BroadcastNodes: broadcastNodes,
+	}
+	return
+}
+
+func (g *StreamGraph) SourceStreamToTask(stm *SourceStream) (task *execution.Task) {
+	rescaleNode := execution.NewNode(
+		context.Background(),
+		stm.Operator(),
+		execution.NewReceiver(),
+		execution.NewEmitter(),
+	)
+	for _, input := range stm.Inputs {
+		rescaleNode.AddInEdge(execution.Edge(input).In())
+	}
+	broadcastNodes := make([]*execution.Node, 0, stm.Parallelism())
+	for i := 0; i < stm.Parallelism(); i++ {
+		broadcastNode := execution.NewNode(
+			context.Background(),
+			stm.Operator(),
+			execution.NewReceiver(),
+			execution.NewEmitter(),
+		)
+		edge := make(execution.Edge)
+		rescaleNode.AddOutEdge(edge.Out())
+		broadcastNode.AddInEdge(edge.In())
+		broadcastNodes = append(broadcastNodes, broadcastNode)
+	}
+	task = &execution.Task{
+		RescaleNodes:   []*execution.Node{rescaleNode},
+		BroadcastNodes: broadcastNodes,
+	}
+	return
 }

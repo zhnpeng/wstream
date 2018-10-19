@@ -9,14 +9,12 @@ import (
 )
 
 type WindowedStream struct {
-	name     string
-	parallel int
-	assigner assigners.WindowAssinger
-	trigger  triggers.Trigger
-	evictor  evictors.Evictor
-
-	operator intfs.Operator
-
+	name       string
+	parallel   int
+	assigner   assigners.WindowAssinger
+	trigger    triggers.Trigger
+	evictor    evictors.Evictor
+	operator   intfs.Operator
 	graph      *StreamGraph
 	streamNode *StreamNode
 }
