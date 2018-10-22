@@ -1,7 +1,9 @@
 package stream
 
 import (
+	"github.com/wandouz/wstream/functions"
 	"github.com/wandouz/wstream/intfs"
+	"github.com/wandouz/wstream/runtime/operator"
 )
 
 type DataStream struct {
@@ -52,10 +54,17 @@ func (s *DataStream) GetStreamNode() (node *StreamNode) {
 	return s.streamNode
 }
 
-func (s *DataStream) toKeyedStream(keys ...interface{}) *KeyedStream {
+func (s *DataStream) toKeyedStream(keys []interface{}) *KeyedStream {
 	return NewKeyedStream(s.flow, s.parallel, keys)
 }
 
 func (s *DataStream) connect(stream Stream) {
 	s.flow.AddStreamEdge(s, stream)
+}
+
+func (s *DataStream) Debug(debugFunc functions.DebugFunc) *DataStream {
+	stream := s.clone()
+	stream.operator = operator.NewDebug(debugFunc)
+	s.connect(stream)
+	return stream
 }

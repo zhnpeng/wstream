@@ -8,8 +8,17 @@ import (
 	"github.com/wandouz/wstream/utils/graph"
 )
 
-// Transform stream to executable
 func (f *Flow) Transform() {
+	if f.transformed == true {
+		logrus.Warn("transform failed, flow already transformed.")
+		return
+	}
+	f.transformed = true
+	f.transform()
+}
+
+// Transform stream to executable
+func (f *Flow) transform() {
 	graph.BFSAll(f.graph, 0, func(v, w int, c int64) {
 		fromNode := f.GetStreamNode(v)
 		toNode := f.GetStreamNode(w)
@@ -118,30 +127,18 @@ func (f *Flow) WindowedStreamToTask(stm *WindowedStream) (task *execution.Task) 
 }
 
 func (f *Flow) SourceStreamToTask(stm *SourceStream) (task *execution.Task) {
-	rescaleNode := execution.NewNode(
-		context.Background(),
-		stm.Operator(),
-		execution.NewReceiver(),
-		execution.NewEmitter(),
-	)
-	for _, input := range stm.Inputs {
-		rescaleNode.AddInEdge(execution.Edge(input).In())
-	}
 	broadcastNodes := make([]*execution.Node, 0, stm.Parallelism())
-	for i := 0; i < stm.Parallelism(); i++ {
-		broadcastNode := execution.NewNode(
+	for _, input := range stm.Inputs() {
+		node := execution.NewNode(
 			context.Background(),
 			stm.Operator(),
 			execution.NewReceiver(),
 			execution.NewEmitter(),
 		)
-		edge := make(execution.Edge)
-		rescaleNode.AddOutEdge(edge.Out())
-		broadcastNode.AddInEdge(edge.In())
-		broadcastNodes = append(broadcastNodes, broadcastNode)
+		node.AddInEdge(execution.Edge(input).In())
+		broadcastNodes = append(broadcastNodes, node)
 	}
 	task = &execution.Task{
-		RescaleNodes:   []*execution.Node{rescaleNode},
 		BroadcastNodes: broadcastNodes,
 	}
 	return

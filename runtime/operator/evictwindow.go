@@ -1,8 +1,11 @@
 package operator
 
 import (
+	"bytes"
 	"container/list"
+	"encoding/gob"
 	"math"
+	"sync"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -30,7 +33,8 @@ type EvictWindow struct {
 	reduceFunc functions.ReduceFunc
 	out        Emitter
 
-	windowsGroup map[windowing.WindowID]*windowing.WindowCollection
+	windowsGroup sync.Map
+	// windowsGroup map[windowing.WindowID]*windowing.WindowCollection
 
 	watermarkTime   time.Time
 	eventTimer      *EventTimerService
@@ -41,7 +45,7 @@ type EvictWindow struct {
 
 // NewEvictWindow return evictable window object
 // evictor is necessary
-func NewEvictWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger, evictor evictors.Evictor) intfs.Operator {
+func NewEvictWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger, evictor evictors.Evictor) *EvictWindow {
 	if assigner == nil {
 		assigner = assigners.NewGlobalWindow()
 	}
@@ -55,7 +59,7 @@ func NewEvictWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger,
 		assigner:     assigner,
 		trigger:      trigger,
 		evictor:      evictor,
-		windowsGroup: make(map[windowing.WindowID]*windowing.WindowCollection),
+		windowsGroup: sync.Map{},
 
 		applyFunc: &byPassApplyFunc{},
 	}
@@ -69,7 +73,35 @@ func NewEvictWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger,
 
 // New is a factory method to new an EvictWindow operator object
 func (w *EvictWindow) New() intfs.Operator {
-	return NewEvictWindow(w.assigner, w.trigger, w.evictor)
+	window := NewEvictWindow(w.assigner, w.trigger, w.evictor)
+	window.SetApplyFunc(w.newApplyFunc())
+	window.SetReduceFunc(w.newReduceFunc())
+	return window
+}
+
+func (w *EvictWindow) newApplyFunc() (udf functions.ApplyFunc) {
+	encodedBytes := encodeFunction(w.applyFunc)
+	reader := bytes.NewReader(encodedBytes)
+	decoder := gob.NewDecoder(reader)
+	err := decoder.Decode(&udf)
+	if err != nil {
+		panic(err)
+	}
+	return
+}
+
+func (w *EvictWindow) newReduceFunc() (udf functions.ReduceFunc) {
+	if w.reduceFunc == nil {
+		return
+	}
+	encodedBytes := encodeFunction(w.reduceFunc)
+	reader := bytes.NewReader(encodedBytes)
+	decoder := gob.NewDecoder(reader)
+	err := decoder.Decode(&udf)
+	if err != nil {
+		panic(err)
+	}
+	return
 }
 
 func (w *EvictWindow) SetApplyFunc(f functions.ApplyFunc) {
@@ -92,14 +124,14 @@ func (w *EvictWindow) handleRecord(record types.Record, out Emitter) {
 		k := utils.HashSlice(record.Key())
 		wid := windowing.NewWindowID(k, window)
 		var coll *windowing.WindowCollection
-		if c, ok := w.windowsGroup[wid]; ok {
-			coll = c
+		if c, ok := w.windowsGroup.Load(wid); ok {
+			coll = c.(*windowing.WindowCollection)
 			coll.Append(record)
 		} else {
 			// evict window not reduce records in collections, so don't pass reduceFunc into it
 			coll = windowing.NewWindowCollection(window, record.Time(), record.Key(), nil)
 			coll.Append(record)
-			w.windowsGroup[wid] = coll
+			w.windowsGroup.Store(wid, coll)
 		}
 		ctx := w.triggerContext.New(wid, coll.Len())
 		signal := w.trigger.OnItem(record, record.Time(), window, ctx)
@@ -118,7 +150,7 @@ func (w *EvictWindow) emitWindow(records *windowing.WindowCollection, out Emitte
 	// so for safty size should count only records with timestamp
 	w.evictor.EvictBefore(records, int64(records.Len()))
 
-	windowEmitter := NewWindowEmitter(records.Time(), out)
+	windowEmitter := NewWindowEmitter(records.Time(), records.Keys(), out)
 	iterator := records.Iterator()
 	if w.reduceFunc != nil {
 		var acc types.Record
@@ -165,10 +197,11 @@ func (w *EvictWindow) handleWatermark(wm *types.Watermark, out Emitter) {
 
 // onProcessingTime is callback for processing timer service
 func (w *EvictWindow) onProcessingTime(wid windowing.WindowID, t time.Time) {
-	coll, ok := w.windowsGroup[wid]
+	c, ok := w.windowsGroup.Load(wid)
 	if !ok {
 		return
 	}
+	coll := c.(*windowing.WindowCollection)
 	signal := w.trigger.OnProcessingTime(t, wid.Window())
 	if signal.IsFire() {
 		w.emitWindow(coll, w.out)
@@ -178,16 +211,17 @@ func (w *EvictWindow) onProcessingTime(wid windowing.WindowID, t time.Time) {
 	}
 	if !w.assigner.IsEventTime() && w.isCleanupTime(wid.Window(), t) {
 		coll.Dispose()
-		delete(w.windowsGroup, wid)
+		w.windowsGroup.Delete(wid)
 	}
 }
 
 // onEventTIme is callback for event timer service
 func (w *EvictWindow) onEventTime(wid windowing.WindowID, t time.Time) {
-	coll, ok := w.windowsGroup[wid]
+	c, ok := w.windowsGroup.Load(wid)
 	if !ok {
 		return
 	}
+	coll := c.(*windowing.WindowCollection)
 
 	w.likelyEmitWatermark()
 
@@ -201,7 +235,7 @@ func (w *EvictWindow) onEventTime(wid windowing.WindowID, t time.Time) {
 	if w.assigner.IsEventTime() && w.isCleanupTime(wid.Window(), t) {
 		// clean window
 		coll.Dispose()
-		delete(w.windowsGroup, wid)
+		w.windowsGroup.Delete(wid)
 	}
 }
 

@@ -20,6 +20,12 @@ func NewMapRecord(t time.Time, v map[string]interface{}) *MapRecord {
 	}
 }
 
+func NewRawMapRecord(v map[string]interface{}) *MapRecord {
+	return &MapRecord{
+		V: v,
+	}
+}
+
 func (m *MapRecord) Time() time.Time {
 	return m.T
 }
@@ -87,11 +93,15 @@ func (m *MapRecord) Inherit(record Record) Record {
 }
 
 func (m *MapRecord) UseKeys(indexes ...interface{}) []interface{} {
-	keys := m.GetMany(indexes)
+	keys := m.GetMany(indexes...)
 	m.K = keys
 	return keys
 }
 
 func (m *MapRecord) Key() []interface{} {
 	return m.K
+}
+
+func (m *MapRecord) SetKey(k []interface{}) {
+	m.K = k
 }

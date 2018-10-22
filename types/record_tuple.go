@@ -110,3 +110,7 @@ func (tuple *TupleRecord) UseKeys(indexes ...interface{}) []interface{} {
 func (tuple *TupleRecord) Key() []interface{} {
 	return tuple.K
 }
+
+func (tuple *TupleRecord) SetKey(k []interface{}) {
+	tuple.K = k
+}

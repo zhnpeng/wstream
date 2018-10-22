@@ -19,9 +19,10 @@ type Stream interface {
 Flow is a DAG graph organized with streams
 */
 type Flow struct {
-	name     string
-	vertices map[int]*StreamNode
-	graph    *graph.Mutable
+	name        string
+	transformed bool
+	vertices    map[int]*StreamNode
+	graph       *graph.Mutable
 }
 
 // New a Flow
@@ -48,78 +49,86 @@ func newStreamNode(id int, stm Stream) *StreamNode {
 	}
 }
 
-func (g *Flow) GetStream(id int) (stm Stream) {
-	if StreamNode, ok := g.vertices[id]; ok {
+func (f *Flow) GetStream(id int) (stm Stream) {
+	if StreamNode, ok := f.vertices[id]; ok {
 		stm = StreamNode.stream
 	}
 	return
 }
 
-// Length return numbers of vertices of graph
-func (g *Flow) Length() int {
-	return len(g.vertices)
+func (f *Flow) GetTask(id int) (task *execution.Task) {
+	if t, ok := f.vertices[id]; ok {
+		task = t.Task
+	}
+	return
+}
+
+// Len return numbers of vertices of graph
+func (f *Flow) Len() int {
+	return len(f.vertices)
 }
 
 // AddStream add a stream vertex to graph
-func (g *Flow) AddStream(stm Stream) {
-	id := g.graph.AddVertex()
+func (f *Flow) AddStream(stm Stream) {
+	id := f.graph.AddVertex()
 	StreamNode := newStreamNode(id, stm)
 	stm.SetStreamNode(StreamNode)
-	g.vertices[id] = StreamNode
+	f.vertices[id] = StreamNode
 }
 
 // AddStreamEdge add directed edge between two stream
-func (g *Flow) AddStreamEdge(from, to Stream) error {
-	if !g.existsStream(from) {
-		g.AddStream(from)
+func (f *Flow) AddStreamEdge(from, to Stream) error {
+	if !f.existsStream(from) {
+		f.AddStream(from)
 	}
-	if !g.existsStream(to) {
-		g.AddStream(to)
+	if !f.existsStream(to) {
+		f.AddStream(to)
 	}
 	fromID := from.GetStreamNode().id
 	toID := to.GetStreamNode().id
-	return g.graph.AddEdge(fromID, toID)
+	return f.graph.AddEdge(fromID, toID)
 }
 
 // LeftMergeStream join right strem to the left
 // right stream will not add to graph
 // any StreamNode connect to right stream will collect to the left
-func (g *Flow) LeftMergeStream(left, right Stream) {
-	if !g.existsStream(left) {
-		g.AddStream(left)
+func (f *Flow) LeftMergeStream(left, right Stream) {
+	if !f.existsStream(left) {
+		f.AddStream(left)
 	}
 	right.SetStreamNode(left.GetStreamNode())
 }
 
-func (g *Flow) existsStream(stm Stream) bool {
+func (f *Flow) existsStream(stm Stream) bool {
 	StreamNode := stm.GetStreamNode()
 	if StreamNode == nil {
 		return false
 	}
-	if _, ok := g.vertices[StreamNode.id]; ok {
+	if _, ok := f.vertices[StreamNode.id]; ok {
 		return true
 	}
 	return false
 }
 
-func (g *Flow) GetStreamNode(id int) (StreamNode *StreamNode) {
-	return g.vertices[id]
+func (f *Flow) GetStreamNode(id int) (StreamNode *StreamNode) {
+	return f.vertices[id]
 }
 
-func (g *Flow) BFSBoth(v int, do func(v, w int, c int64)) {
-	graph.BFSAll(g.graph, v, do)
+func (f *Flow) BFSBoth(v int, do func(v, w int, c int64)) {
+	graph.BFSAll(f.graph, v, do)
 }
 
-func (g *Flow) Run() {
+func (f *Flow) Run() {
+	f.Transform()
 	var wg sync.WaitGroup
-	start := g.GetStreamNode(0)
+	start := f.GetStreamNode(0)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		start.Task.Run()
 	}()
-	graph.BFSBoth(g.graph, 0, func(v, w int, c int64) {
-		task := g.GetStreamNode(w).Task
+	graph.BFSBoth(f.graph, 0, func(v, w int, c int64) {
+		task := f.GetStreamNode(w).Task
 		wg.Add(1)
 		go func() {
 			defer wg.Done()

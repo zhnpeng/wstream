@@ -14,24 +14,31 @@ type Output struct {
 }
 
 func NewOutput(function functions.OutputFunc) *Output {
+	if function == nil {
+		panic("output function must not be nil")
+	}
 	return &Output{function}
 }
 
 func (m *Output) New() intfs.Operator {
-	encodedBytes := encodeFunction(m.function)
-	reader := bytes.NewReader(encodedBytes)
-	decoder := gob.NewDecoder(reader)
-	var udf functions.OutputFunc
-	err := decoder.Decode(&udf)
-	if err != nil {
-		panic(err)
-	}
+	udf := m.newFunction()
 	return NewOutput(udf)
 }
 
 func (m *Output) handleRecord(record types.Record, out Emitter) {
 	m.function.Output(record.Copy())
 	out.Emit(record)
+}
+
+func (m *Output) newFunction() (udf functions.OutputFunc) {
+	encodedBytes := encodeFunction(m.function)
+	reader := bytes.NewReader(encodedBytes)
+	decoder := gob.NewDecoder(reader)
+	err := decoder.Decode(&udf)
+	if err != nil {
+		panic(err)
+	}
+	return
 }
 
 func (m *Output) handleWatermark(wm *types.Watermark, out Emitter) {

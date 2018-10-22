@@ -17,6 +17,9 @@ type Reduce struct {
 }
 
 func NewReduce(function functions.ReduceFunc) *Reduce {
+	if function == nil {
+		panic("reduce function must not be nil")
+	}
 	return &Reduce{
 		function:         function,
 		keyedAccumulator: make(map[utils.KeyID]types.Record),
@@ -24,15 +27,19 @@ func NewReduce(function functions.ReduceFunc) *Reduce {
 }
 
 func (m *Reduce) New() intfs.Operator {
+	udf := m.newFunction()
+	return NewReduce(udf)
+}
+
+func (m *Reduce) newFunction() (udf functions.ReduceFunc) {
 	encodedBytes := encodeFunction(m.function)
 	reader := bytes.NewReader(encodedBytes)
 	decoder := gob.NewDecoder(reader)
-	var udf functions.ReduceFunc
 	err := decoder.Decode(&udf)
 	if err != nil {
 		panic(err)
 	}
-	return NewReduce(udf)
+	return
 }
 
 func (m *Reduce) handleRecord(record types.Record, out Emitter) {

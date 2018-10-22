@@ -1,8 +1,11 @@
 package operator
 
 import (
+	"bytes"
 	"container/list"
+	"encoding/gob"
 	"math"
+	"sync"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -35,7 +38,8 @@ type Window struct {
 	reduceFunc functions.ReduceFunc
 	out        Emitter
 
-	windowsGroup map[windowing.WindowID]*windowing.WindowCollection
+	windowsGroup sync.Map
+	// windowsGroup map[windowing.WindowID]*windowing.WindowCollection
 
 	watermarkTime   time.Time
 	eventTimer      *EventTimerService
@@ -57,7 +61,7 @@ window will swallow all watermarks from upstream operator
 and regenerate new watermark to downstream according to window's fire time
 count window won't generate any watermark
 */
-func NewWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger) intfs.Operator {
+func NewWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger) *Window {
 	if assigner == nil {
 		assigner = assigners.NewGlobalWindow()
 	}
@@ -67,7 +71,7 @@ func NewWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger) intf
 	w := &Window{
 		assigner:     assigner,
 		trigger:      trigger,
-		windowsGroup: make(map[windowing.WindowID]*windowing.WindowCollection),
+		windowsGroup: sync.Map{},
 
 		applyFunc: &byPassApplyFunc{},
 	}
@@ -81,7 +85,35 @@ func NewWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger) intf
 
 // New is a factory method to new an Window operator object
 func (w *Window) New() intfs.Operator {
-	return NewWindow(w.assigner, w.trigger)
+	window := NewWindow(w.assigner, w.trigger)
+	window.SetApplyFunc(w.newApplyFunc())
+	window.SetReduceFunc(w.newReduceFunc())
+	return window
+}
+
+func (w *Window) newApplyFunc() (udf functions.ApplyFunc) {
+	encodedBytes := encodeFunction(w.applyFunc)
+	reader := bytes.NewReader(encodedBytes)
+	decoder := gob.NewDecoder(reader)
+	err := decoder.Decode(&udf)
+	if err != nil {
+		panic(err)
+	}
+	return
+}
+
+func (w *Window) newReduceFunc() (udf functions.ReduceFunc) {
+	if w.reduceFunc == nil {
+		return
+	}
+	encodedBytes := encodeFunction(w.reduceFunc)
+	reader := bytes.NewReader(encodedBytes)
+	decoder := gob.NewDecoder(reader)
+	err := decoder.Decode(&udf)
+	if err != nil {
+		panic(err)
+	}
+	return
 }
 
 func (w *Window) SetApplyFunc(f functions.ApplyFunc) {
@@ -94,7 +126,7 @@ func (w *Window) SetApplyFunc(f functions.ApplyFunc) {
 
 func (w *Window) SetReduceFunc(f functions.ReduceFunc) {
 	if f == nil {
-		logrus.Warnf("Passing a nil reduce function to window apply")
+		logrus.Warnf("Passing a nil reduce function to window reduce")
 		return
 	}
 	w.reduceFunc = f
@@ -106,19 +138,19 @@ func (w *Window) handleRecord(record types.Record, out Emitter) {
 	for _, window := range assignedWindows {
 		if w.isWindowLate(window) {
 			// drop window if it is event time and late
-			logrus.Warnf("drop late window %+v for record %+v", window, record)
+			logrus.Warnf("drop late window (%+v %+v) for record %+v, watermark time is %v", window.Start(), window.End(), record, w.eventTimer.CurrentWatermarkTime())
 			continue
 		}
 		k := utils.HashSlice(record.Key())
 		wid := windowing.NewWindowID(k, window)
 		var coll *windowing.WindowCollection
-		if c, ok := w.windowsGroup[wid]; ok {
-			coll = c
+		if c, ok := w.windowsGroup.Load(wid); ok {
+			coll = c.(*windowing.WindowCollection)
 			coll.Append(record)
 		} else {
 			coll = windowing.NewWindowCollection(window, record.Time(), record.Key(), w.reduceFunc)
 			coll.Append(record)
-			w.windowsGroup[wid] = coll
+			w.windowsGroup.Store(wid, coll)
 		}
 		ctx := w.triggerContext.New(wid, coll.Len())
 		signal := w.trigger.OnItem(record, record.Time(), window, ctx)
@@ -133,7 +165,7 @@ func (w *Window) handleRecord(record types.Record, out Emitter) {
 }
 
 func (w *Window) emitWindow(records *windowing.WindowCollection, out Emitter) {
-	emitter := NewWindowEmitter(records.Time(), out)
+	emitter := NewWindowEmitter(records.Time(), records.Keys(), out)
 	iterator := records.Iterator()
 	w.applyFunc.Apply(iterator, emitter)
 }
@@ -163,10 +195,11 @@ func (w *Window) handleWatermark(wm *types.Watermark, out Emitter) {
 
 // onProcessingTime is callback for processing timer service
 func (w *Window) onProcessingTime(wid windowing.WindowID, t time.Time) {
-	coll, ok := w.windowsGroup[wid]
+	c, ok := w.windowsGroup.Load(wid)
 	if !ok {
 		return
 	}
+	coll := c.(*windowing.WindowCollection)
 	signal := w.trigger.OnProcessingTime(t, wid.Window())
 	if signal.IsFire() {
 		w.emitWindow(coll, w.out)
@@ -176,17 +209,17 @@ func (w *Window) onProcessingTime(wid windowing.WindowID, t time.Time) {
 	}
 	if !w.assigner.IsEventTime() && w.isCleanupTime(wid.Window(), t) {
 		coll.Dispose()
-		delete(w.windowsGroup, wid)
+		w.windowsGroup.Delete(wid)
 	}
 }
 
 // onEventTIme is callback for event timer service
 func (w *Window) onEventTime(wid windowing.WindowID, t time.Time) {
-	coll, ok := w.windowsGroup[wid]
+	c, ok := w.windowsGroup.Load(wid)
 	if !ok {
 		return
 	}
-
+	coll := c.(*windowing.WindowCollection)
 	// reemit watermark before emit windows
 	w.likelyEmitWatermark()
 
@@ -200,7 +233,7 @@ func (w *Window) onEventTime(wid windowing.WindowID, t time.Time) {
 	if w.assigner.IsEventTime() && w.isCleanupTime(wid.Window(), t) {
 		// clean window
 		coll.Dispose()
-		delete(w.windowsGroup, wid)
+		w.windowsGroup.Delete(wid)
 	}
 }
 

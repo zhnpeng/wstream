@@ -11,17 +11,21 @@ import (
 // before record is emit to downstream operator
 type WindowEmitter struct {
 	t       time.Time
+	k       []interface{}
 	emitter Emitter
 }
 
-func NewWindowEmitter(t time.Time, emitter Emitter) *WindowEmitter {
+func NewWindowEmitter(t time.Time, k []interface{}, emitter Emitter) *WindowEmitter {
 	return &WindowEmitter{
 		t:       t,
+		k:       k,
 		emitter: emitter,
 	}
 }
 
 func (e *WindowEmitter) Emit(item types.Item) {
-	item.SetTime(e.t)
-	e.emitter.Emit(item)
+	interItem := item.(types.InternalItem)
+	interItem.SetTime(e.t)
+	interItem.SetKey(e.k)
+	e.emitter.Emit(interItem)
 }

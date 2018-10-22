@@ -43,8 +43,8 @@ func (n *Node) AddOutEdge(outEdge OutEdge) {
 
 func (n *Node) Run() {
 	var wg sync.WaitGroup
-	wg.Add(1)
 	go n.in.Run()
+	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		// TODO: pass ctx to operator Run

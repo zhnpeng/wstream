@@ -14,18 +14,26 @@ type FlatMap struct {
 }
 
 func NewFlatMap(function functions.FlatMapFunc) *FlatMap {
+	if function == nil {
+		panic("flatmap function must not be nil")
+	}
 	return &FlatMap{function}
 }
+
 func (m *FlatMap) New() intfs.Operator {
+	udf := m.newFunction()
+	return NewFlatMap(udf)
+}
+
+func (m *FlatMap) newFunction() (udf functions.FlatMapFunc) {
 	encodedBytes := encodeFunction(m.function)
 	reader := bytes.NewReader(encodedBytes)
 	decoder := gob.NewDecoder(reader)
-	var udf functions.FlatMapFunc
 	err := decoder.Decode(&udf)
 	if err != nil {
 		panic(err)
 	}
-	return NewFlatMap(udf)
+	return
 }
 
 func (m *FlatMap) handleRecord(record types.Record, out Emitter) {

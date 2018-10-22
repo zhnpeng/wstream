@@ -4,6 +4,8 @@ package types
 
 import (
 	"time"
+
+	"github.com/sirupsen/logrus"
 )
 
 // Watermark is kind of item
@@ -40,4 +42,8 @@ func (wm *Watermark) AsRow() (Row, error) {
 		itemType: TypeWatermark,
 		item:     encodedBytes,
 	}, nil
+}
+
+func (wm *Watermark) SetKey(k []interface{}) {
+	logrus.Warnf("Watermark item has no Key field")
 }

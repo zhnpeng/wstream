@@ -23,6 +23,9 @@ func NewAssignTimestampWithPeriodicWatermark(
 	function functions.TimestampWithPeriodicWatermark,
 	period time.Duration,
 ) *AssignTimestampWithPeriodicWatermark {
+	if function == nil {
+		panic("TimestampWithPeriodWatermark function must not be nil")
+	}
 	return &AssignTimestampWithPeriodicWatermark{
 		function:      function,
 		period:        period,
@@ -31,15 +34,19 @@ func NewAssignTimestampWithPeriodicWatermark(
 }
 
 func (f *AssignTimestampWithPeriodicWatermark) New() intfs.Operator {
+	udf := f.newFunction()
+	return NewAssignTimestampWithPeriodicWatermark(udf, f.period)
+}
+
+func (f *AssignTimestampWithPeriodicWatermark) newFunction() (udf functions.TimestampWithPeriodicWatermark) {
 	encodedBytes := encodeFunction(f.function)
 	reader := bytes.NewReader(encodedBytes)
 	decoder := gob.NewDecoder(reader)
-	var udf functions.TimestampWithPeriodicWatermark
 	err := decoder.Decode(&udf)
 	if err != nil {
 		panic(err)
 	}
-	return NewAssignTimestampWithPeriodicWatermark(udf, f.period)
+	return
 }
 
 func (f *AssignTimestampWithPeriodicWatermark) handleRecord(record types.Record, out Emitter) {

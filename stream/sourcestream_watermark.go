@@ -8,7 +8,7 @@ import (
 	"github.com/wandouz/wstream/functions"
 )
 
-func (s *DataStream) TimestampWithPeriodicWatermark(
+func (s *SourceStream) TimestampWithPeriodicWatermark(
 	function functions.TimestampWithPeriodicWatermark,
 	period time.Duration,
 ) *DataStream {
@@ -18,7 +18,7 @@ func (s *DataStream) TimestampWithPeriodicWatermark(
 	return stream
 }
 
-func (s *DataStream) TimestampWithPuncatuatedWatermark(
+func (s *SourceStream) TimestampWithPuncatuatedWatermark(
 	function functions.TimestampWithPunctuatedWatermar,
 ) *DataStream {
 	stream := s.clone()

@@ -123,7 +123,7 @@ func TestEvictWindow_Run_Tumbling_EventTime_Window(t *testing.T) {
 	trigger := triggers.NewEventTimeTrigger()
 	// time evictor evict records
 	evictor := evictors.NewTimeEvictor().Of(1000, false) // 1000 represent to 1000 milliseconds
-	w := NewEvictWindow(assigner, trigger, evictor).(*EvictWindow)
+	w := NewEvictWindow(assigner, trigger, evictor)
 	w.SetReduceFunc(&evictWindowTestReduceFunc{})
 
 	var wg sync.WaitGroup
@@ -243,7 +243,7 @@ func TestEvictWindow_Run_Tumbling_Count_Window(t *testing.T) {
 	assigner := assigners.NewGlobalWindow()
 	trigger := triggers.NewCountTrigger().Of(2)
 	evictor := evictors.NewCountEvictor().Of(2, true)
-	w := NewEvictWindow(assigner, trigger, evictor).(*EvictWindow)
+	w := NewEvictWindow(assigner, trigger, evictor)
 	w.SetReduceFunc(&evictWindowTestReduceFunc{})
 
 	var wg sync.WaitGroup
@@ -357,7 +357,7 @@ func TestEvictWindow_Run_Sliding_Count_Window(t *testing.T) {
 	assigner := assigners.NewGlobalWindow()
 	trigger := triggers.NewCountTrigger().Of(2)
 	evictor := evictors.NewCountEvictor().Of(1, true)
-	w := NewEvictWindow(assigner, trigger, evictor).(*EvictWindow)
+	w := NewEvictWindow(assigner, trigger, evictor)
 	w.SetReduceFunc(&evictWindowTestReduceFunc{})
 
 	var wg sync.WaitGroup

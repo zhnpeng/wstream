@@ -45,11 +45,16 @@ type windowTestReduceFunc struct {
 }
 
 func (f *windowTestReduceFunc) Reduce(x types.Record, y types.Record) types.Record {
-	ret := map[string]interface{}{
+	if x == nil {
+		return types.NewRawMapRecord(map[string]interface{}{
+			"A": cast.ToInt(y.Get("A")),
+			"B": cast.ToInt(y.Get("B")),
+		})
+	}
+	return types.NewRawMapRecord(map[string]interface{}{
 		"A": int(math.Max(cast.ToFloat64(x.Get("A")), cast.ToFloat64(y.Get("A")))),
 		"B": cast.ToInt(x.Get("B")) + cast.ToInt(y.Get("B")),
-	}
-	return types.NewMapRecord(time.Time{}, ret)
+	})
 }
 
 func TestWindow_Run_Tumbling_EventTime_Window(t *testing.T) {
@@ -113,7 +118,7 @@ func TestWindow_Run_Tumbling_EventTime_Window(t *testing.T) {
 	env.Env().TimeCharacteristic = env.IsEventTime
 	assigner := assigners.NewTumblingEventTimeWindow(60, 0)
 	trigger := triggers.NewEventTimeTrigger()
-	w := NewWindow(assigner, trigger).(*Window)
+	w := NewWindow(assigner, trigger)
 	w.SetReduceFunc(&windowTestReduceFunc{})
 
 	var wg sync.WaitGroup
@@ -222,7 +227,7 @@ func TestWindow_Run_Sliding_EventTime_Window(t *testing.T) {
 	env.Env().TimeCharacteristic = env.IsEventTime
 	assigner := assigners.NewSlidingEventTimeWindoww(2, 1, 0)
 	trigger := triggers.NewEventTimeTrigger()
-	w := NewWindow(assigner, trigger).(*Window)
+	w := NewWindow(assigner, trigger)
 	w.SetReduceFunc(&windowTestReduceFunc{})
 
 	var wg sync.WaitGroup
@@ -348,7 +353,7 @@ func TestWindow_Run_Tumbling_ProcessingTime_Window(t *testing.T) {
 	env.Env().TimeCharacteristic = env.IsEventTime
 	assigner := assigners.NewTumblingProcessingTimeWindow(1, 0)
 	trigger := triggers.NewProcessingTimeTrigger()
-	w := NewWindow(assigner, trigger).(*Window)
+	w := NewWindow(assigner, trigger)
 	w.SetReduceFunc(&windowTestReduceFunc{})
 
 	var wg sync.WaitGroup
@@ -455,7 +460,7 @@ func TestWindow_Run_Sliding_ProcessingTime_Window(t *testing.T) {
 	env.Env().TimeCharacteristic = env.IsEventTime
 	assigner := assigners.NewSlidingProcessingTimeWindow(2, 1, 0)
 	trigger := triggers.NewProcessingTimeTrigger()
-	w := NewWindow(assigner, trigger).(*Window)
+	w := NewWindow(assigner, trigger)
 	w.SetReduceFunc(&windowTestReduceFunc{})
 
 	var wg sync.WaitGroup

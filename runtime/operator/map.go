@@ -14,19 +14,26 @@ type Map struct {
 }
 
 func NewMap(function functions.MapFunc) *Map {
+	if function == nil {
+		panic("map function must not be nil")
+	}
 	return &Map{function}
 }
 
 func (m *Map) New() intfs.Operator {
+	udf := m.newFunction()
+	return NewMap(udf)
+}
+
+func (m *Map) newFunction() (udf functions.MapFunc) {
 	encodedBytes := encodeFunction(m.function)
 	reader := bytes.NewReader(encodedBytes)
 	decoder := gob.NewDecoder(reader)
-	var udf functions.MapFunc
 	err := decoder.Decode(&udf)
 	if err != nil {
 		panic(err)
 	}
-	return NewMap(udf)
+	return
 }
 
 func (m *Map) handleRecord(record types.Record, out Emitter) {

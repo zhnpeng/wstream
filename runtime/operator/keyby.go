@@ -12,7 +12,9 @@ type KeyBy struct {
 }
 
 func NewKeyBy(keys []interface{}) *KeyBy {
-	return &KeyBy{keys}
+	return &KeyBy{
+		keys: keys,
+	}
 }
 func (m *KeyBy) New() intfs.Operator {
 	return NewKeyBy(m.keys)
@@ -20,7 +22,7 @@ func (m *KeyBy) New() intfs.Operator {
 
 func (m *KeyBy) handleRecord(record types.Record, out Emitter) {
 	// usekeys and get key values
-	kvs := record.UseKeys(m.keys)
+	kvs := record.UseKeys(m.keys...)
 	index := utils.PartitionByKeys(out.Length(), kvs)
 	out.EmitTo(index, record)
 }
