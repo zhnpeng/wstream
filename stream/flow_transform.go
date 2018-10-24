@@ -30,7 +30,7 @@ func (f *Flow) transform() {
 			//Create executable
 			toNode.Task = f.StreamToTask(toNode.stream)
 		}
-		if len(toNode.Task.RescaleNodes) == 0 {
+		if toNode.Task.RescaleNode == nil {
 			// is a broadcast node
 			for i, n := range fromNode.Task.BroadcastNodes {
 				edge := make(execution.Edge)
@@ -39,11 +39,10 @@ func (f *Flow) transform() {
 			}
 		} else {
 			// is a rescale node
-			length := len(toNode.Task.RescaleNodes)
-			for i, n := range fromNode.Task.BroadcastNodes {
+			for _, n := range fromNode.Task.BroadcastNodes {
 				edge := make(execution.Edge)
 				n.AddOutEdge(edge.Out())
-				toNode.Task.RescaleNodes[i%length].AddInEdge(edge.In())
+				toNode.Task.RescaleNode.AddInEdge(edge.In())
 			}
 		}
 	})
@@ -66,15 +65,13 @@ func (f *Flow) StreamToTask(stm Stream) *execution.Task {
 }
 
 func (f *Flow) KeyedStreamToTask(stm *KeyedStream) (task *execution.Task) {
-	rescaleNode := execution.NewNode(
+	rescaleNode := execution.NewRescaleNode(
 		context.Background(),
-		stm.Operator(),
-		execution.NewReceiver(),
-		execution.NewEmitter(),
+		stm.Selector(),
 	)
-	broadcastNodes := make([]*execution.Node, 0, stm.Parallelism())
+	broadcastNodes := make([]execution.Node, 0, stm.Parallelism())
 	for i := 0; i < stm.Parallelism(); i++ {
-		broadcastNode := execution.NewNode(
+		broadcastNode := execution.NewBroadcastNode(
 			context.Background(),
 			stm.Operator(),
 			execution.NewReceiver(),
@@ -86,16 +83,16 @@ func (f *Flow) KeyedStreamToTask(stm *KeyedStream) (task *execution.Task) {
 		broadcastNodes = append(broadcastNodes, broadcastNode)
 	}
 	task = &execution.Task{
-		RescaleNodes:   []*execution.Node{rescaleNode},
+		RescaleNode:    rescaleNode,
 		BroadcastNodes: broadcastNodes,
 	}
 	return
 }
 
 func (f *Flow) DataStreamToTask(stm *DataStream) (task *execution.Task) {
-	broadcastNodes := make([]*execution.Node, 0, stm.Parallelism())
+	broadcastNodes := make([]execution.Node, 0, stm.Parallelism())
 	for i := 0; i < stm.Parallelism(); i++ {
-		node := execution.NewNode(
+		node := execution.NewBroadcastNode(
 			context.Background(),
 			stm.Operator(),
 			execution.NewReceiver(),
@@ -110,9 +107,9 @@ func (f *Flow) DataStreamToTask(stm *DataStream) (task *execution.Task) {
 }
 
 func (f *Flow) WindowedStreamToTask(stm *WindowedStream) (task *execution.Task) {
-	broadcastNodes := make([]*execution.Node, 0, stm.Parallelism())
+	broadcastNodes := make([]execution.Node, 0, stm.Parallelism())
 	for i := 0; i < stm.Parallelism(); i++ {
-		node := execution.NewNode(
+		node := execution.NewBroadcastNode(
 			context.Background(),
 			stm.Operator(),
 			execution.NewReceiver(),
@@ -127,9 +124,9 @@ func (f *Flow) WindowedStreamToTask(stm *WindowedStream) (task *execution.Task) 
 }
 
 func (f *Flow) SourceStreamToTask(stm *SourceStream) (task *execution.Task) {
-	broadcastNodes := make([]*execution.Node, 0, stm.Parallelism())
+	broadcastNodes := make([]execution.Node, 0, stm.Parallelism())
 	for _, input := range stm.Inputs() {
-		node := execution.NewNode(
+		node := execution.NewBroadcastNode(
 			context.Background(),
 			stm.Operator(),
 			execution.NewReceiver(),

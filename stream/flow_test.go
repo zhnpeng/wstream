@@ -2,10 +2,12 @@ package stream
 
 import (
 	"fmt"
+	"sort"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/spf13/cast"
 	"github.com/wandouz/wstream/types"
 	"github.com/wandouz/wstream/utils"
@@ -37,30 +39,15 @@ func (trf *testReduceFunc) Reduce(a, b types.Record) types.Record {
 	)
 }
 
-type testSlice struct {
-	coll []types.Record
-	mu   sync.Mutex
-}
-
-func (t *testSlice) Append(r types.Record) {
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	t.coll = append(t.coll, r)
-}
-
-func (t *testSlice) Records() []types.Record {
-	return t.coll
-}
-
 type testDebugFunc struct {
-	Records *testSlice
+	Mu      sync.Mutex
+	Records []types.Record
 }
 
 func (t *testDebugFunc) Debug(r types.Record) {
-	if t.Records == nil {
-		t.Records = &testSlice{}
-	}
-	t.Records.Append(r)
+	t.Mu.Lock()
+	defer t.Mu.Unlock()
+	t.Records = append(t.Records, r)
 }
 
 type testTimestampWithPuncatuatedWatermark struct {
@@ -82,14 +69,14 @@ func TestFlow_Run(t *testing.T) {
 	input1 := make(chan map[string]interface{})
 	input2 := make(chan map[string]interface{})
 	flow, source := New("test")
-	Debug := &testDebugFunc{}
+	outfunc := &testDebugFunc{}
 	source.MapChannels(input1, input2).
 		TimestampWithPuncatuatedWatermark(&testTimestampWithPuncatuatedWatermark{}).
 		Map(&testMapFunc{}).
 		KeyBy("D1", "D2").
 		TimeWindow(2).
 		Reduce(&testReduceFunc{}).
-		Debug(Debug)
+		Debug(outfunc)
 	// Debug
 	// flow.Transform()
 	// fmt.Println(reflect.TypeOf(flow.GetStream(0)))
@@ -120,9 +107,78 @@ func TestFlow_Run(t *testing.T) {
 	flow.Run()
 	wg.Wait()
 
-	fmt.Println(len(Debug.Records.Records()))
-	for _, r := range Debug.Records.Records() {
-		fmt.Println(r)
+	got := outfunc.Records
+	if len(got) != 7 {
+		t.Errorf("length of got records not right got %d, want %d", len(outfunc.Records), 7)
+	}
+	sort.SliceStable(got, func(i, j int) bool {
+		ri := got[i]
+		rj := got[j]
+		if ri.Time().Before(rj.Time()) {
+			return true
+		} else if ri.Time().Equal(rj.Time()) {
+			ki := cast.ToString(ri.Key()[0]) + cast.ToString(ri.Key()[1])
+			kj := cast.ToString(rj.Key()[0]) + cast.ToString(rj.Key()[1])
+			return ki < kj
+		}
+		return false
+	})
+	want := []types.Record{
+		&types.MapRecord{
+			T: utils.ParseTime("2018-10-15 18:00:00"),
+			K: []interface{}{"A", "A"},
+			V: map[string]interface{}{
+				"X": 4,
+			},
+		},
+		&types.MapRecord{
+			T: utils.ParseTime("2018-10-15 18:00:00"),
+			K: []interface{}{"A", "B"},
+			V: map[string]interface{}{
+				"X": 6,
+			},
+		},
+		&types.MapRecord{
+			T: utils.ParseTime("2018-10-15 18:00:00"),
+			K: []interface{}{"B", "B"},
+			V: map[string]interface{}{
+				"X": 6,
+			},
+		},
+		&types.MapRecord{
+			T: utils.ParseTime("2018-10-15 18:00:02"),
+			K: []interface{}{"A", "A"},
+			V: map[string]interface{}{
+				"X": 6,
+			},
+		},
+		&types.MapRecord{
+			T: utils.ParseTime("2018-10-15 18:00:02"),
+			K: []interface{}{"A", "B"},
+			V: map[string]interface{}{
+				"X": 6,
+			},
+		},
+		&types.MapRecord{
+			T: utils.ParseTime("2018-10-15 18:00:02"),
+			K: []interface{}{"B", "A"},
+			V: map[string]interface{}{
+				"X": 2,
+			},
+		},
+		&types.MapRecord{
+			T: utils.ParseTime("2018-10-15 18:00:02"),
+			K: []interface{}{"B", "B"},
+			V: map[string]interface{}{
+				"X": 2,
+			},
+		},
+	}
+	if diff := cmp.Diff(got, want); diff != "" {
+		for _, r := range got {
+			fmt.Println(r)
+		}
+		t.Error(diff)
 	}
 }
 

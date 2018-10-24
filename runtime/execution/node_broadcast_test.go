@@ -26,7 +26,7 @@ func (o *doNothingOperatorForTest) handleWatermark(watermark *types.Watermark, o
 	out.Emit(watermark)
 }
 
-func (o *doNothingOperatorForTest) Run(in intfs.Receiver, out intfs.Emitter) {
+func (o *doNothingOperatorForTest) Run(in intfs.Iterator, out intfs.Emitter) {
 	for {
 		item, ok := <-in.Next()
 		if !ok {
@@ -52,19 +52,19 @@ func TestNode_Run_Single_Source_Watermark_Only(t *testing.T) {
 	sinkB0 := make(Edge)
 	sinkB1 := make(Edge)
 
-	nodeA0 := &Node{
+	nodeA0 := &BroadcastNode{
 		operator: &doNothingOperatorForTest{},
 		in:       NewReceiver(),
 		out:      NewEmitter(),
 		ctx:      context.Background(),
 	}
-	nodeB0 := &Node{
+	nodeB0 := &BroadcastNode{
 		operator: &doNothingOperatorForTest{},
 		in:       NewReceiver(),
 		out:      NewEmitter(),
 		ctx:      context.Background(),
 	}
-	nodeB1 := &Node{
+	nodeB1 := &BroadcastNode{
 		operator: &doNothingOperatorForTest{},
 		in:       NewReceiver(),
 		out:      NewEmitter(),
@@ -175,19 +175,19 @@ func TestNode_Run_Multiple_Source_Watermark_Only(t *testing.T) {
 	sinkB0 := make(Edge)
 	sinkB1 := make(Edge)
 
-	nodeA0 := &Node{
+	nodeA0 := &BroadcastNode{
 		operator: &doNothingOperatorForTest{},
 		in:       NewReceiver(),
 		out:      NewEmitter(),
 		ctx:      context.Background(),
 	}
-	nodeB0 := &Node{
+	nodeB0 := &BroadcastNode{
 		operator: &doNothingOperatorForTest{},
 		in:       NewReceiver(),
 		out:      NewEmitter(),
 		ctx:      context.Background(),
 	}
-	nodeB1 := &Node{
+	nodeB1 := &BroadcastNode{
 		operator: &doNothingOperatorForTest{},
 		in:       NewReceiver(),
 		out:      NewEmitter(),

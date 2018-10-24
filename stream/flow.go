@@ -3,17 +3,9 @@ package stream
 import (
 	"sync"
 
-	"github.com/wandouz/wstream/intfs"
 	"github.com/wandouz/wstream/runtime/execution"
 	"github.com/wandouz/wstream/utils/graph"
 )
-
-type Stream interface {
-	Parallelism() int
-	Operator() intfs.Operator
-	SetStreamNode(node *StreamNode)
-	GetStreamNode() (node *StreamNode)
-}
 
 /*
 Flow is a DAG graph organized with streams

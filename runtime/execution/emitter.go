@@ -45,3 +45,31 @@ func (e *Emitter) Dispose() {
 		close(ch)
 	}
 }
+
+type SingleEmitter struct {
+	output OutEdge
+}
+
+func NewSingleEmitter(output OutEdge) *SingleEmitter {
+	return &SingleEmitter{output}
+}
+
+func (e *SingleEmitter) Length() int {
+	return 1
+}
+
+// Emit emit item to all output channels
+func (e *SingleEmitter) Emit(item types.Item) {
+	e.output <- item
+}
+
+// EmitTo emit item to one output channel
+func (e *SingleEmitter) EmitTo(index int, item types.Item) error {
+	e.output <- item
+	return nil
+}
+
+// Dispose close all output channels
+func (e *SingleEmitter) Dispose() {
+	close(e.output)
+}

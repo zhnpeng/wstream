@@ -1,6 +1,6 @@
 package intfs
 
 type Operator interface {
-	Run(in Receiver, out Emitter)
+	Run(in Iterator, out Emitter)
 	New() Operator
 }

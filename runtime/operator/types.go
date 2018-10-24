@@ -4,6 +4,5 @@ import (
 	"github.com/wandouz/wstream/intfs"
 )
 
-type Receiver = intfs.Receiver
+type Receiver = intfs.Iterator
 type Emitter = intfs.Emitter
-type Iterator = intfs.Iterator

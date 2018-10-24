@@ -12,11 +12,10 @@ type WatermarkChan chan *types.Watermark
 // and do a multi-way merge for watermark
 // and parallel by-pass for other items
 type Receiver struct {
-	mu             sync.Mutex
-	inEdges        []InEdge
-	watermarkChans []WatermarkChan
-	output         Edge
-	running        bool
+	mu      sync.Mutex
+	inEdges []InEdge
+	output  Edge
+	running bool
 }
 
 func NewReceiver() *Receiver {
@@ -27,8 +26,6 @@ func NewReceiver() *Receiver {
 
 func (recv *Receiver) Add(input InEdge) {
 	recv.inEdges = append(recv.inEdges, input)
-	// watermarkChans map to input inEdges
-	recv.watermarkChans = append(recv.watermarkChans, make(WatermarkChan, DefaultWatermarkChannelBufferSize))
 }
 
 func (recv *Receiver) Run() {
@@ -43,12 +40,13 @@ func (recv *Receiver) Run() {
 	recv.running = true
 	recv.mu.Unlock()
 
+	emitter := NewSingleEmitter(recv.output)
+	merger := NewWatermarkMerger(len(recv.inEdges), emitter)
 	//fire up watermakr merger
-	watermarkMerger := NewWatermarkMerger(recv.watermarkChans, recv.output)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		watermarkMerger.Run()
+		merger.Run()
 	}()
 
 	//fire up input inEdges
@@ -59,13 +57,13 @@ func (recv *Receiver) Run() {
 			for {
 				item, ok := <-_ch
 				if !ok {
-					close(recv.watermarkChans[_id])
+					merger.CloseOne(_id)
 					return
 				}
 				switch item.(type) {
 				case *types.Watermark:
 					// multiway merge watermark from multiple inputs to one
-					recv.watermarkChans[_id] <- item.(*types.Watermark)
+					merger.Push(_id, item.(*types.Watermark))
 				default:
 					recv.output <- item
 				}

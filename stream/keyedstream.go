@@ -7,6 +7,7 @@ import (
 
 type KeyedStream struct {
 	parallel int
+	selector intfs.Selector
 	operator intfs.Operator
 
 	graph      *Flow
@@ -17,8 +18,13 @@ func NewKeyedStream(graph *Flow, parallel int, keys []interface{}) *KeyedStream 
 	return &KeyedStream{
 		graph:    graph,
 		parallel: parallel,
-		operator: operator.NewKeyBy(keys),
+		selector: operator.NewKeyBy(keys),
+		operator: operator.NewByPass(),
 	}
+}
+
+func (s *KeyedStream) Selector() intfs.Selector {
+	return s.selector.New()
 }
 
 func (s *KeyedStream) Operator() intfs.Operator {

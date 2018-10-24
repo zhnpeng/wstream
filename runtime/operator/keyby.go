@@ -16,21 +16,13 @@ func NewKeyBy(keys []interface{}) *KeyBy {
 		keys: keys,
 	}
 }
-func (m *KeyBy) New() intfs.Operator {
+
+func (m *KeyBy) New() intfs.Selector {
 	return NewKeyBy(m.keys)
 }
 
-func (m *KeyBy) handleRecord(record types.Record, out Emitter) {
-	// usekeys and get key values
+func (m *KeyBy) Select(record types.Record, size int) int {
 	kvs := record.UseKeys(m.keys...)
-	index := utils.PartitionByKeys(out.Length(), kvs)
-	out.EmitTo(index, record)
-}
-
-func (m *KeyBy) handleWatermark(wm *types.Watermark, out Emitter) {
-	out.Emit(wm)
-}
-
-func (m *KeyBy) Run(in Receiver, out Emitter) {
-	consume(in, out, m)
+	index := utils.PartitionByKeys(size, kvs)
+	return index
 }

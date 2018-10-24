@@ -3,6 +3,7 @@ package execution
 import (
 	"container/heap"
 
+	"github.com/wandouz/wstream/intfs"
 	"github.com/wandouz/wstream/types"
 )
 
@@ -10,16 +11,28 @@ import (
 type WatermarkMerger struct {
 	inputs    []WatermarkChan
 	watermark types.Watermark
-	output    Edge
+	output    intfs.Emitter
 	wmHeap    *WatermarkHeap
 }
 
-func NewWatermarkMerger(inputs []WatermarkChan, output Edge) *WatermarkMerger {
+func NewWatermarkMerger(size int, output intfs.Emitter) *WatermarkMerger {
+	inputs := make([]WatermarkChan, size)
+	for i := 0; i < size; i++ {
+		inputs[i] = make(WatermarkChan, DefaultWatermarkChannelBufferSize)
+	}
 	return &WatermarkMerger{
 		inputs: inputs,
 		output: output,
 		wmHeap: &WatermarkHeap{},
 	}
+}
+
+func (m *WatermarkMerger) Push(id int, wm *types.Watermark) {
+	m.inputs[id] <- wm
+}
+
+func (m *WatermarkMerger) CloseOne(id int) {
+	close(m.inputs[id])
 }
 
 func (m *WatermarkMerger) Run() {
@@ -43,7 +56,7 @@ func (m *WatermarkMerger) Run() {
 		for m.wmHeap.Len() > 0 {
 			item := heap.Pop(m.wmHeap).(WatermarkHeapItem)
 			if item.item.Time().After(m.watermark.Time()) {
-				m.output <- item.item
+				m.output.Emit(item.item)
 				m.watermark.T = item.item.Time()
 			}
 			nextWatermark, ok := <-item.ch
