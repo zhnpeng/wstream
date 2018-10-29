@@ -25,10 +25,6 @@ func NewRescaleNode(ctx context.Context, selector intfs.Selector) *RescaleNode {
 	}
 }
 
-func (n *RescaleNode) Dispose() {
-	n.out.Dispose()
-}
-
 func (n *RescaleNode) AddInEdge(in InEdge) {
 	n.inputs = append(n.inputs, in)
 }
@@ -78,5 +74,5 @@ func (n *RescaleNode) Run() {
 		}(i, ch)
 	}
 	wg.Wait()
-	defer n.Dispose()
+	defer n.out.Dispose()
 }

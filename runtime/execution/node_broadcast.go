@@ -29,10 +29,6 @@ func NewBroadcastNode(ctx context.Context, operator intfs.Operator, in *Receiver
 	}
 }
 
-func (n *BroadcastNode) Dispose() {
-	n.out.Dispose()
-}
-
 func (n *BroadcastNode) AddInEdge(inEdge InEdge) {
 	n.in.Add(inEdge)
 }
