@@ -42,8 +42,7 @@ type Window struct {
 	// windowsGroup map[windowing.WindowID]*windowing.WindowCollection
 
 	watermarkTime   time.Time
-	eventTimer      *EventTimerService
-	processingTimer *ProcessingTimerService
+	wts             *WindowTimerService
 	triggerContext  *WindowTriggerContext
 	assignerContext *WindowAssignerContext
 }
@@ -75,11 +74,10 @@ func NewWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger) *Win
 
 		applyFunc: &byPassApplyFunc{},
 	}
-	w.processingTimer = NewProcessingTimerService(w, time.Second)
-	w.eventTimer = NewEventTimerService(w)
+	w.wts = NewWindowTimerService(w, time.Second)
 	// bind this window to triggerContext factory
-	w.triggerContext = NewWindowTriggerContext(w.processingTimer, w.eventTimer)
-	w.assignerContext = NewWindowAssignerContext(w.processingTimer)
+	w.triggerContext = NewWindowTriggerContext(w.wts)
+	w.assignerContext = NewWindowAssignerContext(w.wts)
 	return w
 }
 
@@ -138,7 +136,7 @@ func (w *Window) handleRecord(record types.Record, out Emitter) {
 	for _, window := range assignedWindows {
 		if w.isWindowLate(window) {
 			// drop window if it is event time and late
-			logrus.Warnf("drop late window (%+v %+v) for record %+v, watermark time is %v", window.Start(), window.End(), record, w.eventTimer.CurrentWatermarkTime())
+			logrus.Warnf("drop late window (%+v %+v) for record %+v, watermark time is %v", window.Start(), window.End(), record, w.wts.CurrentWatermarkTime())
 			continue
 		}
 		k := utils.HashSlice(record.Key())
@@ -176,21 +174,20 @@ func (w *Window) registerCleanupTimer(wid windowing.WindowID, window windows.Win
 		return
 	}
 	if w.assigner.IsEventTime() {
-		w.eventTimer.RegisterEventTimer(wid, window.MaxTimestamp())
+		w.wts.RegisterEventTimer(wid, window.MaxTimestamp())
 	} else {
-		w.processingTimer.RegisterProcessingTimer(wid, window.MaxTimestamp())
+		w.wts.RegisterProcessingTimer(wid, window.MaxTimestamp())
 	}
 }
 
 func (w *Window) isWindowLate(window windows.Window) bool {
-	return w.assigner.IsEventTime() && window.MaxTimestamp().Before(w.eventTimer.CurrentWatermarkTime())
+	return w.assigner.IsEventTime() && window.MaxTimestamp().Before(w.wts.CurrentWatermarkTime())
 }
 
 func (w *Window) handleWatermark(wm *types.Watermark, out Emitter) {
-	// EventTimerService emit watermark
-	// so Window Operator with CountAssigner won't
-	// emit watermark to down stream operator
-	w.eventTimer.Drive(wm.Time())
+	//window do multi way merge watermarks into one
+	//and drive event time with it
+	w.wts.Drive(wm.Time())
 }
 
 // onProcessingTime is callback for processing timer service
@@ -243,7 +240,7 @@ func (w *Window) isCleanupTime(window windows.Window, t time.Time) bool {
 
 // check if should emit new watermark
 func (w *Window) likelyEmitWatermark() {
-	eventTime := w.eventTimer.CurrentWatermarkTime()
+	eventTime := w.wts.CurrentWatermarkTime()
 	if eventTime.After(w.watermarkTime) {
 		w.out.Emit(types.NewWatermark(eventTime))
 		w.watermarkTime = eventTime
@@ -252,67 +249,23 @@ func (w *Window) likelyEmitWatermark() {
 
 // Run this operator
 func (w *Window) Run(in Receiver, out Emitter) {
-	// FIXME: emitter may be property of operator
 	w.out = out
-	w.processingTimer.Start()
-	consume(in, out, w)
-}
-
-// WindowTriggerContext is a factory
-// implement TriggerContext and bind processing/event timer service from window operator
-// use factory New(windowing.WindowID) *WindowTriggerContext to create a new context
-type WindowTriggerContext struct {
-	wid  windowing.WindowID
-	size int
-	ets  *EventTimerService
-	pts  *ProcessingTimerService
-}
-
-// NewWindowTriggerContext make a context
-func NewWindowTriggerContext(p *ProcessingTimerService, e *EventTimerService) *WindowTriggerContext {
-	return &WindowTriggerContext{
-		pts: p,
-		ets: e,
+	w.wts.Start()
+	defer w.wts.Stop()
+	for {
+		item, ok := <-in.Next()
+		if !ok {
+			return
+		}
+		switch item.(type) {
+		case types.Record:
+			w.handleRecord(item.(types.Record), out)
+		case *types.Watermark:
+			w.handleWatermark(item.(*types.Watermark), out)
+		}
 	}
 }
 
-// New is factory method to create new WindowTriggerContext object with param WindowID
-func (c *WindowTriggerContext) New(wid windowing.WindowID, size int) *WindowTriggerContext {
-	return &WindowTriggerContext{
-		wid:  wid,
-		size: size,
-		pts:  c.pts,
-		ets:  c.ets,
-	}
-}
-
-func (c *WindowTriggerContext) WindowSize() int {
-	return c.size
-}
-
-func (c *WindowTriggerContext) RegisterProcessingTimer(t time.Time) {
-	c.pts.RegisterProcessingTimer(c.wid, t)
-}
-
-func (c *WindowTriggerContext) RegisterEventTimer(t time.Time) {
-	c.ets.RegisterEventTimer(c.wid, t)
-}
-
-func (c *WindowTriggerContext) GetCurrentEventTime() time.Time {
-	return c.ets.CurrentWatermarkTime()
-}
-
-// WindowAssignerContext is context passing to window assigner
-type WindowAssignerContext struct {
-	processingTimerService *ProcessingTimerService
-}
-
-func NewWindowAssignerContext(service *ProcessingTimerService) *WindowAssignerContext {
-	return &WindowAssignerContext{
-		processingTimerService: service,
-	}
-}
-
-func (c *WindowAssignerContext) GetCurrentProcessingTime() time.Time {
-	return c.processingTimerService.CurrentProcessingTime()
+func (w *Window) Dispose() {
+	w.out.Dispose()
 }

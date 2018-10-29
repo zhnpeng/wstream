@@ -6,40 +6,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/wandouz/wstream/intfs"
+	"github.com/wandouz/wstream/runtime/operator"
+
 	"github.com/wandouz/wstream/types"
 	"github.com/wandouz/wstream/utils"
 )
-
-type doNothingOperatorForTest struct {
-}
-
-func (o *doNothingOperatorForTest) New() intfs.Operator {
-	return &doNothingOperatorForTest{}
-}
-
-func (o *doNothingOperatorForTest) handleRecord(record types.Record, out intfs.Emitter) {
-	out.Emit(record)
-}
-
-func (o *doNothingOperatorForTest) handleWatermark(watermark *types.Watermark, out intfs.Emitter) {
-	out.Emit(watermark)
-}
-
-func (o *doNothingOperatorForTest) Run(in intfs.Iterator, out intfs.Emitter) {
-	for {
-		item, ok := <-in.Next()
-		if !ok {
-			return
-		}
-		switch item.(type) {
-		case types.Record:
-			o.handleRecord(item.(types.Record), out)
-		case *types.Watermark:
-			o.handleWatermark(item.(*types.Watermark), out)
-		}
-	}
-}
 
 func TestNode_Run_Single_Source_Watermark_Only(t *testing.T) {
 	/*
@@ -53,19 +24,19 @@ func TestNode_Run_Single_Source_Watermark_Only(t *testing.T) {
 	sinkB1 := make(Edge)
 
 	nodeA0 := &BroadcastNode{
-		operator: &doNothingOperatorForTest{},
+		operator: operator.NewByPass(),
 		in:       NewReceiver(),
 		out:      NewEmitter(),
 		ctx:      context.Background(),
 	}
 	nodeB0 := &BroadcastNode{
-		operator: &doNothingOperatorForTest{},
+		operator: operator.NewByPass(),
 		in:       NewReceiver(),
 		out:      NewEmitter(),
 		ctx:      context.Background(),
 	}
 	nodeB1 := &BroadcastNode{
-		operator: &doNothingOperatorForTest{},
+		operator: operator.NewByPass(),
 		in:       NewReceiver(),
 		out:      NewEmitter(),
 		ctx:      context.Background(),
@@ -176,19 +147,19 @@ func TestNode_Run_Multiple_Source_Watermark_Only(t *testing.T) {
 	sinkB1 := make(Edge)
 
 	nodeA0 := &BroadcastNode{
-		operator: &doNothingOperatorForTest{},
+		operator: operator.NewByPass(),
 		in:       NewReceiver(),
 		out:      NewEmitter(),
 		ctx:      context.Background(),
 	}
 	nodeB0 := &BroadcastNode{
-		operator: &doNothingOperatorForTest{},
+		operator: operator.NewByPass(),
 		in:       NewReceiver(),
 		out:      NewEmitter(),
 		ctx:      context.Background(),
 	}
 	nodeB1 := &BroadcastNode{
-		operator: &doNothingOperatorForTest{},
+		operator: operator.NewByPass(),
 		in:       NewReceiver(),
 		out:      NewEmitter(),
 		ctx:      context.Background(),

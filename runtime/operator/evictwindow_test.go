@@ -42,6 +42,10 @@ func (e *evictWindowTestEmitter) EmitTo(index int, item types.Item) error {
 	return nil
 }
 
+func (e *evictWindowTestEmitter) Dispose() {
+	close(e.ch)
+}
+
 type evictWindowTestReduceFunc struct {
 }
 
@@ -150,7 +154,6 @@ func TestEvictWindow_Run_Tumbling_EventTime_Window(t *testing.T) {
 
 	// wait until all item is emit to output
 	w.Run(receiver, emitter)
-	close(output)
 	wg.Wait()
 
 	want := []types.Item{
@@ -270,7 +273,6 @@ func TestEvictWindow_Run_Tumbling_Count_Window(t *testing.T) {
 
 	// wait until all item is emit to output
 	w.Run(receiver, emitter)
-	close(output)
 	wg.Wait()
 
 	want := []types.Item{
@@ -384,7 +386,6 @@ func TestEvictWindow_Run_Sliding_Count_Window(t *testing.T) {
 
 	// wait until all item is emit to output
 	w.Run(receiver, emitter)
-	close(output)
 	wg.Wait()
 
 	want := []types.Item{

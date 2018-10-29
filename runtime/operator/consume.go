@@ -10,6 +10,7 @@ type Handler interface {
 }
 
 func consume(in Receiver, out Emitter, handler Handler) {
+	defer out.Dispose()
 	for {
 		item, ok := <-in.Next()
 		if !ok {

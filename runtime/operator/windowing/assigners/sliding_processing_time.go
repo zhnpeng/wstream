@@ -18,7 +18,7 @@ type SlidingProcessingTimeWindow struct {
 
 func NewSlidingProcessingTimeWindow(period, every, offset int64) *SlidingProcessingTimeWindow {
 	if offset < 0 || period <= 0 {
-		panic("SlidingProcessingTimeWindow params must satisfy period > 0")
+		panic("SlidingProcessingTimeWindow params must satisfy offset and period > 0")
 	}
 	return &SlidingProcessingTimeWindow{
 		period: period,

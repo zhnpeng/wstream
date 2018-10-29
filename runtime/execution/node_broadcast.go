@@ -51,5 +51,4 @@ func (n *BroadcastNode) Run() {
 		n.operator.Run(n.in, n.out)
 	}()
 	wg.Wait()
-	defer n.Dispose()
 }

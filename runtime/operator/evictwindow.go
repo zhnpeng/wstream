@@ -37,8 +37,7 @@ type EvictWindow struct {
 	// windowsGroup map[windowing.WindowID]*windowing.WindowCollection
 
 	watermarkTime   time.Time
-	eventTimer      *EventTimerService
-	processingTimer *ProcessingTimerService
+	wts             *WindowTimerService
 	triggerContext  *WindowTriggerContext
 	assignerContext *WindowAssignerContext
 }
@@ -63,11 +62,10 @@ func NewEvictWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger,
 
 		applyFunc: &byPassApplyFunc{},
 	}
-	w.processingTimer = NewProcessingTimerService(w, time.Second)
-	w.eventTimer = NewEventTimerService(w)
+	w.wts = NewWindowTimerService(w, time.Second)
 	// bind this window to triggerContext factory
-	w.triggerContext = NewWindowTriggerContext(w.processingTimer, w.eventTimer)
-	w.assignerContext = NewWindowAssignerContext(w.processingTimer)
+	w.triggerContext = NewWindowTriggerContext(w.wts)
+	w.assignerContext = NewWindowAssignerContext(w.wts)
 	return w
 }
 
@@ -179,20 +177,20 @@ func (w *EvictWindow) registerCleanupTimer(wid windowing.WindowID, window window
 		return
 	}
 	if w.assigner.IsEventTime() {
-		w.eventTimer.RegisterEventTimer(wid, window.MaxTimestamp())
+		w.wts.RegisterEventTimer(wid, window.MaxTimestamp())
 	} else {
-		w.processingTimer.RegisterProcessingTimer(wid, window.MaxTimestamp())
+		w.wts.RegisterProcessingTimer(wid, window.MaxTimestamp())
 	}
 }
 
 func (w *EvictWindow) isWindowLate(window windows.Window) bool {
-	return w.assigner.IsEventTime() && window.MaxTimestamp().Before(w.eventTimer.CurrentWatermarkTime())
+	return w.assigner.IsEventTime() && window.MaxTimestamp().Before(w.wts.CurrentWatermarkTime())
 }
 
 // EvictWindow operator don't emit watermark from upstream operator
 // and will emit new watermark when emit window
 func (w *EvictWindow) handleWatermark(wm *types.Watermark, out Emitter) {
-	w.eventTimer.Drive(wm.Time())
+	w.wts.Drive(wm.Time())
 }
 
 // onProcessingTime is callback for processing timer service
@@ -245,7 +243,7 @@ func (w *EvictWindow) isCleanupTime(window windows.Window, t time.Time) bool {
 
 // check if should emit new watermark
 func (w *EvictWindow) likelyEmitWatermark() {
-	eventTime := w.eventTimer.CurrentWatermarkTime()
+	eventTime := w.wts.CurrentWatermarkTime()
 	if eventTime.After(w.watermarkTime) {
 		w.out.Emit(types.NewWatermark(eventTime))
 		w.watermarkTime = eventTime
@@ -255,6 +253,22 @@ func (w *EvictWindow) likelyEmitWatermark() {
 // Run this operator
 func (w *EvictWindow) Run(in Receiver, out Emitter) {
 	w.out = out
-	w.processingTimer.Start()
-	consume(in, out, w)
+	w.wts.Start()
+	defer w.wts.Stop()
+	for {
+		item, ok := <-in.Next()
+		if !ok {
+			return
+		}
+		switch item.(type) {
+		case types.Record:
+			w.handleRecord(item.(types.Record), out)
+		case *types.Watermark:
+			w.handleWatermark(item.(*types.Watermark), out)
+		}
+	}
+}
+
+func (w *EvictWindow) Dispose() {
+	w.out.Dispose()
 }
