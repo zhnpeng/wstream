@@ -33,8 +33,16 @@ func (n *BroadcastNode) AddInEdge(inEdge InEdge) {
 	n.in.Add(inEdge)
 }
 
+func (n *BroadcastNode) AddInEdges(ins ...InEdge) {
+	n.in.Adds(ins...)
+}
+
 func (n *BroadcastNode) AddOutEdge(outEdge OutEdge) {
 	n.out.Add(outEdge)
+}
+
+func (n *BroadcastNode) AddOutEdges(outs ...OutEdge) {
+	n.out.Adds(outs...)
 }
 
 func (n *BroadcastNode) Run() {

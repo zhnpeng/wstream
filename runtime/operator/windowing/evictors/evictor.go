@@ -12,6 +12,6 @@ type EvictorContext interface {
 }
 
 type Evictor interface {
-	EvictBefore(coll *windowing.WindowCollection, size int64)
-	EvictAfter(coll *windowing.WindowCollection, size int64)
+	EvictBefore(contents *windowing.WindowContents, size int64)
+	EvictAfter(contents *windowing.WindowContents, size int64)
 }

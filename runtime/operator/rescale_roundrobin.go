@@ -7,31 +7,21 @@ import (
 	"github.com/wandouz/wstream/types"
 )
 
-type RescaleRoundrobin struct {
+type RoundRobinSelector struct {
 	count int64
 }
 
-func NewRescaleRoundRobin() *RescaleRoundrobin {
-	return &RescaleRoundrobin{}
+func NewRoundRobinSelector() *RoundRobinSelector {
+	return &RoundRobinSelector{}
 }
 
-func (m *RescaleRoundrobin) New() intfs.Operator {
-	return NewRescaleRoundRobin()
+func (m *RoundRobinSelector) New() intfs.Selector {
+	return NewRoundRobinSelector()
 }
 
-func (m *RescaleRoundrobin) handleRecord(record types.Record, out Emitter) {
-	// TODO: refine this
-	// Round Robin way to emit item
-	// get key values, then calculate index, then emit to partition by index
+func (m *RoundRobinSelector) Select(record types.Record, size int) int {
+	// TODO: find a better implement
 	cnt := atomic.AddInt64(&m.count, 1)
-	index := cnt % int64(out.Length())
-	out.EmitTo(int(index), record)
-}
-
-func (m *RescaleRoundrobin) handleWatermark(wm *types.Watermark, out Emitter) {
-	out.Emit(wm)
-}
-
-func (m *RescaleRoundrobin) Run(in Receiver, out Emitter) {
-	consume(in, out, m)
+	index := cnt % int64(size)
+	return int(index)
 }

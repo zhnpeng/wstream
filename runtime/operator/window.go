@@ -31,20 +31,16 @@ func (*byPassApplyFunc) Apply(records *list.Element, out functions.Emitter) {
 // assigner is due to assign windows for each record
 // trigger is due to judge timing to emit window records
 type Window struct {
-	assigner assigners.WindowAssinger
-	trigger  triggers.Trigger
-
-	applyFunc  functions.ApplyFunc
-	reduceFunc functions.ReduceFunc
-	out        Emitter
-
-	windowsGroup sync.Map
-	// windowsGroup map[windowing.WindowID]*windowing.WindowCollection
-
-	watermarkTime   time.Time
-	wts             *WindowTimerService
-	triggerContext  *WindowTriggerContext
-	assignerContext *WindowAssignerContext
+	assigner          assigners.WindowAssinger
+	trigger           triggers.Trigger
+	applyFunc         functions.ApplyFunc
+	reduceFunc        functions.ReduceFunc
+	out               Emitter
+	windowContentsMap sync.Map // map[windowing.WindowID]*windowing.WindowContents
+	watermarkTime     time.Time
+	wts               *WindowTimerService
+	triggerContext    *WindowTriggerContext
+	assignerContext   *WindowAssignerContext
 }
 
 /*
@@ -68,9 +64,9 @@ func NewWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger) *Win
 		trigger = assigner.GetDefaultTrigger()
 	}
 	w := &Window{
-		assigner:     assigner,
-		trigger:      trigger,
-		windowsGroup: sync.Map{},
+		assigner:          assigner,
+		trigger:           trigger,
+		windowContentsMap: sync.Map{},
 
 		applyFunc: &byPassApplyFunc{},
 	}
@@ -141,28 +137,25 @@ func (w *Window) handleRecord(record types.Record, out Emitter) {
 		}
 		k := utils.HashSlice(record.Key())
 		wid := windowing.NewWindowID(k, window)
-		var coll *windowing.WindowCollection
-		if c, ok := w.windowsGroup.Load(wid); ok {
-			coll = c.(*windowing.WindowCollection)
-			coll.Append(record)
+		var contents *windowing.WindowContents
+		if c, ok := w.windowContentsMap.Load(wid); ok {
+			contents = c.(*windowing.WindowContents)
+			contents.Append(record)
 		} else {
-			coll = windowing.NewWindowCollection(window, record.Time(), record.Key(), w.reduceFunc)
-			coll.Append(record)
-			w.windowsGroup.Store(wid, coll)
+			contents = windowing.NewWindowContents(window, record.Time(), record.Key(), w.reduceFunc)
+			contents.Append(record)
+			w.windowContentsMap.Store(wid, contents)
 		}
-		ctx := w.triggerContext.New(wid, coll.Len())
+		ctx := w.triggerContext.New(wid, contents.Len())
 		signal := w.trigger.OnItem(record, record.Time(), window, ctx)
 		if signal.IsFire() {
-			w.emitWindow(coll, out)
-		}
-		if signal.IsPurge() {
-			coll.Dispose()
+			w.emitWindow(contents, out)
 		}
 		w.registerCleanupTimer(wid, window)
 	}
 }
 
-func (w *Window) emitWindow(records *windowing.WindowCollection, out Emitter) {
+func (w *Window) emitWindow(records *windowing.WindowContents, out Emitter) {
 	emitter := NewWindowEmitter(records.Time(), records.Keys(), out)
 	iterator := records.Iterator()
 	w.applyFunc.Apply(iterator, emitter)
@@ -192,45 +185,36 @@ func (w *Window) handleWatermark(wm *types.Watermark, out Emitter) {
 
 // onProcessingTime is callback for processing timer service
 func (w *Window) onProcessingTime(wid windowing.WindowID, t time.Time) {
-	c, ok := w.windowsGroup.Load(wid)
+	c, ok := w.windowContentsMap.Load(wid)
 	if !ok {
 		return
 	}
-	coll := c.(*windowing.WindowCollection)
+	contents := c.(*windowing.WindowContents)
 	signal := w.trigger.OnProcessingTime(t, wid.Window())
 	if signal.IsFire() {
-		w.emitWindow(coll, w.out)
-	}
-	if signal.IsPurge() {
-		coll.Dispose()
-	}
-	if !w.assigner.IsEventTime() && w.isCleanupTime(wid.Window(), t) {
-		coll.Dispose()
-		w.windowsGroup.Delete(wid)
+		w.emitWindow(contents, w.out)
+		// dispose window content
+		contents.Dispose()
+		w.windowContentsMap.Delete(wid)
 	}
 }
 
 // onEventTIme is callback for event timer service
 func (w *Window) onEventTime(wid windowing.WindowID, t time.Time) {
-	c, ok := w.windowsGroup.Load(wid)
+	c, ok := w.windowContentsMap.Load(wid)
 	if !ok {
 		return
 	}
-	coll := c.(*windowing.WindowCollection)
+	contents := c.(*windowing.WindowContents)
 	// reemit watermark before emit windows
 	w.likelyEmitWatermark()
 
 	signal := w.trigger.OnEventTime(t, wid.Window())
 	if signal.IsFire() {
-		w.emitWindow(coll, w.out)
-	}
-	if signal.IsPurge() {
-		coll.Dispose()
-	}
-	if w.assigner.IsEventTime() && w.isCleanupTime(wid.Window(), t) {
-		// clean window
-		coll.Dispose()
-		w.windowsGroup.Delete(wid)
+		w.emitWindow(contents, w.out)
+		// dispose window content
+		contents.Dispose()
+		w.windowContentsMap.Delete(wid)
 	}
 }
 

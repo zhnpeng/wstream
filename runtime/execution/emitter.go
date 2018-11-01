@@ -22,6 +22,10 @@ func (e *Emitter) Add(ch OutEdge) {
 	e.outEdges = append(e.outEdges, ch)
 }
 
+func (e *Emitter) Adds(chs ...OutEdge) {
+	e.outEdges = append(e.outEdges, chs...)
+}
+
 // Emit emit item to all output channels
 func (e *Emitter) Emit(item types.Item) {
 	for _, channel := range e.outEdges {

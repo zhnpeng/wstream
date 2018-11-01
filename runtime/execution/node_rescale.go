@@ -29,8 +29,16 @@ func (n *RescaleNode) AddInEdge(in InEdge) {
 	n.inputs = append(n.inputs, in)
 }
 
+func (n *RescaleNode) AddInEdges(ins ...InEdge) {
+	n.inputs = append(n.inputs, ins...)
+}
+
 func (n *RescaleNode) AddOutEdge(out OutEdge) {
 	n.out.Add(out)
+}
+
+func (n *RescaleNode) AddOutEdges(outs ...OutEdge) {
+	n.out.Adds(outs...)
 }
 
 func (n *RescaleNode) Run() {

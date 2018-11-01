@@ -25,21 +25,17 @@ import (
 // trigger is due to judge timing to emit window records
 // evictor is due to evict records before or after window records are emitted
 type EvictWindow struct {
-	assigner assigners.WindowAssinger
-	trigger  triggers.Trigger
-	evictor  evictors.Evictor
-
-	applyFunc  functions.ApplyFunc
-	reduceFunc functions.ReduceFunc
-	out        Emitter
-
-	windowsGroup sync.Map
-	// windowsGroup map[windowing.WindowID]*windowing.WindowCollection
-
-	watermarkTime   time.Time
-	wts             *WindowTimerService
-	triggerContext  *WindowTriggerContext
-	assignerContext *WindowAssignerContext
+	assigner          assigners.WindowAssinger
+	trigger           triggers.Trigger
+	evictor           evictors.Evictor
+	applyFunc         functions.ApplyFunc
+	reduceFunc        functions.ReduceFunc
+	out               Emitter
+	windowContentsMap sync.Map // map[windowing.WindowID]*windowing.WindowContents
+	watermarkTime     time.Time
+	wts               *WindowTimerService
+	triggerContext    *WindowTriggerContext
+	assignerContext   *WindowAssignerContext
 }
 
 // NewEvictWindow return evictable window object
@@ -55,10 +51,10 @@ func NewEvictWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger,
 		panic("EvictWindow must has an evictor")
 	}
 	w := &EvictWindow{
-		assigner:     assigner,
-		trigger:      trigger,
-		evictor:      evictor,
-		windowsGroup: sync.Map{},
+		assigner:          assigner,
+		trigger:           trigger,
+		evictor:           evictor,
+		windowContentsMap: sync.Map{},
 
 		applyFunc: &byPassApplyFunc{},
 	}
@@ -121,29 +117,26 @@ func (w *EvictWindow) handleRecord(record types.Record, out Emitter) {
 		}
 		k := utils.HashSlice(record.Key())
 		wid := windowing.NewWindowID(k, window)
-		var coll *windowing.WindowCollection
-		if c, ok := w.windowsGroup.Load(wid); ok {
-			coll = c.(*windowing.WindowCollection)
-			coll.Append(record)
+		var contents *windowing.WindowContents
+		if c, ok := w.windowContentsMap.Load(wid); ok {
+			contents = c.(*windowing.WindowContents)
+			contents.Append(record)
 		} else {
-			// evict window not reduce records in collections, so don't pass reduceFunc into it
-			coll = windowing.NewWindowCollection(window, record.Time(), record.Key(), nil)
-			coll.Append(record)
-			w.windowsGroup.Store(wid, coll)
+			// evict window not reduce records in contentsections, so don't pass reduceFunc into it
+			contents = windowing.NewWindowContents(window, record.Time(), record.Key(), nil)
+			contents.Append(record)
+			w.windowContentsMap.Store(wid, contents)
 		}
-		ctx := w.triggerContext.New(wid, coll.Len())
+		ctx := w.triggerContext.New(wid, contents.Len())
 		signal := w.trigger.OnItem(record, record.Time(), window, ctx)
 		if signal.IsFire() {
-			w.emitWindow(coll, out)
-		}
-		if signal.IsPurge() {
-			coll.Dispose()
+			w.emitWindow(contents, out)
 		}
 		w.registerCleanupTimer(wid, window)
 	}
 }
 
-func (w *EvictWindow) emitWindow(records *windowing.WindowCollection, out Emitter) {
+func (w *EvictWindow) emitWindow(records *windowing.WindowContents, out Emitter) {
 	// for TimeEvictor records without timestamp is invalid
 	// so for safty size should count only records with timestamp
 	w.evictor.EvictBefore(records, int64(records.Len()))
@@ -195,45 +188,35 @@ func (w *EvictWindow) handleWatermark(wm *types.Watermark, out Emitter) {
 
 // onProcessingTime is callback for processing timer service
 func (w *EvictWindow) onProcessingTime(wid windowing.WindowID, t time.Time) {
-	c, ok := w.windowsGroup.Load(wid)
+	c, ok := w.windowContentsMap.Load(wid)
 	if !ok {
 		return
 	}
-	coll := c.(*windowing.WindowCollection)
+	contents := c.(*windowing.WindowContents)
 	signal := w.trigger.OnProcessingTime(t, wid.Window())
 	if signal.IsFire() {
-		w.emitWindow(coll, w.out)
-	}
-	if signal.IsPurge() {
-		coll.Dispose()
-	}
-	if !w.assigner.IsEventTime() && w.isCleanupTime(wid.Window(), t) {
-		coll.Dispose()
-		w.windowsGroup.Delete(wid)
+		w.emitWindow(contents, w.out)
+		contents.Dispose()
+		w.windowContentsMap.Delete(wid)
 	}
 }
 
 // onEventTIme is callback for event timer service
 func (w *EvictWindow) onEventTime(wid windowing.WindowID, t time.Time) {
-	c, ok := w.windowsGroup.Load(wid)
+	c, ok := w.windowContentsMap.Load(wid)
 	if !ok {
 		return
 	}
-	coll := c.(*windowing.WindowCollection)
+	contents := c.(*windowing.WindowContents)
 
 	w.likelyEmitWatermark()
 
 	signal := w.trigger.OnEventTime(t, wid.Window())
 	if signal.IsFire() {
-		w.emitWindow(coll, w.out)
-	}
-	if signal.IsPurge() {
-		coll.Dispose()
-	}
-	if w.assigner.IsEventTime() && w.isCleanupTime(wid.Window(), t) {
+		w.emitWindow(contents, w.out)
 		// clean window
-		coll.Dispose()
-		w.windowsGroup.Delete(wid)
+		contents.Dispose()
+		w.windowContentsMap.Delete(wid)
 	}
 }
 

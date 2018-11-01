@@ -168,11 +168,8 @@ func TestNode_Run_Multiple_Source_Watermark_Only(t *testing.T) {
 	edgeA02B0 := make(Edge)
 	edgeA02B1 := make(Edge)
 
-	nodeA0.AddInEdge(source0.In())
-	nodeA0.AddInEdge(source1.In())
-	nodeA0.AddInEdge(source2.In())
-	nodeA0.AddOutEdge(edgeA02B0.Out())
-	nodeA0.AddOutEdge(edgeA02B1.Out())
+	nodeA0.AddInEdges(source0.In(), source1.In(), source2.In())
+	nodeA0.AddOutEdges(edgeA02B0.Out(), edgeA02B1.Out())
 
 	nodeB0.AddInEdge(edgeA02B0.In())
 	nodeB1.AddInEdge(edgeA02B1.In())

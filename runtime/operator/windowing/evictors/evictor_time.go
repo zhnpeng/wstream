@@ -20,27 +20,27 @@ func NewTimeEvictor() *TimeEvictor {
 	return &TimeEvictor{}
 }
 
-func (e *TimeEvictor) EvictBefore(coll *windowing.WindowCollection, size int64) {
+func (e *TimeEvictor) EvictBefore(contents *windowing.WindowContents, size int64) {
 	if !e.doEvictAfter {
-		e.evict(coll, size)
+		e.evict(contents, size)
 	}
 }
 
-func (e *TimeEvictor) EvictAfter(coll *windowing.WindowCollection, size int64) {
+func (e *TimeEvictor) EvictAfter(contents *windowing.WindowContents, size int64) {
 	if e.doEvictAfter {
-		e.evict(coll, size)
+		e.evict(contents, size)
 	}
 }
 
-func (e *TimeEvictor) evict(coll *windowing.WindowCollection, size int64) {
-	// evict require elements in coll has timestamp
-	maxTime := e.getMaxTime(coll)
+func (e *TimeEvictor) evict(contents *windowing.WindowContents, size int64) {
+	// evict require elements in contents has timestamp
+	maxTime := e.getMaxTime(contents)
 	evictBeforeTime := maxTime.Add(-1 * time.Duration(e.size) * time.Millisecond)
-	for iter := coll.Iterator(); iter != nil; {
+	for iter := contents.Iterator(); iter != nil; {
 		if item, ok := iter.Value.(types.Item); ok {
 			if !item.Time().After(evictBeforeTime) {
 				// RemoveN remove element and return its next
-				iter = coll.RemoveN(iter)
+				iter = contents.RemoveN(iter)
 				continue
 			}
 		}
@@ -48,9 +48,9 @@ func (e *TimeEvictor) evict(coll *windowing.WindowCollection, size int64) {
 	}
 }
 
-func (e *TimeEvictor) getMaxTime(coll *windowing.WindowCollection) time.Time {
+func (e *TimeEvictor) getMaxTime(contents *windowing.WindowContents) time.Time {
 	var maxTime time.Time
-	for iter := coll.Iterator(); iter != nil; iter = iter.Next() {
+	for iter := contents.Iterator(); iter != nil; iter = iter.Next() {
 		if item, ok := iter.Value.(types.Item); ok {
 			if item.Time().After(maxTime) {
 				maxTime = item.Time()

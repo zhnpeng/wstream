@@ -28,6 +28,10 @@ func (recv *Receiver) Add(input InEdge) {
 	recv.inEdges = append(recv.inEdges, input)
 }
 
+func (recv *Receiver) Adds(inputs ...InEdge) {
+	recv.inEdges = append(recv.inEdges, inputs...)
+}
+
 func (recv *Receiver) Run() {
 	var wg sync.WaitGroup
 	if recv.running {
