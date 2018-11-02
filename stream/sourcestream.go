@@ -16,7 +16,7 @@ func NewSourceStream(flow *Flow) *SourceStream {
 	stm := &SourceStream{
 		DataStream: DataStream{
 			flow:     flow,
-			operator: operator.NewRescaleRoundRobin(),
+			operator: operator.NewSourceRoundrobin(),
 		},
 	}
 	flow.AddStream(stm)
