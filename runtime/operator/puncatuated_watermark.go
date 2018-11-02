@@ -10,28 +10,28 @@ import (
 	"github.com/wandouz/wstream/types"
 )
 
-type AssignTimestampWithPunctuatedWatermark struct {
+type TimeWithPunctuatedWatermarkAssigner struct {
 	function          functions.TimestampWithPunctuatedWatermar
 	prevItemTimestamp int64
 	prevWatermark     *types.Watermark
 }
 
-func NewAssignTimestampWithPunctuatedWatermark(function functions.TimestampWithPunctuatedWatermar) *AssignTimestampWithPunctuatedWatermark {
+func NewTimeWithPunctuatedWatermarkAssigner(function functions.TimestampWithPunctuatedWatermar) *TimeWithPunctuatedWatermarkAssigner {
 	if function == nil {
 		panic("TimestampWithPunctuatedWatermar function must not be nil")
 	}
-	return &AssignTimestampWithPunctuatedWatermark{
+	return &TimeWithPunctuatedWatermarkAssigner{
 		function:      function,
 		prevWatermark: &types.Watermark{},
 	}
 }
 
-func (f *AssignTimestampWithPunctuatedWatermark) New() intfs.Operator {
+func (f *TimeWithPunctuatedWatermarkAssigner) New() intfs.Operator {
 	udf := f.newFunction()
-	return NewAssignTimestampWithPunctuatedWatermark(udf)
+	return NewTimeWithPunctuatedWatermarkAssigner(udf)
 }
 
-func (f *AssignTimestampWithPunctuatedWatermark) newFunction() (udf functions.TimestampWithPunctuatedWatermar) {
+func (f *TimeWithPunctuatedWatermarkAssigner) newFunction() (udf functions.TimestampWithPunctuatedWatermar) {
 	encodedBytes := encodeFunction(f.function)
 	reader := bytes.NewReader(encodedBytes)
 	decoder := gob.NewDecoder(reader)
@@ -42,7 +42,7 @@ func (f *AssignTimestampWithPunctuatedWatermark) newFunction() (udf functions.Ti
 	return
 }
 
-func (f *AssignTimestampWithPunctuatedWatermark) handleRecord(record types.Record, out Emitter) {
+func (f *TimeWithPunctuatedWatermarkAssigner) handleRecord(record types.Record, out Emitter) {
 	extractedTimestamp := f.function.ExtractTimestamp(record, f.prevItemTimestamp)
 	f.prevItemTimestamp = extractedTimestamp
 	record.SetTime(time.Unix(extractedTimestamp, 0))
@@ -56,13 +56,13 @@ func (f *AssignTimestampWithPunctuatedWatermark) handleRecord(record types.Recor
 	out.Emit(record)
 }
 
-func (f *AssignTimestampWithPunctuatedWatermark) handleWatermark(wm *types.Watermark, out Emitter) {
+func (f *TimeWithPunctuatedWatermarkAssigner) handleWatermark(wm *types.Watermark, out Emitter) {
 	if wm != nil && wm.After(f.prevWatermark) {
 		f.prevWatermark = wm
 		out.Emit(wm)
 	}
 }
 
-func (f *AssignTimestampWithPunctuatedWatermark) Run(in Receiver, out Emitter) {
+func (f *TimeWithPunctuatedWatermarkAssigner) Run(in Receiver, out Emitter) {
 	consume(in, out, f)
 }

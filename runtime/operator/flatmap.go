@@ -10,10 +10,10 @@ import (
 )
 
 type FlatMap struct {
-	function functions.FlatMapFunc
+	function functions.FlatMap
 }
 
-func NewFlatMap(function functions.FlatMapFunc) *FlatMap {
+func NewFlatMap(function functions.FlatMap) *FlatMap {
 	if function == nil {
 		panic("flatmap function must not be nil")
 	}
@@ -25,7 +25,7 @@ func (m *FlatMap) New() intfs.Operator {
 	return NewFlatMap(udf)
 }
 
-func (m *FlatMap) newFunction() (udf functions.FlatMapFunc) {
+func (m *FlatMap) newFunction() (udf functions.FlatMap) {
 	encodedBytes := encodeFunction(m.function)
 	reader := bytes.NewReader(encodedBytes)
 	decoder := gob.NewDecoder(reader)

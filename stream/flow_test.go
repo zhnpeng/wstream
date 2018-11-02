@@ -50,14 +50,14 @@ func (t *testDebugFunc) Debug(r types.Record) {
 	t.Records = append(t.Records, r)
 }
 
-type testTimestampWithPuncatuatedWatermark struct {
+type testAssignTimeWithPuncatuatedWatermark struct {
 }
 
-func (t *testTimestampWithPuncatuatedWatermark) ExtractTimestamp(r types.Record, pts int64) int64 {
+func (t *testAssignTimeWithPuncatuatedWatermark) ExtractTimestamp(r types.Record, pts int64) int64 {
 	return cast.ToInt64(r.Get("T"))
 }
 
-func (t *testTimestampWithPuncatuatedWatermark) GetNextWatermark(r types.Record, ets int64) (wm *types.Watermark) {
+func (t *testAssignTimeWithPuncatuatedWatermark) GetNextWatermark(r types.Record, ets int64) (wm *types.Watermark) {
 	isWatermark := cast.ToBool(r.Get("Watermark"))
 	if isWatermark {
 		return types.NewWatermark(time.Unix(ets, 0))
@@ -71,7 +71,7 @@ func TestFlow_Run(t *testing.T) {
 	flow, source := New("test")
 	outfunc := &testDebugFunc{}
 	source.MapChannels(input1, input2).
-		TimestampWithPuncatuatedWatermark(&testTimestampWithPuncatuatedWatermark{}).
+		AssignTimeWithPuncatuatedWatermark(&testAssignTimeWithPuncatuatedWatermark{}).
 		Map(&testMapFunc{}).
 		KeyBy("D1", "D2").
 		TimeWindow(2).

@@ -33,8 +33,8 @@ func (*byPassApplyFunc) Apply(records *list.Element, out functions.Emitter) {
 type Window struct {
 	assigner          assigners.WindowAssinger
 	trigger           triggers.Trigger
-	applyFunc         functions.ApplyFunc
-	reduceFunc        functions.ReduceFunc
+	applyFunc         functions.Apply
+	reduceFunc        functions.Reduce
 	out               Emitter
 	windowContentsMap sync.Map // map[windowing.WindowID]*windowing.WindowContents
 	watermarkTime     time.Time
@@ -45,16 +45,19 @@ type Window struct {
 
 /*
 NewWindow make a window operator object
-params:
-	default assigner is GlobalWindowAssigner
-	default trigger is assigner's default trigger
-	default evictor is nil
-Some notices
-1. about watermark
-only when time charaacteristic is event time watermark make sences
-window will swallow all watermarks from upstream operator
-and regenerate new watermark to downstream according to window's fire time
-count window won't generate any watermark
+
+	PARAMS
+		default assigner is GlobalWindowAssigner
+		default trigger is assigner's default trigger
+		default evictor is nil
+
+	DESCRIPTION:
+
+		About watermark
+			only when time charaacteristic is event time watermark make sences
+			window will swallow all watermarks from upstream operator
+			and regenerate new watermark to downstream according to window's fire time
+			count window won't generate any watermark
 */
 func NewWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger) *Window {
 	if assigner == nil {
@@ -85,7 +88,7 @@ func (w *Window) New() intfs.Operator {
 	return window
 }
 
-func (w *Window) newApplyFunc() (udf functions.ApplyFunc) {
+func (w *Window) newApplyFunc() (udf functions.Apply) {
 	encodedBytes := encodeFunction(w.applyFunc)
 	reader := bytes.NewReader(encodedBytes)
 	decoder := gob.NewDecoder(reader)
@@ -96,7 +99,7 @@ func (w *Window) newApplyFunc() (udf functions.ApplyFunc) {
 	return
 }
 
-func (w *Window) newReduceFunc() (udf functions.ReduceFunc) {
+func (w *Window) newReduceFunc() (udf functions.Reduce) {
 	if w.reduceFunc == nil {
 		return
 	}
@@ -110,7 +113,7 @@ func (w *Window) newReduceFunc() (udf functions.ReduceFunc) {
 	return
 }
 
-func (w *Window) SetApplyFunc(f functions.ApplyFunc) {
+func (w *Window) SetApplyFunc(f functions.Apply) {
 	if f == nil {
 		logrus.Warnf("Passing a nil apply function to window apply")
 		return
@@ -118,7 +121,7 @@ func (w *Window) SetApplyFunc(f functions.ApplyFunc) {
 	w.applyFunc = f
 }
 
-func (w *Window) SetReduceFunc(f functions.ReduceFunc) {
+func (w *Window) SetReduceFunc(f functions.Reduce) {
 	if f == nil {
 		logrus.Warnf("Passing a nil reduce function to window reduce")
 		return

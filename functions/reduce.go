@@ -5,8 +5,8 @@ import (
 )
 
 /*
-ReduceFunc run after non-windowded datastream is a "rolling" reduce
+Reduce run after non-windowded datastream is a "rolling" reduce
 */
-type ReduceFunc interface {
+type Reduce interface {
 	Reduce(a, b types.Record) (o types.Record)
 }

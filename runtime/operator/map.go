@@ -10,10 +10,10 @@ import (
 )
 
 type Map struct {
-	function functions.MapFunc
+	function functions.Map
 }
 
-func NewMap(function functions.MapFunc) *Map {
+func NewMap(function functions.Map) *Map {
 	if function == nil {
 		panic("map function must not be nil")
 	}
@@ -25,7 +25,7 @@ func (m *Map) New() intfs.Operator {
 	return NewMap(udf)
 }
 
-func (m *Map) newFunction() (udf functions.MapFunc) {
+func (m *Map) newFunction() (udf functions.Map) {
 	encodedBytes := encodeFunction(m.function)
 	reader := bytes.NewReader(encodedBytes)
 	decoder := gob.NewDecoder(reader)

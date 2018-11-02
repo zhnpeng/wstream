@@ -7,10 +7,10 @@ import (
 )
 
 type Debug struct {
-	function functions.DebugFunc
+	function functions.Debug
 }
 
-func NewDebug(function functions.DebugFunc) *Debug {
+func NewDebug(function functions.Debug) *Debug {
 	if function == nil {
 		panic("Debug function must not be nil")
 	}

@@ -5,7 +5,7 @@ import (
 	"github.com/wandouz/wstream/runtime/operator"
 )
 
-func (s *DataStream) FlatMap(fn functions.FlatMapFunc) *DataStream {
+func (s *DataStream) FlatMap(fn functions.FlatMap) *DataStream {
 	stream := s.clone()
 	stream.operator = operator.NewFlatMap(fn)
 	s.connect(stream)

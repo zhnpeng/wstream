@@ -12,11 +12,11 @@ import (
 
 // Reduce is a rolling reduce in datastream and keyedstream
 type Reduce struct {
-	function         functions.ReduceFunc
+	function         functions.Reduce
 	keyedAccumulator map[utils.KeyID]types.Record
 }
 
-func NewReduce(function functions.ReduceFunc) *Reduce {
+func NewReduce(function functions.Reduce) *Reduce {
 	if function == nil {
 		panic("reduce function must not be nil")
 	}
@@ -31,7 +31,7 @@ func (m *Reduce) New() intfs.Operator {
 	return NewReduce(udf)
 }
 
-func (m *Reduce) newFunction() (udf functions.ReduceFunc) {
+func (m *Reduce) newFunction() (udf functions.Reduce) {
 	encodedBytes := encodeFunction(m.function)
 	reader := bytes.NewReader(encodedBytes)
 	decoder := gob.NewDecoder(reader)

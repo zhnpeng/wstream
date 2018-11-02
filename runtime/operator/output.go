@@ -10,10 +10,10 @@ import (
 )
 
 type Output struct {
-	function functions.OutputFunc
+	function functions.Output
 }
 
-func NewOutput(function functions.OutputFunc) *Output {
+func NewOutput(function functions.Output) *Output {
 	if function == nil {
 		panic("output function must not be nil")
 	}
@@ -30,7 +30,7 @@ func (m *Output) handleRecord(record types.Record, out Emitter) {
 	out.Emit(record)
 }
 
-func (m *Output) newFunction() (udf functions.OutputFunc) {
+func (m *Output) newFunction() (udf functions.Output) {
 	encodedBytes := encodeFunction(m.function)
 	reader := bytes.NewReader(encodedBytes)
 	decoder := gob.NewDecoder(reader)

@@ -2,6 +2,6 @@ package functions
 
 import "github.com/wandouz/wstream/types"
 
-type FilterFunc interface {
+type Filter interface {
 	Filter(record types.Record) bool
 }

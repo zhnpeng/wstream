@@ -6,7 +6,7 @@ import (
 	"github.com/wandouz/wstream/utils"
 )
 
-// KeyBy is a rescaling node
+// KeyBy is a Selector rescale partitions according to record's key
 type KeyBy struct {
 	keys []interface{}
 }

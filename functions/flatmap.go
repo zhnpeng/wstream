@@ -4,6 +4,6 @@ import (
 	"github.com/wandouz/wstream/types"
 )
 
-type FlatMapFunc interface {
+type FlatMap interface {
 	FlatMap(record types.Record, emitter Emitter)
 }

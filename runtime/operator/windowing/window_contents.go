@@ -13,12 +13,12 @@ type WindowContents struct {
 	t          time.Time
 	k          []interface{}
 	elements   *list.List
-	reduceFunc functions.ReduceFunc
+	reduceFunc functions.Reduce
 }
 
 // NewWindowContents if window is a TimeWindow collection's T is window's start ts
 // else is the first record's time
-func NewWindowContents(window windows.Window, t time.Time, k []interface{}, reduceFunc functions.ReduceFunc) *WindowContents {
+func NewWindowContents(window windows.Window, t time.Time, k []interface{}, reduceFunc functions.Reduce) *WindowContents {
 	return &WindowContents{
 		t:          window.Start(),
 		k:          k,

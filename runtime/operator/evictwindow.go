@@ -28,8 +28,8 @@ type EvictWindow struct {
 	assigner          assigners.WindowAssinger
 	trigger           triggers.Trigger
 	evictor           evictors.Evictor
-	applyFunc         functions.ApplyFunc
-	reduceFunc        functions.ReduceFunc
+	applyFunc         functions.Apply
+	reduceFunc        functions.Reduce
 	out               Emitter
 	windowContentsMap sync.Map // map[windowing.WindowID]*windowing.WindowContents
 	watermarkTime     time.Time
@@ -73,7 +73,7 @@ func (w *EvictWindow) New() intfs.Operator {
 	return window
 }
 
-func (w *EvictWindow) newApplyFunc() (udf functions.ApplyFunc) {
+func (w *EvictWindow) newApplyFunc() (udf functions.Apply) {
 	encodedBytes := encodeFunction(w.applyFunc)
 	reader := bytes.NewReader(encodedBytes)
 	decoder := gob.NewDecoder(reader)
@@ -84,7 +84,7 @@ func (w *EvictWindow) newApplyFunc() (udf functions.ApplyFunc) {
 	return
 }
 
-func (w *EvictWindow) newReduceFunc() (udf functions.ReduceFunc) {
+func (w *EvictWindow) newReduceFunc() (udf functions.Reduce) {
 	if w.reduceFunc == nil {
 		return
 	}
@@ -98,11 +98,11 @@ func (w *EvictWindow) newReduceFunc() (udf functions.ReduceFunc) {
 	return
 }
 
-func (w *EvictWindow) SetApplyFunc(f functions.ApplyFunc) {
+func (w *EvictWindow) SetApplyFunc(f functions.Apply) {
 	w.applyFunc = f
 }
 
-func (w *EvictWindow) SetReduceFunc(f functions.ReduceFunc) {
+func (w *EvictWindow) SetReduceFunc(f functions.Reduce) {
 	w.reduceFunc = f
 }
 

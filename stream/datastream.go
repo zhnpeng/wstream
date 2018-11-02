@@ -62,7 +62,7 @@ func (s *DataStream) connect(stream Stream) {
 	s.flow.AddStreamEdge(s, stream)
 }
 
-func (s *DataStream) Debug(debugFunc functions.DebugFunc) *DataStream {
+func (s *DataStream) Debug(debugFunc functions.Debug) *DataStream {
 	stream := s.clone()
 	stream.operator = operator.NewDebug(debugFunc)
 	s.connect(stream)

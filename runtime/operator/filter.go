@@ -10,10 +10,10 @@ import (
 )
 
 type Filter struct {
-	function functions.FilterFunc
+	function functions.Filter
 }
 
-func NewFilter(function functions.FilterFunc) *Filter {
+func NewFilter(function functions.Filter) *Filter {
 	if function == nil {
 		panic("filter function must not be nil")
 	}
@@ -25,7 +25,7 @@ func (f *Filter) New() intfs.Operator {
 	return NewFilter(udf)
 }
 
-func (f *Filter) newFunction() (udf functions.FilterFunc) {
+func (f *Filter) newFunction() (udf functions.Filter) {
 	encodedBytes := encodeFunction(f.function)
 	reader := bytes.NewReader(encodedBytes)
 	decoder := gob.NewDecoder(reader)

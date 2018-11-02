@@ -4,6 +4,6 @@ import (
 	"container/list"
 )
 
-type ApplyFunc interface {
+type Apply interface {
 	Apply(records *list.Element, emitter Emitter)
 }

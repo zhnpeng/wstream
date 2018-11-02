@@ -6,11 +6,11 @@ import (
 
 // WindowOperator is helper interface to set user functions to window operator
 type WindowOperator interface {
-	SetApplyFunc(functions.ApplyFunc)
-	SetReduceFunc(functions.ReduceFunc)
+	SetApplyFunc(functions.Apply)
+	SetReduceFunc(functions.Reduce)
 }
 
-func (s *WindowedStream) Apply(applyFunc functions.ApplyFunc) *DataStream {
+func (s *WindowedStream) Apply(applyFunc functions.Apply) *DataStream {
 	stream := s.toDataStream()
 	operator := s.operator.(WindowOperator)
 	operator.SetApplyFunc(applyFunc)

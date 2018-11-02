@@ -12,7 +12,7 @@ type TimestampWithPunctuatedWatermar interface {
 	GetNextWatermark(record types.Record, extractedTimestamp int64) (wm *types.Watermark)
 }
 
-type TimestampWithPeriodicWatermark interface {
+type AssignTimeWithPeriodicWatermark interface {
 	ExtractTimestamp(record types.Record, prevRecordTimestamp int64) (sec int64)
 	GetNextWatermark() (wm *types.Watermark)
 	Period() time.Duration

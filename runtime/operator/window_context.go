@@ -6,13 +6,14 @@ import (
 	"github.com/wandouz/wstream/runtime/operator/windowing"
 )
 
-// WindowTriggerContext is a factory
-// implement TriggerContext and bind processing/event timer service from window operator
-// use factory New(windowing.WindowID) *WindowTriggerContext to create a new context
+/*
+WindowTriggerContext is used for Trigger implement TriggerContext
+use factory New(windowing.WindowID) *WindowTriggerContext to create a new context
+*/
 type WindowTriggerContext struct {
 	wid  windowing.WindowID
-	size int
 	wts  *WindowTimerService
+	size int
 }
 
 // NewWindowTriggerContext make a context
@@ -24,8 +25,8 @@ func NewWindowTriggerContext(wts *WindowTimerService) *WindowTriggerContext {
 func (c *WindowTriggerContext) New(wid windowing.WindowID, size int) *WindowTriggerContext {
 	return &WindowTriggerContext{
 		wid:  wid,
-		size: size,
 		wts:  c.wts,
+		size: size,
 	}
 }
 
