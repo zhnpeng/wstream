@@ -45,4 +45,4 @@ func main() {
 
 ### Reduce with tumbling event time window
 
-[full example](examples/windows/tumbling_time_window.go)
+[examples/windows/tumbling_time_window.go](examples/windows/tumbling_time_window.go)
