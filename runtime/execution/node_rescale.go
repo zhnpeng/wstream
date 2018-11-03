@@ -76,7 +76,7 @@ func (n *RescaleNode) Run() {
 					merger.Push(_i, item.(*types.Watermark))
 				default:
 					index := n.selector.Select(item.(types.Record), n.out.Length())
-					n.out.EmitTo(index, item)
+					_ = n.out.EmitTo(index, item)
 				}
 			}
 		}(i, ch)

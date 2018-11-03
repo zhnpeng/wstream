@@ -15,7 +15,7 @@ type myMapFunc struct{}
 
 func (tmf *myMapFunc) Map(r types.Record) (o types.Record) {
 	x := cast.ToInt(r.Get("X"))
-	r.Set("X", x+1)
+	_ = r.Set("X", x+1)
 	return r
 }
 

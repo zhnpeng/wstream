@@ -9,10 +9,7 @@ const (
 )
 
 func (s TriggerSignal) IsFire() bool {
-	if s == FIRE {
-		return true
-	}
-	return false
+	return s == FIRE
 }
 
 func (s TriggerSignal) String() string {

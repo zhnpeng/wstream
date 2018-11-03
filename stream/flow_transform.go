@@ -9,7 +9,7 @@ import (
 )
 
 func (f *Flow) Transform() {
-	if f.transformed == true {
+	if f.transformed {
 		logrus.Warn("transform failed, flow already transformed.")
 		return
 	}
