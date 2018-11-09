@@ -34,7 +34,7 @@ func main() {
         ).
         Map(&myMapFunc{}).
         KeyBy("Key1", "Key2"). // group by "Key1" and "Key2"
-        TimeWindow(2). // tumblint event time window for every 2 seconds
+        TimeWindow(2). // tumbling event time window for every 2 seconds
         Reduce(&myReduceFunc{}). // reduce on all datas for each window
         Output(outfunc)
     flow.Run() // Run infinity until input1 and input2 are closed
