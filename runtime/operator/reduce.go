@@ -44,12 +44,12 @@ func (m *Reduce) newFunction() (udf functions.Reduce) {
 
 func (m *Reduce) handleRecord(record types.Record, out Emitter) {
 	keys := utils.HashSlice(record.Key())
-	if acc, ok := m.keyedAccumulator[keys]; ok {
-		acc = m.function.Reduce(acc, record)
-		m.keyedAccumulator[keys] = acc.Inherit(record)
-	} else {
-		m.keyedAccumulator[keys] = record
+	var acc types.Record
+	if prevAcc, ok := m.keyedAccumulator[keys]; ok {
+		acc = prevAcc
 	}
+	acc = m.function.Reduce(acc, record)
+	m.keyedAccumulator[keys] = acc.Inherit(record)
 	out.Emit(m.keyedAccumulator[keys])
 }
 
