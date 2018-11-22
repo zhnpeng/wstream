@@ -147,7 +147,7 @@ func (w *EvictWindow) emitWindow(records *windowing.WindowContents, out Emitter)
 		var acc types.Record
 		for iter := iterator; iter != nil; iter = iter.Next() {
 			if acc == nil {
-				acc = iter.Value.(types.Record)
+				acc = w.reduceFunc.Accmulater(iter.Value.(types.Record))
 			} else {
 				acc = w.reduceFunc.Reduce(acc, iter.Value.(types.Record))
 			}

@@ -49,6 +49,14 @@ func (e *evictWindowTestEmitter) Dispose() {
 type evictWindowTestReduceFunc struct {
 }
 
+func (f *evictWindowTestReduceFunc) Accmulater(x types.Record) types.Record {
+	ret := map[string]interface{}{
+		"A": cast.ToInt(x.Get("A")),
+		"B": cast.ToInt(x.Get("B")),
+	}
+	return types.NewMapRecord(time.Time{}, ret)
+}
+
 func (f *evictWindowTestReduceFunc) Reduce(x types.Record, y types.Record) types.Record {
 	ret := map[string]interface{}{
 		"A": int(math.Max(cast.ToFloat64(x.Get("A")), cast.ToFloat64(y.Get("A")))),

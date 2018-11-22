@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/wandouz/wstream/runtime/operator"
+	"github.com/wandouz/wstream/runtime/selector"
 	"github.com/wandouz/wstream/types"
 	"github.com/wandouz/wstream/utils"
 )
@@ -18,7 +18,7 @@ func TestRescaleNode_Run(t *testing.T) {
 	sink0 := make(Edge)
 	sink1 := make(Edge)
 
-	node := NewRescaleNode(context.Background(), operator.NewRoundRobinSelector())
+	node := NewRescaleNode(context.Background(), selector.NewRoundRobinSelector())
 	node.AddInEdges(source0.In(), source1.In(), source2.In())
 	node.AddOutEdges(sink0.Out(), sink1.Out())
 	tm := utils.ParseTime("2018-08-17 10:00:00")

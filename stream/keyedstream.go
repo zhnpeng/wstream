@@ -3,6 +3,7 @@ package stream
 import (
 	"github.com/wandouz/wstream/intfs"
 	"github.com/wandouz/wstream/runtime/operator"
+	"github.com/wandouz/wstream/runtime/selector"
 )
 
 type KeyedStream struct {
@@ -18,7 +19,7 @@ func NewKeyedStream(graph *Flow, parallel int, keys []interface{}) *KeyedStream 
 	return &KeyedStream{
 		graph:    graph,
 		parallel: parallel,
-		selector: operator.NewKeyBy(keys),
+		selector: selector.NewKeyBy(keys),
 		operator: operator.NewByPass(),
 	}
 }
@@ -31,7 +32,7 @@ func (s *KeyedStream) Operator() intfs.Operator {
 	return s.operator.New()
 }
 
-func (s *KeyedStream) SetPartition(parallel int) *KeyedStream {
+func (s *KeyedStream) Rescale(parallel int) *KeyedStream {
 	s.parallel = parallel
 	return s
 }

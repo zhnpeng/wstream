@@ -1,4 +1,4 @@
-package operator
+package selector
 
 import (
 	"sync/atomic"

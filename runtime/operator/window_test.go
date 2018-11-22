@@ -48,13 +48,14 @@ func (e *windowtestEmitter) Dispose() {
 type windowTestReduceFunc struct {
 }
 
+func (f *windowTestReduceFunc) Accmulater(x types.Record) types.Record {
+	return types.NewRawMapRecord(map[string]interface{}{
+		"A": cast.ToInt(x.Get("A")),
+		"B": cast.ToInt(x.Get("B")),
+	})
+}
+
 func (f *windowTestReduceFunc) Reduce(x types.Record, y types.Record) types.Record {
-	if x == nil {
-		return types.NewRawMapRecord(map[string]interface{}{
-			"A": cast.ToInt(y.Get("A")),
-			"B": cast.ToInt(y.Get("B")),
-		})
-	}
 	return types.NewRawMapRecord(map[string]interface{}{
 		"A": int(math.Max(cast.ToFloat64(x.Get("A")), cast.ToFloat64(y.Get("A")))),
 		"B": cast.ToInt(x.Get("B")) + cast.ToInt(y.Get("B")),

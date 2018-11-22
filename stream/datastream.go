@@ -4,6 +4,7 @@ import (
 	"github.com/wandouz/wstream/functions"
 	"github.com/wandouz/wstream/intfs"
 	"github.com/wandouz/wstream/runtime/operator"
+	"github.com/wandouz/wstream/runtime/selector"
 )
 
 type DataStream struct {
@@ -41,11 +42,6 @@ func (s *DataStream) clone() *DataStream {
 	}
 }
 
-func (s *DataStream) SetPartition(parallel int) *DataStream {
-	s.parallel = parallel
-	return s
-}
-
 func (s *DataStream) SetStreamNode(node *StreamNode) {
 	s.streamNode = node
 }
@@ -56,6 +52,10 @@ func (s *DataStream) GetStreamNode() (node *StreamNode) {
 
 func (s *DataStream) toKeyedStream(keys []interface{}) *KeyedStream {
 	return NewKeyedStream(s.flow, s.parallel, keys)
+}
+
+func (s *DataStream) toRescaleStream(parallel int, selector *selector.Selector) *RescaledStream {
+	return NewRescaledStream(s.flow, parallel, selector)
 }
 
 func (s *DataStream) connect(stream Stream) {

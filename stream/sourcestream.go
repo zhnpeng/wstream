@@ -1,7 +1,6 @@
 package stream
 
 import (
-	"github.com/sirupsen/logrus"
 	"github.com/wandouz/wstream/runtime/operator"
 	"github.com/wandouz/wstream/types"
 )
@@ -21,11 +20,6 @@ func NewSourceStream(flow *Flow) *SourceStream {
 	}
 	flow.AddStream(stm)
 	return stm
-}
-
-func (s *SourceStream) SetPartition(parallel int) *SourceStream {
-	logrus.Warn("SourceStream not supported to set partition, its partition count is the same as count of inputs")
-	return s
 }
 
 func (s *SourceStream) Inputs() []chan types.Item {

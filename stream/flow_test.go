@@ -23,14 +23,15 @@ func (tmf *testMapFunc) Map(r types.Record) (o types.Record) {
 
 type testReduceFunc struct{}
 
+func (trf *testReduceFunc) Accmulater(a types.Record) types.Record {
+	return types.NewRawMapRecord(
+		map[string]interface{}{
+			"X": cast.ToInt(a.Get("X")),
+		},
+	)
+}
+
 func (trf *testReduceFunc) Reduce(a, b types.Record) types.Record {
-	if a == nil {
-		return types.NewRawMapRecord(
-			map[string]interface{}{
-				"X": cast.ToInt(b.Get("X")),
-			},
-		)
-	}
 	x := cast.ToInt(a.Get("X")) + cast.ToInt(b.Get("X"))
 	return types.NewRawMapRecord(
 		map[string]interface{}{

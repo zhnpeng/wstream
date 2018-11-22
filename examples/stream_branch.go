@@ -19,14 +19,15 @@ func (tmf *myMapFunc) Map(r types.Record) (o types.Record) {
 
 type myReduceFuncX struct{}
 
+func (trf *myReduceFuncX) Accmulater(a types.Record) types.Record {
+	return types.NewRawMapRecord(
+		map[string]interface{}{
+			"X": cast.ToInt(a.Get("X")),
+		},
+	)
+}
+
 func (trf *myReduceFuncX) Reduce(a, b types.Record) types.Record {
-	if a == nil {
-		return types.NewRawMapRecord(
-			map[string]interface{}{
-				"X": cast.ToInt(b.Get("X")),
-			},
-		)
-	}
 	x := cast.ToInt(a.Get("X")) + cast.ToInt(b.Get("X"))
 	return types.NewRawMapRecord(
 		map[string]interface{}{
@@ -37,14 +38,15 @@ func (trf *myReduceFuncX) Reduce(a, b types.Record) types.Record {
 
 type myReduceFuncY struct{}
 
+func (trf *myReduceFuncY) Accmulater(a types.Record) types.Record {
+	return types.NewRawMapRecord(
+		map[string]interface{}{
+			"Y": cast.ToInt(a.Get("Y")),
+		},
+	)
+}
+
 func (trf *myReduceFuncY) Reduce(a, b types.Record) types.Record {
-	if a == nil {
-		return types.NewRawMapRecord(
-			map[string]interface{}{
-				"Y": cast.ToInt(b.Get("Y")),
-			},
-		)
-	}
 	y := cast.ToInt(a.Get("Y")) + cast.ToInt(b.Get("Y"))
 	return types.NewRawMapRecord(
 		map[string]interface{}{

@@ -1,4 +1,4 @@
-package operator
+package selector
 
 import (
 	"github.com/wandouz/wstream/intfs"
