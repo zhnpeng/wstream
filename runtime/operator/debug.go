@@ -22,7 +22,7 @@ func (m *Debug) New() intfs.Operator {
 }
 
 func (m *Debug) handleRecord(record types.Record, out Emitter) {
-	m.function.Debug(record.Copy())
+	m.function.Debug(record)
 	out.Emit(record)
 }
 

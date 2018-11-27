@@ -64,6 +64,41 @@ func (f *Flow) StreamToTask(stm Stream) *execution.Task {
 	return nil
 }
 
+func (f *Flow) SourceStreamToTask(stm *SourceStream) (task *execution.Task) {
+	broadcastNodes := make([]execution.Node, 0, stm.Parallelism())
+	for _, input := range stm.Inputs() {
+		node := execution.NewBroadcastNode(
+			context.Background(),
+			stm.Operator(),
+			execution.NewReceiver(),
+			execution.NewEmitter(),
+		)
+		node.AddInEdge(execution.Edge(input).In())
+		broadcastNodes = append(broadcastNodes, node)
+	}
+	task = &execution.Task{
+		BroadcastNodes: broadcastNodes,
+	}
+	return
+}
+
+func (f *Flow) DataStreamToTask(stm *DataStream) (task *execution.Task) {
+	broadcastNodes := make([]execution.Node, 0, stm.Parallelism())
+	for i := 0; i < stm.Parallelism(); i++ {
+		node := execution.NewBroadcastNode(
+			context.Background(),
+			stm.Operator(),
+			execution.NewReceiver(),
+			execution.NewEmitter(),
+		)
+		broadcastNodes = append(broadcastNodes, node)
+	}
+	task = &execution.Task{
+		BroadcastNodes: broadcastNodes,
+	}
+	return
+}
+
 func (f *Flow) KeyedStreamToTask(stm *KeyedStream) (task *execution.Task) {
 	rescaleNode := execution.NewRescaleNode(
 		context.Background(),
@@ -89,23 +124,6 @@ func (f *Flow) KeyedStreamToTask(stm *KeyedStream) (task *execution.Task) {
 	return
 }
 
-func (f *Flow) DataStreamToTask(stm *DataStream) (task *execution.Task) {
-	broadcastNodes := make([]execution.Node, 0, stm.Parallelism())
-	for i := 0; i < stm.Parallelism(); i++ {
-		node := execution.NewBroadcastNode(
-			context.Background(),
-			stm.Operator(),
-			execution.NewReceiver(),
-			execution.NewEmitter(),
-		)
-		broadcastNodes = append(broadcastNodes, node)
-	}
-	task = &execution.Task{
-		BroadcastNodes: broadcastNodes,
-	}
-	return
-}
-
 func (f *Flow) WindowedStreamToTask(stm *WindowedStream) (task *execution.Task) {
 	broadcastNodes := make([]execution.Node, 0, stm.Parallelism())
 	for i := 0; i < stm.Parallelism(); i++ {
@@ -115,24 +133,6 @@ func (f *Flow) WindowedStreamToTask(stm *WindowedStream) (task *execution.Task) 
 			execution.NewReceiver(),
 			execution.NewEmitter(),
 		)
-		broadcastNodes = append(broadcastNodes, node)
-	}
-	task = &execution.Task{
-		BroadcastNodes: broadcastNodes,
-	}
-	return
-}
-
-func (f *Flow) SourceStreamToTask(stm *SourceStream) (task *execution.Task) {
-	broadcastNodes := make([]execution.Node, 0, stm.Parallelism())
-	for _, input := range stm.Inputs() {
-		node := execution.NewBroadcastNode(
-			context.Background(),
-			stm.Operator(),
-			execution.NewReceiver(),
-			execution.NewEmitter(),
-		)
-		node.AddInEdge(execution.Edge(input).In())
 		broadcastNodes = append(broadcastNodes, node)
 	}
 	task = &execution.Task{

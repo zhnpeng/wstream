@@ -46,11 +46,13 @@ func (tuple *TupleRecord) AsRow() (Row, error) {
 	}, nil
 }
 
-func (tuple *TupleRecord) Copy() Record {
+func (tuple *TupleRecord) Clone() Item {
+	tmp := make([]interface{}, len(tuple.V))
+	copy(tuple.V, tmp)
 	return &TupleRecord{
 		T: tuple.T,
 		K: tuple.K,
-		V: tuple.V,
+		V: tmp,
 	}
 }
 

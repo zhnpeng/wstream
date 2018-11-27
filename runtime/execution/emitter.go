@@ -29,7 +29,7 @@ func (e *Emitter) Adds(chs ...OutEdge) {
 // Emit emit item to all output channels
 func (e *Emitter) Emit(item types.Item) {
 	for _, channel := range e.outEdges {
-		channel <- item
+		channel <- item.Clone()
 	}
 }
 
@@ -39,7 +39,7 @@ func (e *Emitter) EmitTo(index int, item types.Item) error {
 	if length == 0 {
 		return errors.Errorf("no avaliable channel")
 	}
-	e.outEdges[index%length] <- item
+	e.outEdges[index%length] <- item.Clone()
 	return nil
 }
 
@@ -64,12 +64,12 @@ func (e *SingleEmitter) Length() int {
 
 // Emit emit item to all output channels
 func (e *SingleEmitter) Emit(item types.Item) {
-	e.output <- item
+	e.output <- item.Clone()
 }
 
 // EmitTo emit item to one output channel
 func (e *SingleEmitter) EmitTo(index int, item types.Item) error {
-	e.output <- item
+	e.output <- item.Clone()
 	return nil
 }
 

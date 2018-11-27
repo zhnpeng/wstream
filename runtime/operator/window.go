@@ -158,9 +158,9 @@ func (w *Window) handleRecord(record types.Record, out Emitter) {
 	}
 }
 
-func (w *Window) emitWindow(records *windowing.WindowContents, out Emitter) {
-	emitter := NewWindowEmitter(records.Time(), records.Keys(), out)
-	iterator := records.Iterator()
+func (w *Window) emitWindow(contents *windowing.WindowContents, out Emitter) {
+	emitter := NewWindowEmitter(contents.Time(), contents.Keys(), out)
+	iterator := contents.Iterator()
 	w.applyFunc.Apply(iterator, emitter)
 }
 

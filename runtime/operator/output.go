@@ -26,7 +26,7 @@ func (m *Output) New() intfs.Operator {
 }
 
 func (m *Output) handleRecord(record types.Record, out Emitter) {
-	m.function.Output(record.Copy())
+	m.function.Output(record)
 	out.Emit(record)
 }
 

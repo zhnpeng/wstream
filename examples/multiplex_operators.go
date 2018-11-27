@@ -41,13 +41,13 @@ type myReduceFuncY struct{}
 func (trf *myReduceFuncY) Accmulater(a types.Record) types.Record {
 	return types.NewRawMapRecord(
 		map[string]interface{}{
-			"Y": cast.ToInt(a.Get("Y")),
+			"Y": cast.ToInt(a.Get("X")),
 		},
 	)
 }
 
 func (trf *myReduceFuncY) Reduce(a, b types.Record) types.Record {
-	y := cast.ToInt(a.Get("Y")) + cast.ToInt(b.Get("Y"))
+	y := cast.ToInt(a.Get("Y")) + cast.ToInt(b.Get("X"))
 	return types.NewRawMapRecord(
 		map[string]interface{}{
 			"Y": y,
@@ -65,15 +65,17 @@ func (t *myOutputFunc) Output(r types.Record) {
 func main() {
 	input1 := make(chan map[string]interface{})
 	input2 := make(chan map[string]interface{})
-	flow, source := stream.New("tumbling_event_window")
+	flow, source := stream.New("multiplex_rolling_reduce")
 	outfunc := &myOutputFunc{}
-	src := source.MapChannels(input1, input2).Map(&myMapFunc{})
+	src := source.MapChannels(input1, input2)
 
-	src.KeyBy("D1", "D2").
+	src.Map(&myMapFunc{}).
+		KeyBy("D1", "D2").
 		Reduce(&myReduceFuncX{}).
 		Output(outfunc)
 
-	src.KeyBy("D1").
+	src.Map(&myMapFunc{}).
+		KeyBy("D1").
 		Reduce(&myReduceFuncY{}).
 		Output(outfunc)
 

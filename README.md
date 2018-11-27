@@ -23,6 +23,10 @@ go get github.com/wandouz/wstream
 * Window.Reduce
 * Window.Apply
 
+## Characteristics
+
+* downstream operator receive a clone of each record from upstream avoiding data race.
+
 ## Usage
 
 ```go

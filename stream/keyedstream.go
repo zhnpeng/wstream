@@ -57,6 +57,6 @@ func (s *KeyedStream) toWindowedStream() *WindowedStream {
 	return NewWindowedStream(s.graph, s.parallel)
 }
 
-func (s *KeyedStream) connect(stream Stream) {
-	s.graph.AddStreamEdge(s, stream)
+func (s *KeyedStream) connect(stream Stream) error {
+	return s.graph.AddStreamEdge(s, stream)
 }

@@ -49,11 +49,15 @@ func (m *MapRecord) AsRow() (Row, error) {
 	}, nil
 }
 
-func (m *MapRecord) Copy() Record {
+func (m *MapRecord) Clone() Item {
+	tmp := make(map[string]interface{})
+	for k, v := range m.V {
+		tmp[k] = v
+	}
 	return &MapRecord{
 		T: m.T,
 		K: m.K,
-		V: m.V,
+		V: tmp,
 	}
 }
 

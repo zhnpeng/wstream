@@ -13,70 +13,17 @@ import (
 	"github.com/wandouz/wstream/utils"
 )
 
-type testMapFunc struct{}
-
-func (tmf *testMapFunc) Map(r types.Record) (o types.Record) {
-	x := cast.ToInt(r.Get("X"))
-	r.Set("X", x+1)
-	return r
-}
-
-type testReduceFunc struct{}
-
-func (trf *testReduceFunc) Accmulater(a types.Record) types.Record {
-	return types.NewRawMapRecord(
-		map[string]interface{}{
-			"X": cast.ToInt(a.Get("X")),
-		},
-	)
-}
-
-func (trf *testReduceFunc) Reduce(a, b types.Record) types.Record {
-	x := cast.ToInt(a.Get("X")) + cast.ToInt(b.Get("X"))
-	return types.NewRawMapRecord(
-		map[string]interface{}{
-			"X": x,
-		},
-	)
-}
-
-type testDebugFunc struct {
-	Mu      sync.Mutex
-	Records []types.Record
-}
-
-func (t *testDebugFunc) Debug(r types.Record) {
-	t.Mu.Lock()
-	defer t.Mu.Unlock()
-	t.Records = append(t.Records, r)
-}
-
-type testAssignTimeWithPuncatuatedWatermark struct {
-}
-
-func (t *testAssignTimeWithPuncatuatedWatermark) ExtractTimestamp(r types.Record, pts int64) int64 {
-	return cast.ToInt64(r.Get("T"))
-}
-
-func (t *testAssignTimeWithPuncatuatedWatermark) GetNextWatermark(r types.Record, ets int64) (wm *types.Watermark) {
-	isWatermark := cast.ToBool(r.Get("Watermark"))
-	if isWatermark {
-		return types.NewWatermark(time.Unix(ets, 0))
-	}
-	return
-}
-
-func TestFlow_Run(t *testing.T) {
+func TestFlow_Tumbling_Time_Window(t *testing.T) {
 	input1 := make(chan map[string]interface{})
 	input2 := make(chan map[string]interface{})
 	flow, source := New("test")
-	outfunc := &testDebugFunc{}
+	outfunc := &testDebug{}
 	source.MapChannels(input1, input2).
 		AssignTimeWithPuncatuatedWatermark(&testAssignTimeWithPuncatuatedWatermark{}).
-		Map(&testMapFunc{}).
+		Map(&testMapPlusOne{}).
 		KeyBy("D1", "D2").
 		TimeWindow(2).
-		Reduce(&testReduceFunc{}).
+		Reduce(&testReduce{}).
 		Debug(outfunc)
 	// Debug
 	// flow.Transform()
@@ -182,7 +129,227 @@ func TestFlow_Run(t *testing.T) {
 		t.Error(diff)
 	}
 }
+func TestFlow_Multiplex_Rolling_Reduce(t *testing.T) {
+	input1 := make(chan map[string]interface{})
+	input2 := make(chan map[string]interface{})
+	flow, source := New("multiplex_rolling_reduce")
+	outfunc1 := &testDebug{}
+	outfunc2 := &testDebug{}
+	src := source.MapChannels(input1, input2)
 
+	src.Map(&testMapSetOne{}).
+		KeyBy("D1", "D2").
+		Reduce(&testReduce{}).
+		Debug(outfunc1)
+
+	src.Map(&testMapSetOne{}).
+		KeyBy("D1").
+		Reduce(&testReduce{}).
+		Debug(outfunc2)
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for _, m := range dataset3 {
+			input1 <- m
+		}
+		close(input1)
+	}()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for _, m := range dataset4 {
+			input2 <- m
+		}
+		close(input2)
+	}()
+	flow.Run()
+	wg.Wait()
+	sort.Slice(outfunc1.Records, func(i, j int) bool {
+		ri := outfunc1.Records[i]
+		rj := outfunc1.Records[j]
+		ki := fmt.Sprintf("%v", ri.Key())
+		kj := fmt.Sprintf("%v", rj.Key())
+		return ki < kj
+	})
+	sort.Slice(outfunc2.Records, func(i, j int) bool {
+		ri := outfunc2.Records[i]
+		rj := outfunc2.Records[j]
+		ki := fmt.Sprintf("%v", ri.Key())
+		kj := fmt.Sprintf("%v", rj.Key())
+		return ki < kj
+	})
+	want1 := []types.Record{
+		&types.MapRecord{
+			K: []interface{}{"A", "A"},
+			V: map[string]interface{}{
+				"X": 1,
+			},
+		},
+		&types.MapRecord{
+			K: []interface{}{"A", "B"},
+			V: map[string]interface{}{
+				"X": 1,
+			},
+		},
+		&types.MapRecord{
+			K: []interface{}{"A", "B"},
+			V: map[string]interface{}{
+				"X": 2,
+			},
+		},
+		&types.MapRecord{
+			K: []interface{}{"B", "B"},
+			V: map[string]interface{}{
+				"X": 1,
+			},
+		},
+		&types.MapRecord{
+			K: []interface{}{"B", "B"},
+			V: map[string]interface{}{
+				"X": 2,
+			},
+		},
+		&types.MapRecord{
+			K: []interface{}{"B", "C"},
+			V: map[string]interface{}{
+				"X": 1,
+			},
+		},
+		&types.MapRecord{
+			K: []interface{}{"C", "C"},
+			V: map[string]interface{}{
+				"X": 1,
+			},
+		},
+		&types.MapRecord{
+			K: []interface{}{"C", "C"},
+			V: map[string]interface{}{
+				"X": 2,
+			},
+		},
+	}
+	want2 := []types.Record{
+		&types.MapRecord{
+			K: []interface{}{"A"},
+			V: map[string]interface{}{
+				"X": 1,
+			},
+		},
+		&types.MapRecord{
+			K: []interface{}{"A"},
+			V: map[string]interface{}{
+				"X": 2,
+			},
+		},
+		&types.MapRecord{
+			K: []interface{}{"A"},
+			V: map[string]interface{}{
+				"X": 3,
+			},
+		},
+		&types.MapRecord{
+			K: []interface{}{"B"},
+			V: map[string]interface{}{
+				"X": 1,
+			},
+		},
+		&types.MapRecord{
+			K: []interface{}{"B"},
+			V: map[string]interface{}{
+				"X": 2,
+			},
+		},
+		&types.MapRecord{
+			K: []interface{}{"B"},
+			V: map[string]interface{}{
+				"X": 3,
+			},
+		},
+		&types.MapRecord{
+			K: []interface{}{"C"},
+			V: map[string]interface{}{
+				"X": 1,
+			},
+		},
+		&types.MapRecord{
+			K: []interface{}{"C"},
+			V: map[string]interface{}{
+				"X": 2,
+			},
+		},
+	}
+	if diff := cmp.Diff(outfunc1.Records, want1); diff != "" {
+		t.Fatal(diff)
+	}
+	if diff := cmp.Diff(outfunc2.Records, want2); diff != "" {
+		t.Fatal(diff)
+	}
+}
+
+// Functions
+type testMapSetOne struct{}
+
+func (tmf *testMapSetOne) Map(r types.Record) (o types.Record) {
+	_ = r.Set("X", 1)
+	return r
+}
+
+type testMapPlusOne struct{}
+
+func (tmf *testMapPlusOne) Map(r types.Record) (o types.Record) {
+	x := cast.ToInt(r.Get("X"))
+	r.Set("X", x+1)
+	return r
+}
+
+type testReduce struct{}
+
+func (trf *testReduce) Accmulater(a types.Record) types.Record {
+	return types.NewRawMapRecord(
+		map[string]interface{}{
+			"X": cast.ToInt(a.Get("X")),
+		},
+	)
+}
+
+func (trf *testReduce) Reduce(a, b types.Record) types.Record {
+	x := cast.ToInt(a.Get("X")) + cast.ToInt(b.Get("X"))
+	return types.NewRawMapRecord(
+		map[string]interface{}{
+			"X": x,
+		},
+	)
+}
+
+type testDebug struct {
+	Mu      sync.Mutex
+	Records []types.Record
+}
+
+func (t *testDebug) Debug(r types.Record) {
+	t.Mu.Lock()
+	defer t.Mu.Unlock()
+	t.Records = append(t.Records, r)
+}
+
+type testAssignTimeWithPuncatuatedWatermark struct {
+}
+
+func (t *testAssignTimeWithPuncatuatedWatermark) ExtractTimestamp(r types.Record, pts int64) int64 {
+	return cast.ToInt64(r.Get("T"))
+}
+
+func (t *testAssignTimeWithPuncatuatedWatermark) GetNextWatermark(r types.Record, ets int64) (wm *types.Watermark) {
+	isWatermark := cast.ToBool(r.Get("Watermark"))
+	if isWatermark {
+		return types.NewWatermark(time.Unix(ets, 0))
+	}
+	return
+}
+
+// Data
 var (
 	dataset1 = []map[string]interface{}{
 		map[string]interface{}{
@@ -294,6 +461,63 @@ var (
 			"T":  utils.ParseTime("2018-10-15 18:00:03").Unix(),
 			"D1": "B",
 			"D2": "A",
+			"X":  1,
+		},
+		map[string]interface{}{
+			"Watermark": true,
+			"T":         utils.ParseTime("2018-10-15 18:00:04").Unix(),
+			"D1":        "C",
+			"D2":        "C",
+			"X":         1,
+		},
+	}
+	dataset3 = []map[string]interface{}{
+		map[string]interface{}{
+			"Watermark": true,
+			"T":         utils.ParseTime("2018-10-15 18:00:00").Unix(),
+			"D1":        "A",
+			"D2":        "A",
+			"X":         1,
+		},
+
+		map[string]interface{}{
+			"T":  utils.ParseTime("2018-10-15 18:00:00").Unix(),
+			"D1": "A",
+			"D2": "B",
+			"X":  1,
+		},
+		map[string]interface{}{
+			"T":  utils.ParseTime("2018-10-15 18:00:01").Unix(),
+			"D1": "B",
+			"D2": "B",
+			"X":  1,
+		},
+		map[string]interface{}{
+			"Watermark": true,
+			"T":         utils.ParseTime("2018-10-15 18:00:04").Unix(),
+			"D1":        "C",
+			"D2":        "C",
+			"X":         1,
+		},
+	}
+
+	dataset4 = []map[string]interface{}{
+		map[string]interface{}{
+			"T":  utils.ParseTime("2018-10-15 18:00:02").Unix(),
+			"D1": "A",
+			"D2": "B",
+			"X":  1,
+		},
+		map[string]interface{}{
+			"T":  utils.ParseTime("2018-10-15 18:00:02").Unix(),
+			"D1": "B",
+			"D2": "B",
+			"X":  1,
+		},
+		map[string]interface{}{
+			"T":  utils.ParseTime("2018-10-15 18:00:03").Unix(),
+			"D1": "B",
+			"D2": "C",
 			"X":  1,
 		},
 		map[string]interface{}{

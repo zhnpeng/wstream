@@ -24,8 +24,11 @@ func NewWindowEmitter(t time.Time, k []interface{}, emitter Emitter) *WindowEmit
 }
 
 func (e *WindowEmitter) Emit(item types.Item) {
-	interItem := item.(types.InternalItem)
-	interItem.SetTime(e.t)
-	interItem.SetKey(e.k)
-	e.emitter.Emit(interItem)
+	if record, ok := item.(types.Record); ok {
+		record.SetTime(e.t)
+		record.SetKey(e.k)
+		e.emitter.Emit(record)
+	} else {
+		e.emitter.Emit(item)
+	}
 }

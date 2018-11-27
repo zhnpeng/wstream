@@ -58,8 +58,8 @@ func (s *DataStream) toRescaleStream(parallel int, selector *selector.Selector) 
 	return NewRescaledStream(s.flow, parallel, selector)
 }
 
-func (s *DataStream) connect(stream Stream) {
-	s.flow.AddStreamEdge(s, stream)
+func (s *DataStream) connect(stream Stream) error {
+	return s.flow.AddStreamEdge(s, stream)
 }
 
 func (s *DataStream) Debug(debugFunc functions.Debug) *DataStream {
