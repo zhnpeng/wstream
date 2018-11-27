@@ -4,7 +4,6 @@ package types
 
 import (
 	"errors"
-	"fmt"
 	"time"
 )
 
@@ -56,10 +55,6 @@ func (tuple *TupleRecord) Clone() Item {
 	}
 }
 
-func (tuple *TupleRecord) AsString() string {
-	return fmt.Sprint(tuple.V)
-}
-
 func (tuple *TupleRecord) Get(index interface{}) interface{} {
 	i, ok := index.(int)
 	if !ok {
@@ -104,7 +99,7 @@ func (tuple *TupleRecord) Inherit(record Record) Record {
 
 // UseKeys use indexes key's values as record's key
 func (tuple *TupleRecord) UseKeys(indexes ...interface{}) []interface{} {
-	keys := tuple.GetMany(indexes)
+	keys := tuple.GetMany(indexes...)
 	tuple.K = keys
 	return keys
 }
