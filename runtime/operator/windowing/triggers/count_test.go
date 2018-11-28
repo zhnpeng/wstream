@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/wandouz/wstream/runtime/operator/windowing/windows"
-	"github.com/wandouz/wstream/types"
 )
 
 type mockCTC struct {
@@ -25,17 +24,17 @@ func TestCountTrigger_Functions(t *testing.T) {
 	ctx2 := &mockCTC{size: 11}
 	ctx3 := &mockCTC{size: 12}
 
-	got := trigger.OnItem(&types.MapRecord{}, time.Time{}, w, ctx1)
+	got := trigger.OnItem(nil, time.Time{}, w, ctx1)
 	if got != CONTINUE {
 		t.Errorf("got = %v, want %v", got, CONTINUE)
 	}
 
-	got = trigger.OnItem(&types.MapRecord{}, time.Time{}, w, ctx2)
+	got = trigger.OnItem(nil, time.Time{}, w, ctx2)
 	if got != FIRE {
 		t.Errorf("got = %v, want %v", got, FIRE)
 	}
 
-	got = trigger.OnItem(&types.MapRecord{}, time.Time{}, w, ctx3)
+	got = trigger.OnItem(nil, time.Time{}, w, ctx3)
 	if got != FIRE {
 		t.Errorf("got = %v, want %v", got, FIRE)
 	}

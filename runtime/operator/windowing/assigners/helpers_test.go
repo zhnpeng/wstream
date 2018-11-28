@@ -5,7 +5,7 @@ import (
 )
 
 func TestGetWindowStartWithOffset(t *testing.T) {
-	ts := int64(1543388431) // "2018-11-28T08 15:00:31"
+	ts := int64(1543388461) // "2018-11-28T08 15:00:31"
 	type args struct {
 		ts     int64
 		offset int64
@@ -23,7 +23,7 @@ func TestGetWindowStartWithOffset(t *testing.T) {
 				offset: 8,
 				slide:  60,
 			},
-			want: 1543388400,
+			want: 1543388460,
 		},
 		{
 			name: "slide 60 seconds",
@@ -32,7 +32,7 @@ func TestGetWindowStartWithOffset(t *testing.T) {
 				offset: 0,
 				slide:  60,
 			},
-			want: 1543388400,
+			want: 1543388460,
 		},
 		{
 			name: "slide 70 seconds",
@@ -41,7 +41,7 @@ func TestGetWindowStartWithOffset(t *testing.T) {
 				offset: 8,
 				slide:  70,
 			},
-			want: 1543388420,
+			want: 1543388450,
 		},
 	}
 	for _, tt := range tests {

@@ -36,5 +36,5 @@ func (a *TumblingProcessingTimeWindow) GetDefaultTrigger() triggers.Trigger {
 }
 
 func (a *TumblingProcessingTimeWindow) IsEventTime() bool {
-	return true
+	return false
 }
