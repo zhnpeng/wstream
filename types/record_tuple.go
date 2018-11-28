@@ -35,7 +35,7 @@ func (tuple *TupleRecord) SetTime(t time.Time) {
 }
 
 func (tuple *TupleRecord) AsRow() (Row, error) {
-	encodedBytes, err := tuple.UnmarshalMsg(nil)
+	encodedBytes, err := tuple.MarshalMsg(nil)
 	if err != nil {
 		return Row{}, err
 	}

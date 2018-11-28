@@ -84,5 +84,7 @@ func TestTupleRecord_Funcs(t *testing.T) {
 		t.Errorf("record.Type = %v, want %v", record.Type(), TypeTupleRecord)
 	}
 
-	record.AsRow()
+	if _, err := record.AsRow(); err != nil {
+		t.Error(err)
+	}
 }

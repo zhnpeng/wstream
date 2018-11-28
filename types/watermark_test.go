@@ -56,5 +56,7 @@ func TestWatermark_Funcs(t *testing.T) {
 		t.Errorf("record.Type = %v, want %v", record.Type(), TypeWatermark)
 	}
 
-	record.AsRow()
+	if _, err := record.AsRow(); err != nil {
+		t.Error(err)
+	}
 }
