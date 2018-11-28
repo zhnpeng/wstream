@@ -51,4 +51,10 @@ func TestWatermark_Funcs(t *testing.T) {
 	if NewWatermark(now.Add(time.Second)).After(record) == false {
 		t.Errorf("After =%v, want %v", false, true)
 	}
+
+	if record.Type() != TypeWatermark {
+		t.Errorf("record.Type = %v, want %v", record.Type(), TypeWatermark)
+	}
+
+	record.AsRow()
 }

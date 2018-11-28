@@ -87,4 +87,10 @@ func TestMapRecord_Funcs(t *testing.T) {
 	if !reflect.DeepEqual(record, record.Clone()) {
 		t.Errorf("record.Clone = %v, want %v", record.Clone(), record)
 	}
+
+	if record.Type() != TypeMapRecord {
+		t.Errorf("record.Type = %v, want %v", record.Type(), TypeMapRecord)
+	}
+
+	record.AsRow()
 }
