@@ -3,8 +3,8 @@ package triggers
 import (
 	"time"
 
-	"github.com/wandouz/wstream/runtime/operator/windowing/windows"
-	"github.com/wandouz/wstream/types"
+	"github.com/zhnpeng/wstream/runtime/operator/windowing/windows"
+	"github.com/zhnpeng/wstream/types"
 )
 
 type ProcessingTimeTrigger struct {

@@ -10,11 +10,11 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/spf13/cast"
-	"github.com/wandouz/wstream/env"
-	"github.com/wandouz/wstream/runtime/operator/windowing/assigners"
-	"github.com/wandouz/wstream/runtime/operator/windowing/triggers"
-	"github.com/wandouz/wstream/types"
-	"github.com/wandouz/wstream/utils"
+	"github.com/zhnpeng/wstream/env"
+	"github.com/zhnpeng/wstream/runtime/operator/windowing/assigners"
+	"github.com/zhnpeng/wstream/runtime/operator/windowing/triggers"
+	"github.com/zhnpeng/wstream/types"
+	"github.com/zhnpeng/wstream/utils"
 )
 
 type windowTestReceiver struct {

@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"encoding/gob"
 
-	"github.com/wandouz/wstream/functions"
-	"github.com/wandouz/wstream/intfs"
-	"github.com/wandouz/wstream/types"
-	"github.com/wandouz/wstream/utils"
+	"github.com/zhnpeng/wstream/functions"
+	"github.com/zhnpeng/wstream/intfs"
+	"github.com/zhnpeng/wstream/types"
+	"github.com/zhnpeng/wstream/utils"
 )
 
 // Reduce is a rolling reduce in datastream and keyedstream

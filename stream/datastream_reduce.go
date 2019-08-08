@@ -1,8 +1,8 @@
 package stream
 
 import (
-	"github.com/wandouz/wstream/functions"
-	"github.com/wandouz/wstream/runtime/operator"
+	"github.com/zhnpeng/wstream/functions"
+	"github.com/zhnpeng/wstream/runtime/operator"
 )
 
 func (s *DataStream) Reduce(reduceFunc functions.Reduce) *DataStream {

@@ -4,8 +4,8 @@ import (
 	"context"
 	"sync"
 
-	"github.com/wandouz/wstream/intfs"
-	"github.com/wandouz/wstream/types"
+	"github.com/zhnpeng/wstream/intfs"
+	"github.com/zhnpeng/wstream/types"
 )
 
 type RescaleNode struct {

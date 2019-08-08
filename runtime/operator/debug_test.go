@@ -3,7 +3,7 @@ package operator
 import (
 	"testing"
 
-	"github.com/wandouz/wstream/types"
+	"github.com/zhnpeng/wstream/types"
 )
 
 type testDebug struct{}

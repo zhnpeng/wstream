@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/sirupsen/logrus"
-	"github.com/wandouz/wstream/runtime/execution"
-	"github.com/wandouz/wstream/utils/graph"
+	"github.com/zhnpeng/wstream/runtime/execution"
+	"github.com/zhnpeng/wstream/utils/graph"
 )
 
 func (f *Flow) Transform() {

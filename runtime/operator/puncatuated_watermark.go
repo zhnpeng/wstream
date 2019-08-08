@@ -5,9 +5,9 @@ import (
 	"encoding/gob"
 	"time"
 
-	"github.com/wandouz/wstream/functions"
-	"github.com/wandouz/wstream/intfs"
-	"github.com/wandouz/wstream/types"
+	"github.com/zhnpeng/wstream/functions"
+	"github.com/zhnpeng/wstream/intfs"
+	"github.com/zhnpeng/wstream/types"
 )
 
 type TimeWithPunctuatedWatermarkAssigner struct {

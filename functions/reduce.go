@@ -1,7 +1,7 @@
 package functions
 
 import (
-	"github.com/wandouz/wstream/types"
+	"github.com/zhnpeng/wstream/types"
 )
 
 /*

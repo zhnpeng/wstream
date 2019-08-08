@@ -1,9 +1,9 @@
 package selector
 
 import (
-	"github.com/wandouz/wstream/intfs"
-	"github.com/wandouz/wstream/types"
-	"github.com/wandouz/wstream/utils"
+	"github.com/zhnpeng/wstream/intfs"
+	"github.com/zhnpeng/wstream/types"
+	"github.com/zhnpeng/wstream/utils"
 )
 
 // KeyBy is a Selector rescale partitions according to record's key

@@ -3,8 +3,8 @@ package evictors
 import (
 	"time"
 
-	"github.com/wandouz/wstream/runtime/operator/windowing"
-	"github.com/wandouz/wstream/types"
+	"github.com/zhnpeng/wstream/runtime/operator/windowing"
+	"github.com/zhnpeng/wstream/types"
 )
 
 /*

@@ -4,9 +4,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/wandouz/wstream/runtime/operator/windowing/triggers"
-	"github.com/wandouz/wstream/runtime/operator/windowing/windows"
-	"github.com/wandouz/wstream/utils"
+	"github.com/zhnpeng/wstream/runtime/operator/windowing/triggers"
+	"github.com/zhnpeng/wstream/runtime/operator/windowing/windows"
+	"github.com/zhnpeng/wstream/utils"
 )
 
 func TestSlidingProcessingTimeWindow_AssignWindows(t *testing.T) {

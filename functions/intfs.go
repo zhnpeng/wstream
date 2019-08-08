@@ -1,6 +1,6 @@
 package functions
 
-import "github.com/wandouz/wstream/types"
+import "github.com/zhnpeng/wstream/types"
 
 type Emitter interface {
 	Emit(item types.Item)

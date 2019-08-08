@@ -3,9 +3,9 @@ package stream
 import (
 	"time"
 
-	"github.com/wandouz/wstream/runtime/operator"
+	"github.com/zhnpeng/wstream/runtime/operator"
 
-	"github.com/wandouz/wstream/functions"
+	"github.com/zhnpeng/wstream/functions"
 )
 
 func (s *SourceStream) AssignTimeWithPeriodicWatermark(

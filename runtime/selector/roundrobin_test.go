@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/wandouz/wstream/types"
+	"github.com/zhnpeng/wstream/types"
 )
 
 func TestRoundRobinSelector_Select(t *testing.T) {

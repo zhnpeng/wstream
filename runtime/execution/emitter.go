@@ -2,7 +2,7 @@ package execution
 
 import (
 	"github.com/pkg/errors"
-	"github.com/wandouz/wstream/types"
+	"github.com/zhnpeng/wstream/types"
 )
 
 //Emitter is used to emit item to output outEdges

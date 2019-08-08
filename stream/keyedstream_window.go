@@ -1,13 +1,13 @@
 package stream
 
 import (
-	"github.com/wandouz/wstream/env"
-	"github.com/wandouz/wstream/runtime/operator/windowing/evictors"
+	"github.com/zhnpeng/wstream/env"
+	"github.com/zhnpeng/wstream/runtime/operator/windowing/evictors"
 
-	"github.com/wandouz/wstream/runtime/operator/windowing/triggers"
+	"github.com/zhnpeng/wstream/runtime/operator/windowing/triggers"
 
-	"github.com/wandouz/wstream/runtime/operator"
-	"github.com/wandouz/wstream/runtime/operator/windowing/assigners"
+	"github.com/zhnpeng/wstream/runtime/operator"
+	"github.com/zhnpeng/wstream/runtime/operator/windowing/assigners"
 )
 
 // Window allow user custom Window behavior

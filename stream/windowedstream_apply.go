@@ -1,7 +1,7 @@
 package stream
 
 import (
-	"github.com/wandouz/wstream/functions"
+	"github.com/zhnpeng/wstream/functions"
 )
 
 // WindowOperator is helper interface to set user functions to window operator

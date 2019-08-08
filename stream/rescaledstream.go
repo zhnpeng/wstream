@@ -1,9 +1,9 @@
 package stream
 
 import (
-	"github.com/wandouz/wstream/intfs"
-	"github.com/wandouz/wstream/runtime/operator"
-	"github.com/wandouz/wstream/runtime/selector"
+	"github.com/zhnpeng/wstream/intfs"
+	"github.com/zhnpeng/wstream/runtime/operator"
+	"github.com/zhnpeng/wstream/runtime/selector"
 )
 
 type RescaledStream struct {

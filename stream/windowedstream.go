@@ -1,11 +1,11 @@
 package stream
 
 import (
-	"github.com/wandouz/wstream/intfs"
-	"github.com/wandouz/wstream/runtime/operator"
-	"github.com/wandouz/wstream/runtime/operator/windowing/assigners"
-	"github.com/wandouz/wstream/runtime/operator/windowing/evictors"
-	"github.com/wandouz/wstream/runtime/operator/windowing/triggers"
+	"github.com/zhnpeng/wstream/intfs"
+	"github.com/zhnpeng/wstream/runtime/operator"
+	"github.com/zhnpeng/wstream/runtime/operator/windowing/assigners"
+	"github.com/zhnpeng/wstream/runtime/operator/windowing/evictors"
+	"github.com/zhnpeng/wstream/runtime/operator/windowing/triggers"
 )
 
 type WindowedStream struct {

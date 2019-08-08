@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/wandouz/wstream/runtime/selector"
-	"github.com/wandouz/wstream/types"
-	"github.com/wandouz/wstream/utils"
+	"github.com/zhnpeng/wstream/runtime/selector"
+	"github.com/zhnpeng/wstream/types"
+	"github.com/zhnpeng/wstream/utils"
 )
 
 func TestRescaleNode_Run(t *testing.T) {

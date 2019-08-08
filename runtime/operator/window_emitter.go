@@ -3,7 +3,7 @@ package operator
 import (
 	"time"
 
-	"github.com/wandouz/wstream/types"
+	"github.com/zhnpeng/wstream/types"
 )
 
 // WindowEmitter is proxy of normal emitter

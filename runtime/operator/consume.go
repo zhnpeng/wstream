@@ -1,7 +1,7 @@
 package operator
 
 import (
-	"github.com/wandouz/wstream/types"
+	"github.com/zhnpeng/wstream/types"
 )
 
 type Handler interface {

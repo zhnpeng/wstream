@@ -1,6 +1,6 @@
 package functions
 
-import "github.com/wandouz/wstream/types"
+import "github.com/zhnpeng/wstream/types"
 
 type Output interface {
 	Output(record types.Record)

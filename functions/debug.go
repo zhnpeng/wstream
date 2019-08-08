@@ -1,6 +1,6 @@
 package functions
 
-import "github.com/wandouz/wstream/types"
+import "github.com/zhnpeng/wstream/types"
 
 type Debug interface {
 	Debug(record types.Record)

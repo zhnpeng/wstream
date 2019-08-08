@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/spf13/cast"
-	"github.com/wandouz/wstream/stream"
-	"github.com/wandouz/wstream/types"
-	"github.com/wandouz/wstream/utils"
+	"github.com/zhnpeng/wstream/stream"
+	"github.com/zhnpeng/wstream/types"
+	"github.com/zhnpeng/wstream/utils"
 )
 
 type myMapFunc struct{}

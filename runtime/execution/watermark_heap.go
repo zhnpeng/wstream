@@ -1,6 +1,6 @@
 package execution
 
-import "github.com/wandouz/wstream/types"
+import "github.com/zhnpeng/wstream/types"
 
 type WatermarkHeapItem struct {
 	item *types.Watermark

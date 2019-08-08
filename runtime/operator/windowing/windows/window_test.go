@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/wandouz/wstream/utils"
+	"github.com/zhnpeng/wstream/utils"
 )
 
 func TestNew(t *testing.T) {

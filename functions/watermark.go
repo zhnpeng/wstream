@@ -3,7 +3,7 @@ package functions
 import (
 	"time"
 
-	"github.com/wandouz/wstream/types"
+	"github.com/zhnpeng/wstream/types"
 )
 
 type TimestampWithPunctuatedWatermar interface {

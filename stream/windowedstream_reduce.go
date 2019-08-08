@@ -1,7 +1,7 @@
 package stream
 
 import (
-	"github.com/wandouz/wstream/functions"
+	"github.com/zhnpeng/wstream/functions"
 )
 
 func (s *WindowedStream) Reduce(reduceFunc functions.Reduce) *DataStream {

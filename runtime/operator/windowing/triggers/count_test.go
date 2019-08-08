@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/wandouz/wstream/runtime/operator/windowing/windows"
+	"github.com/zhnpeng/wstream/runtime/operator/windowing/windows"
 )
 
 type mockCTC struct {

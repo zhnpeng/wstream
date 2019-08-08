@@ -1,7 +1,7 @@
 package operator
 
 import (
-	"github.com/wandouz/wstream/intfs"
+	"github.com/zhnpeng/wstream/intfs"
 )
 
 type Receiver = intfs.Iterator

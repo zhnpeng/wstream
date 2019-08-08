@@ -3,7 +3,7 @@ package execution
 import (
 	"sync"
 
-	"github.com/wandouz/wstream/types"
+	"github.com/zhnpeng/wstream/types"
 )
 
 type WatermarkChan chan *types.Watermark

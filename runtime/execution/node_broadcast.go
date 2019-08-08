@@ -4,7 +4,7 @@ import (
 	"context"
 	"sync"
 
-	"github.com/wandouz/wstream/intfs"
+	"github.com/zhnpeng/wstream/intfs"
 )
 
 // type BroadcastNode interface {

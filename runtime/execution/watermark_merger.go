@@ -3,8 +3,8 @@ package execution
 import (
 	"container/heap"
 
-	"github.com/wandouz/wstream/intfs"
-	"github.com/wandouz/wstream/types"
+	"github.com/zhnpeng/wstream/intfs"
+	"github.com/zhnpeng/wstream/types"
 )
 
 // WatermarkMerger is serial multiway merger for watermark

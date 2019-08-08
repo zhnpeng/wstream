@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/wandouz/wstream/runtime/operator"
+	"github.com/zhnpeng/wstream/runtime/operator"
 
-	"github.com/wandouz/wstream/types"
-	"github.com/wandouz/wstream/utils"
+	"github.com/zhnpeng/wstream/types"
+	"github.com/zhnpeng/wstream/utils"
 )
 
 func TestNode_Run_Single_Source_Watermark_Only(t *testing.T) {

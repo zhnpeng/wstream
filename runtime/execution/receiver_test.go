@@ -4,8 +4,8 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/wandouz/wstream/types"
-	"github.com/wandouz/wstream/utils"
+	"github.com/zhnpeng/wstream/types"
+	"github.com/zhnpeng/wstream/utils"
 )
 
 func TestReceiver_Run_Multi_Way(t *testing.T) {

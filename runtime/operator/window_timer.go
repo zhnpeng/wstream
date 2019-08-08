@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/wandouz/wstream/runtime/operator/windowing"
+	"github.com/zhnpeng/wstream/runtime/operator/windowing"
 )
 
 type TimerHandler interface {

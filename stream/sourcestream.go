@@ -1,8 +1,8 @@
 package stream
 
 import (
-	"github.com/wandouz/wstream/runtime/operator"
-	"github.com/wandouz/wstream/types"
+	"github.com/zhnpeng/wstream/runtime/operator"
+	"github.com/zhnpeng/wstream/types"
 )
 
 // SourceStream accept channels as inputs
