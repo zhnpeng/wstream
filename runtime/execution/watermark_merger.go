@@ -89,13 +89,13 @@ func (m *WatermarkMerger) runTimeout() {
 	for {
 		for _, ch := range m.inputs {
 			select {
-			case t := <- timer.C:
+			case t := <-timer.C:
 				heap.Push(m.wmHeap, WatermarkHeapItem{
 					item: types.NewChockWatermark(t),
-					ch: ch,
+					ch:   ch,
 				})
 				timer.Reset(m.timeout)
-			case i, ok := <- ch:
+			case i, ok := <-ch:
 				if !ok {
 					/*
 						return if any of input channel is closed
@@ -122,10 +122,10 @@ func (m *WatermarkMerger) runTimeout() {
 				m.watermark.T = item.item.Time()
 			}
 			select {
-			case t := <- timer.C:
+			case t := <-timer.C:
 				heap.Push(m.wmHeap, WatermarkHeapItem{
 					item: types.NewChockWatermark(t),
-					ch: ch,
+					ch:   item.ch,
 				})
 				timer.Reset(m.timeout)
 			case nextWatermark, ok := <-item.ch:
