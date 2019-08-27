@@ -45,7 +45,7 @@ func (recv *Receiver) Run() {
 	recv.mu.Unlock()
 
 	emitter := NewSingleEmitter(recv.output)
-	merger := NewWatermarkMerger(len(recv.inEdges), emitter)
+	merger := NewWatermarkMerger(len(recv.inEdges), emitter, 0)
 	//fire up watermakr merger
 	wg.Add(1)
 	go func() {

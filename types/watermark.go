@@ -9,6 +9,12 @@ import (
 // Watermark is kind of item
 type Watermark struct {
 	T time.Time
+
+	IsChock bool
+}
+
+func NewChockWatermark(t time.Time) *Watermark {
+	return &Watermark{T: t, IsChock: true}
 }
 
 func NewWatermark(t time.Time) *Watermark {

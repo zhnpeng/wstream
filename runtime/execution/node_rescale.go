@@ -54,7 +54,7 @@ func (n *RescaleNode) Run() {
 	n.running = true
 	n.mu.Unlock()
 
-	merger := NewWatermarkMerger(len(n.inputs), n.out)
+	merger := NewWatermarkMerger(len(n.inputs), n.out, 0)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
