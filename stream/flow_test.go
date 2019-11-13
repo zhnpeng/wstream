@@ -169,15 +169,15 @@ func TestFlow_Multiplex_Rolling_Reduce(t *testing.T) {
 	sort.Slice(outfunc1.Records, func(i, j int) bool {
 		ri := outfunc1.Records[i]
 		rj := outfunc1.Records[j]
-		ki := fmt.Sprintf("%v", ri.Key())
-		kj := fmt.Sprintf("%v", rj.Key())
+		ki := fmt.Sprintf("%v%d", ri.Key(), ri.Get("X"))
+		kj := fmt.Sprintf("%v%d", rj.Key(), rj.Get("X"))
 		return ki < kj
 	})
 	sort.Slice(outfunc2.Records, func(i, j int) bool {
 		ri := outfunc2.Records[i]
 		rj := outfunc2.Records[j]
-		ki := fmt.Sprintf("%v", ri.Key())
-		kj := fmt.Sprintf("%v", rj.Key())
+		ki := fmt.Sprintf("%v%d", ri.Key(), ri.Get("X"))
+		kj := fmt.Sprintf("%v%d", rj.Key(), rj.Get("X"))
 		return ki < kj
 	})
 	want1 := []types.Record{
