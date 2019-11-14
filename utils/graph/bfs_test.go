@@ -93,7 +93,10 @@ func TestBFSAll(t *testing.T) {
 	if len(got) != 12 {
 		t.Errorf("BFSAll want: %d, got: %d", 12, len(got))
 	}
-	if diff := cmp.Diff(got, expected, cmp.AllowUnexported(struct{ v, w int }{0, 0})); diff != "" {
-		t.Errorf("BFSAll: %s", diff)
+	for i := 0; i < 12; i++ {
+		if got[i].v != expected[i].v || got[i].w != expected[i].w {
+			t.Errorf("BFSALL: got: %v, wnat: %v", got, expected)
+			break
+		}
 	}
 }
