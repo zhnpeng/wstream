@@ -132,34 +132,34 @@ func (w *Window) SetReduceFunc(f functions.Reduce) {
 func (w *Window) handleRecord(record types.Record, out Emitter) {
 	assignedWindows := w.assigner.AssignWindows(record, w.assignerContext)
 
+	key := utils.HashSlice(record.Key())
 	for _, window := range assignedWindows {
 		if w.isWindowLate(window) {
 			// drop window if it is event time and late
 			logrus.Warnf("drop late window (%+v %+v) for record %+v, watermark time is %v", window.Start(), window.End(), record, w.wts.CurrentWatermarkTime())
 			continue
 		}
-		k := utils.HashSlice(record.Key())
-		wid := windowing.NewWindowID(k, window)
+		wid := windowing.NewWindowID(key, window)
 		var contents *windowing.WindowContents
-		if c, ok := w.windowContentsMap.Load(wid); ok {
+		if c, ok := w.windowContentsMap.Load(key); ok {
 			contents = c.(*windowing.WindowContents)
 			contents.Append(record)
 		} else {
 			contents = windowing.NewWindowContents(window, record.Time(), record.Key(), w.reduceFunc)
 			contents.Append(record)
-			w.windowContentsMap.Store(wid, contents)
+			w.windowContentsMap.Store(key, contents)
 		}
 		ctx := w.triggerContext.New(wid, contents.Len())
 		signal := w.trigger.OnItem(record, record.Time(), window, ctx)
 		if signal.IsFire() {
-			w.emitWindow(contents, out)
+			w.emitWindow(window, contents, out)
 		}
 		w.registerCleanupTimer(wid, window)
 	}
 }
 
-func (w *Window) emitWindow(contents *windowing.WindowContents, out Emitter) {
-	emitter := NewWindowEmitter(contents.Time(), contents.Keys(), out)
+func (w *Window) emitWindow(window windows.Window, contents *windowing.WindowContents, out Emitter) {
+	emitter := NewWindowEmitter(window.Start(), contents.Keys(), out)
 	iterator := contents.Iterator()
 	w.applyFunc.Apply(iterator, emitter)
 }
@@ -195,7 +195,7 @@ func (w *Window) onProcessingTime(wid windowing.WindowID, t time.Time) {
 	contents := c.(*windowing.WindowContents)
 	signal := w.trigger.OnProcessingTime(t, wid.Window())
 	if signal.IsFire() {
-		w.emitWindow(contents, w.out)
+		w.emitWindow(wid.Window(), contents, w.out)
 		// dispose window content
 		contents.Dispose()
 		w.windowContentsMap.Delete(wid)
@@ -214,7 +214,7 @@ func (w *Window) onEventTime(wid windowing.WindowID, t time.Time) {
 
 	signal := w.trigger.OnEventTime(t, wid.Window())
 	if signal.IsFire() {
-		w.emitWindow(contents, w.out)
+		w.emitWindow(wid.Window(), contents, w.out)
 		// dispose window content
 		contents.Dispose()
 		w.windowContentsMap.Delete(wid)

@@ -109,39 +109,39 @@ func (w *EvictWindow) SetReduceFunc(f functions.Reduce) {
 func (w *EvictWindow) handleRecord(record types.Record, out Emitter) {
 	assignedWindows := w.assigner.AssignWindows(record, w.assignerContext)
 
+	key := utils.HashSlice(record.Key())
 	for _, window := range assignedWindows {
 		if w.isWindowLate(window) {
 			// drop window if it is event time and late
 			logrus.Warnf("drop late window %+v for record %+v", window, record)
 			continue
 		}
-		k := utils.HashSlice(record.Key())
-		wid := windowing.NewWindowID(k, window)
+		wid := windowing.NewWindowID(key, window)
 		var contents *windowing.WindowContents
-		if c, ok := w.windowContentsMap.Load(wid); ok {
+		if c, ok := w.windowContentsMap.Load(key); ok {
 			contents = c.(*windowing.WindowContents)
 			contents.Append(record)
 		} else {
 			// evict window not reduce records in contentsections, so don't pass reduceFunc into it
 			contents = windowing.NewWindowContents(window, record.Time(), record.Key(), nil)
 			contents.Append(record)
-			w.windowContentsMap.Store(wid, contents)
+			w.windowContentsMap.Store(key, contents)
 		}
 		ctx := w.triggerContext.New(wid, contents.Len())
 		signal := w.trigger.OnItem(record, record.Time(), window, ctx)
 		if signal.IsFire() {
-			w.emitWindow(contents, out)
+			w.emitWindow(window, contents, out)
 		}
 		w.registerCleanupTimer(wid, window)
 	}
 }
 
-func (w *EvictWindow) emitWindow(records *windowing.WindowContents, out Emitter) {
+func (w *EvictWindow) emitWindow(window windows.Window, records *windowing.WindowContents, out Emitter) {
 	// for TimeEvictor records without timestamp is invalid
 	// so for safty size should count only records with timestamp
 	w.evictor.EvictBefore(records, int64(records.Len()))
 
-	windowEmitter := NewWindowEmitter(records.Time(), records.Keys(), out)
+	windowEmitter := NewWindowEmitter(window.Start(), records.Keys(), out)
 	iterator := records.Iterator()
 	if w.reduceFunc != nil {
 		var acc types.Record
@@ -188,14 +188,14 @@ func (w *EvictWindow) handleWatermark(wm *types.Watermark, out Emitter) {
 
 // onProcessingTime is callback for processing timer service
 func (w *EvictWindow) onProcessingTime(wid windowing.WindowID, t time.Time) {
-	c, ok := w.windowContentsMap.Load(wid)
+	c, ok := w.windowContentsMap.Load(wid.Key())
 	if !ok {
 		return
 	}
 	contents := c.(*windowing.WindowContents)
 	signal := w.trigger.OnProcessingTime(t, wid.Window())
 	if signal.IsFire() {
-		w.emitWindow(contents, w.out)
+		w.emitWindow(wid.Window(), contents, w.out)
 		contents.Dispose()
 		w.windowContentsMap.Delete(wid)
 	}
@@ -203,7 +203,7 @@ func (w *EvictWindow) onProcessingTime(wid windowing.WindowID, t time.Time) {
 
 // onEventTIme is callback for event timer service
 func (w *EvictWindow) onEventTime(wid windowing.WindowID, t time.Time) {
-	c, ok := w.windowContentsMap.Load(wid)
+	c, ok := w.windowContentsMap.Load(wid.Key())
 	if !ok {
 		return
 	}
@@ -213,7 +213,7 @@ func (w *EvictWindow) onEventTime(wid windowing.WindowID, t time.Time) {
 
 	signal := w.trigger.OnEventTime(t, wid.Window())
 	if signal.IsFire() {
-		w.emitWindow(contents, w.out)
+		w.emitWindow(wid.Window(), contents, w.out)
 		// clean window
 		contents.Dispose()
 		w.windowContentsMap.Delete(wid)

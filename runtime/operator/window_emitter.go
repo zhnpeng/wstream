@@ -25,6 +25,7 @@ func NewWindowEmitter(t time.Time, k []interface{}, emitter Emitter) *WindowEmit
 
 func (e *WindowEmitter) Emit(item types.Item) {
 	if record, ok := item.(types.Record); ok {
+		// TODO: bad design, remove this
 		record.SetTime(e.t)
 		record.SetKey(e.k)
 		e.emitter.Emit(record)
