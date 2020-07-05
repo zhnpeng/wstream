@@ -7,13 +7,14 @@ import (
 )
 
 type TimestampWithPunctuatedWatermar interface {
-	// ExtractTime return sec only so minious granularity is second
+	// ExtractTime set record's time to event time, return sec only so minious granularity is second
 	ExtractTimestamp(record types.Record, prevRecordTimestamp int64) (sec int64)
 	GetNextWatermark(record types.Record, extractedTimestamp int64) (wm *types.Watermark)
 }
 
 type AssignTimeWithPeriodicWatermark interface {
+	// ExtractTime set record's time to event time, return sec only so minious granularity is second
 	ExtractTimestamp(record types.Record, prevRecordTimestamp int64) (sec int64)
-	GetNextWatermark() (wm *types.Watermark)
+	GetNextWatermark(t time.Time) (wm *types.Watermark)
 	Period() time.Duration
 }

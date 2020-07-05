@@ -74,8 +74,8 @@ func (f *TimeWithPeriodicWatermarkAssigner) Run(in Receiver, out Emitter) {
 		defer ticker.Stop()
 		for {
 			select {
-			case <-ticker.C:
-				nextWatermark := f.function.GetNextWatermark()
+			case t := <-ticker.C:
+				nextWatermark := f.function.GetNextWatermark(t)
 				f.handleWatermark(nextWatermark, out)
 			case <-ctx.Done():
 				return

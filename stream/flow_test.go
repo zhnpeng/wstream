@@ -352,57 +352,57 @@ func (t *testAssignTimeWithPuncatuatedWatermark) GetNextWatermark(r types.Record
 // Data
 var (
 	dataset1 = []map[string]interface{}{
-		map[string]interface{}{
+		{
 			"Watermark": true,
 			"T":         utils.ParseTime("2018-10-15 18:00:00").Unix(),
 			"D1":        "A",
 			"D2":        "A",
 			"X":         1,
 		},
-		map[string]interface{}{
+		{
 			"T":  utils.ParseTime("2018-10-15 18:00:01").Unix(),
 			"D1": "A",
 			"D2": "A",
 			"X":  1,
 		},
-		map[string]interface{}{
+		{
 			"T":  utils.ParseTime("2018-10-15 18:00:00").Unix(),
 			"D1": "A",
 			"D2": "B",
 			"X":  1,
 		},
-		map[string]interface{}{
+		{
 			"T":  utils.ParseTime("2018-10-15 18:00:01").Unix(),
 			"D1": "B",
 			"D2": "B",
 			"X":  1,
 		},
-		map[string]interface{}{
+		{
 			"Watermark": true,
 			"T":         utils.ParseTime("2018-10-15 18:00:02").Unix(),
 			"D1":        "A",
 			"D2":        "B",
 			"X":         1,
 		},
-		map[string]interface{}{
+		{
 			"T":  utils.ParseTime("2018-10-15 18:00:02").Unix(),
 			"D1": "A",
 			"D2": "B",
 			"X":  1,
 		},
-		map[string]interface{}{
+		{
 			"T":  utils.ParseTime("2018-10-15 18:00:02").Unix(),
 			"D1": "A",
 			"D2": "A",
 			"X":  1,
 		},
-		map[string]interface{}{
+		{
 			"T":  utils.ParseTime("2018-10-15 18:00:03").Unix(),
 			"D1": "A",
 			"D2": "A",
 			"X":  1,
 		},
-		map[string]interface{}{
+		{
 			"Watermark": true,
 			"T":         utils.ParseTime("2018-10-15 18:00:04").Unix(),
 			"D1":        "C",
@@ -412,58 +412,58 @@ var (
 	}
 
 	dataset2 = []map[string]interface{}{
-		map[string]interface{}{
+		{
 			"Watermark": true,
 			"T":         utils.ParseTime("2018-10-15 18:00:00").Unix(),
 			"D1":        "B",
 			"D2":        "B",
 			"X":         1,
 		},
-		map[string]interface{}{
+		{
 			"T":  utils.ParseTime("2018-10-15 18:00:01").Unix(),
 			"D1": "A",
 			"D2": "B",
 			"X":  1,
 		},
-		map[string]interface{}{
+		{
 			"T":  utils.ParseTime("2018-10-15 18:00:00").Unix(),
 			"D1": "A",
 			"D2": "B",
 			"X":  1,
 		},
-		map[string]interface{}{
+		{
 			"Watermark": true,
 			"T":         utils.ParseTime("2018-10-15 18:00:01").Unix(),
 			"D1":        "B",
 			"D2":        "B",
 			"X":         1,
 		},
-		map[string]interface{}{
+		{
 			"Watermark": true,
 			"T":         utils.ParseTime("2018-10-15 18:00:02").Unix(),
 			"D1":        "A",
 			"D2":        "A",
 			"X":         1,
 		},
-		map[string]interface{}{
+		{
 			"T":  utils.ParseTime("2018-10-15 18:00:02").Unix(),
 			"D1": "A",
 			"D2": "B",
 			"X":  1,
 		},
-		map[string]interface{}{
+		{
 			"T":  utils.ParseTime("2018-10-15 18:00:02").Unix(),
 			"D1": "B",
 			"D2": "B",
 			"X":  1,
 		},
-		map[string]interface{}{
+		{
 			"T":  utils.ParseTime("2018-10-15 18:00:03").Unix(),
 			"D1": "B",
 			"D2": "A",
 			"X":  1,
 		},
-		map[string]interface{}{
+		{
 			"Watermark": true,
 			"T":         utils.ParseTime("2018-10-15 18:00:04").Unix(),
 			"D1":        "C",
@@ -472,7 +472,7 @@ var (
 		},
 	}
 	dataset3 = []map[string]interface{}{
-		map[string]interface{}{
+		{
 			"Watermark": true,
 			"T":         utils.ParseTime("2018-10-15 18:00:00").Unix(),
 			"D1":        "A",
@@ -480,19 +480,19 @@ var (
 			"X":         1,
 		},
 
-		map[string]interface{}{
+		{
 			"T":  utils.ParseTime("2018-10-15 18:00:00").Unix(),
 			"D1": "A",
 			"D2": "B",
 			"X":  1,
 		},
-		map[string]interface{}{
+		{
 			"T":  utils.ParseTime("2018-10-15 18:00:01").Unix(),
 			"D1": "B",
 			"D2": "B",
 			"X":  1,
 		},
-		map[string]interface{}{
+		{
 			"Watermark": true,
 			"T":         utils.ParseTime("2018-10-15 18:00:04").Unix(),
 			"D1":        "C",
@@ -502,25 +502,25 @@ var (
 	}
 
 	dataset4 = []map[string]interface{}{
-		map[string]interface{}{
+		{
 			"T":  utils.ParseTime("2018-10-15 18:00:02").Unix(),
 			"D1": "A",
 			"D2": "B",
 			"X":  1,
 		},
-		map[string]interface{}{
+		{
 			"T":  utils.ParseTime("2018-10-15 18:00:02").Unix(),
 			"D1": "B",
 			"D2": "B",
 			"X":  1,
 		},
-		map[string]interface{}{
+		{
 			"T":  utils.ParseTime("2018-10-15 18:00:03").Unix(),
 			"D1": "B",
 			"D2": "C",
 			"X":  1,
 		},
-		map[string]interface{}{
+		{
 			"Watermark": true,
 			"T":         utils.ParseTime("2018-10-15 18:00:04").Unix(),
 			"D1":        "C",
