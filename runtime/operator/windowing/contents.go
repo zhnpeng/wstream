@@ -9,6 +9,10 @@ import (
 	"github.com/zhnpeng/wstream/types"
 )
 
+/*
+WindowContents represent for a specified window (key, Window)
+and hold all records belong to this window
+*/
 type WindowContents struct {
 	keys       []interface{}
 	window     windows.Window
@@ -27,22 +31,27 @@ func NewWindowContents(window windows.Window, t time.Time, keys []interface{}, r
 	}
 }
 
+// Keys return window's key in string format
 func (c *WindowContents) Keys() []interface{} {
 	return c.keys
 }
 
+// Len is the len of elements list, size of this WindowContents
 func (c *WindowContents) Len() int {
 	return c.elements.Len()
 }
 
+// Iterator return a iteratable object
 func (c *WindowContents) Iterator() *list.Element {
 	return c.elements.Front()
 }
 
+// Window use to get the window related to this WindowContents
 func (c *WindowContents) Window() windows.Window {
 	return c.window
 }
 
+// PushBack push record back to the elements list
 func (c *WindowContents) PushBack(record types.Record) {
 	c.elements.PushBack(record)
 }
@@ -79,6 +88,7 @@ func (c *WindowContents) RemoveN(e *list.Element) (next *list.Element) {
 	return
 }
 
+// Dispose all elements in WindowContents
 func (c *WindowContents) Dispose() {
 	c.elements.Init()
 }
