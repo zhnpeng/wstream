@@ -6,17 +6,17 @@ import (
 )
 
 type WindowID struct {
-	k utils.KeyID
-	w windows.Window
+	key    utils.KeyID
+	window windows.Window
 }
 
-func NewWindowID(k utils.KeyID, w windows.Window) WindowID {
+func NewWindowID(key utils.KeyID, window windows.Window) WindowID {
 	return WindowID{
-		k: k,
-		w: w,
+		key:    key,
+		window: window,
 	}
 }
 
 func (wid WindowID) Window() windows.Window {
-	return wid.w
+	return wid.window
 }

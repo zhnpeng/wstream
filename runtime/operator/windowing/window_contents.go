@@ -10,8 +10,7 @@ import (
 )
 
 type WindowContents struct {
-	t          time.Time
-	k          []interface{}
+	keys       []interface{}
 	window     windows.Window
 	elements   *list.List
 	reduceFunc functions.WindowReduce
@@ -19,10 +18,9 @@ type WindowContents struct {
 
 // NewWindowContents if window is a TimeWindow collection's T is window's start ts
 // else is the first record's time
-func NewWindowContents(window windows.Window, t time.Time, k []interface{}, reduceFunc functions.WindowReduce) *WindowContents {
+func NewWindowContents(window windows.Window, t time.Time, keys []interface{}, reduceFunc functions.WindowReduce) *WindowContents {
 	return &WindowContents{
-		t:          window.Start(),
-		k:          k,
+		keys:       keys,
 		window:     window,
 		elements:   list.New(),
 		reduceFunc: reduceFunc,
@@ -30,7 +28,7 @@ func NewWindowContents(window windows.Window, t time.Time, k []interface{}, redu
 }
 
 func (c *WindowContents) Keys() []interface{} {
-	return c.k
+	return c.keys
 }
 
 func (c *WindowContents) Len() int {
