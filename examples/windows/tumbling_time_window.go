@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/spf13/cast"
+	"github.com/zhnpeng/wstream/runtime/operator/windowing/windows"
 	"github.com/zhnpeng/wstream/stream"
 	"github.com/zhnpeng/wstream/types"
 	"github.com/zhnpeng/wstream/utils"
@@ -21,12 +22,15 @@ func (tmf *myMapFunc) Map(r types.Record) (o types.Record) {
 
 type myReduceFunc struct{}
 
-func (trf *myReduceFunc) Accmulater(a types.Record) types.Record {
-	return types.NewRawMapRecord(
+func (trf *myReduceFunc) Accmulater(window windows.Window, a types.Record) types.Record {
+	acc := types.NewMapRecord(
+		window.Start(),
 		map[string]interface{}{
 			"X": cast.ToInt(a.Get("X")),
 		},
 	)
+	acc.SetKey(a.Key())
+	return acc
 }
 
 func (trf *myReduceFunc) Reduce(a, b types.Record) types.Record {

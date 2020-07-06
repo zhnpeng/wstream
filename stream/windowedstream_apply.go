@@ -7,7 +7,7 @@ import (
 // WindowOperator is helper interface to set user functions to window operator
 type WindowOperator interface {
 	SetApplyFunc(functions.Apply)
-	SetReduceFunc(functions.Reduce)
+	SetReduceFunc(functions.WindowReduce)
 }
 
 func (s *WindowedStream) Apply(applyFunc functions.Apply) *DataStream {

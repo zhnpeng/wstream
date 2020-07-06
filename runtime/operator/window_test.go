@@ -1,7 +1,6 @@
 package operator
 
 import (
-	"fmt"
 	"math"
 	"sync"
 	"testing"
@@ -14,6 +13,7 @@ import (
 	"github.com/zhnpeng/wstream/env"
 	"github.com/zhnpeng/wstream/runtime/operator/windowing/assigners"
 	"github.com/zhnpeng/wstream/runtime/operator/windowing/triggers"
+	"github.com/zhnpeng/wstream/runtime/operator/windowing/windows"
 	"github.com/zhnpeng/wstream/types"
 	"github.com/zhnpeng/wstream/utils"
 )
@@ -49,18 +49,24 @@ func (e *windowtestEmitter) Dispose() {
 type windowTestReduceFunc struct {
 }
 
-func (f *windowTestReduceFunc) Accmulater(x types.Record) types.Record {
-	return types.NewRawMapRecord(map[string]interface{}{
+func (f *windowTestReduceFunc) Accmulater(window windows.Window, x types.Record) types.Record {
+	var t time.Time
+	if window.Start().Equal(t) {
+		// for count window window's time is the first record's time
+		t = x.Time()
+	} else {
+		t = window.Start()
+	}
+	return types.NewMapRecord(t, map[string]interface{}{
 		"A": cast.ToInt(x.Get("A")),
 		"B": cast.ToInt(x.Get("B")),
 	})
 }
 
 func (f *windowTestReduceFunc) Reduce(x types.Record, y types.Record) types.Record {
-	return types.NewRawMapRecord(map[string]interface{}{
-		"A": int(math.Max(cast.ToFloat64(x.Get("A")), cast.ToFloat64(y.Get("A")))),
-		"B": cast.ToInt(x.Get("B")) + cast.ToInt(y.Get("B")),
-	})
+	x.Set("A", int(math.Max(cast.ToFloat64(x.Get("A")), cast.ToFloat64(y.Get("A")))))
+	x.Set("B", cast.ToInt(x.Get("B"))+cast.ToInt(y.Get("B")))
+	return x
 }
 
 func TestWindow_Run_Tumbling_EventTime_Window(t *testing.T) {
@@ -175,7 +181,6 @@ func TestWindow_Run_Tumbling_EventTime_Window(t *testing.T) {
 			},
 		),
 	}
-	fmt.Println(got)
 
 	if diff := cmp.Diff(got, want); diff != "" {
 		t.Error(diff)

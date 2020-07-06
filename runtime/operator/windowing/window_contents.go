@@ -12,16 +12,18 @@ import (
 type WindowContents struct {
 	t          time.Time
 	k          []interface{}
+	window     windows.Window
 	elements   *list.List
-	reduceFunc functions.Reduce
+	reduceFunc functions.WindowReduce
 }
 
 // NewWindowContents if window is a TimeWindow collection's T is window's start ts
 // else is the first record's time
-func NewWindowContents(window windows.Window, t time.Time, k []interface{}, reduceFunc functions.Reduce) *WindowContents {
+func NewWindowContents(window windows.Window, t time.Time, k []interface{}, reduceFunc functions.WindowReduce) *WindowContents {
 	return &WindowContents{
 		t:          window.Start(),
 		k:          k,
+		window:     window,
 		elements:   list.New(),
 		reduceFunc: reduceFunc,
 	}
@@ -31,26 +33,16 @@ func (c *WindowContents) Keys() []interface{} {
 	return c.k
 }
 
-// Time return window collection time
-// for a GlobalWindow return collection's first element's time
-func (c *WindowContents) Time() time.Time {
-	if !c.t.Equal(time.Time{}) {
-		return c.t
-	}
-	t := c.t
-	first := c.elements.Front()
-	if first != nil {
-		t = first.Value.(types.Item).Time()
-	}
-	return t
-}
-
 func (c *WindowContents) Len() int {
 	return c.elements.Len()
 }
 
 func (c *WindowContents) Iterator() *list.Element {
 	return c.elements.Front()
+}
+
+func (c *WindowContents) Window() windows.Window {
+	return c.window
 }
 
 func (c *WindowContents) PushBack(record types.Record) {
@@ -64,7 +56,7 @@ func (c *WindowContents) Append(record types.Record) {
 	} else {
 		element := c.elements.Front()
 		if element == nil {
-			acc := c.reduceFunc.Accmulater(record)
+			acc := c.reduceFunc.Accmulater(c.Window(), record)
 			c.PushBack(acc)
 		} else {
 			acc := element.Value.(types.Record)

@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/spf13/cast"
+	"github.com/zhnpeng/wstream/runtime/operator/windowing/windows"
 	"github.com/zhnpeng/wstream/types"
 	"github.com/zhnpeng/wstream/utils"
 )
@@ -23,7 +24,7 @@ func TestFlow_Tumbling_Time_Window(t *testing.T) {
 		Map(&testMapPlusOne{}).
 		KeyBy("D1", "D2").
 		TimeWindow(2).
-		Reduce(&testReduce{}).
+		Reduce(&testWindowReduce{}).
 		Debug(outfunc)
 	// Debug
 	// flow.Transform()
@@ -302,6 +303,24 @@ func (tmf *testMapPlusOne) Map(r types.Record) (o types.Record) {
 	x := cast.ToInt(r.Get("X"))
 	r.Set("X", x+1)
 	return r
+}
+
+type testWindowReduce struct{}
+
+func (trf *testWindowReduce) Accmulater(window windows.Window, a types.Record) types.Record {
+	acc := types.NewMapRecord(
+		window.Start(),
+		map[string]interface{}{
+			"X": cast.ToInt(a.Get("X")),
+		},
+	)
+	acc.SetKey(a.Key())
+	return acc
+}
+
+func (trf *testWindowReduce) Reduce(a, b types.Record) types.Record {
+	a.Set("X", cast.ToInt(a.Get("X"))+cast.ToInt(b.Get("X")))
+	return a
 }
 
 type testReduce struct{}

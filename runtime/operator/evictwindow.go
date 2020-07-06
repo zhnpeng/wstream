@@ -30,7 +30,7 @@ type EvictWindow struct {
 	trigger           triggers.Trigger
 	evictor           evictors.Evictor
 	applyFunc         functions.Apply
-	reduceFunc        functions.Reduce
+	reduceFunc        functions.WindowReduce
 	out               Emitter
 	windowContentsMap sync.Map // map[windowing.WindowID]*windowing.WindowContents
 	watermarkTime     time.Time
@@ -88,7 +88,7 @@ func (w *EvictWindow) newApplyFunc() (udf functions.Apply) {
 	return
 }
 
-func (w *EvictWindow) newReduceFunc() (udf functions.Reduce) {
+func (w *EvictWindow) newReduceFunc() (udf functions.WindowReduce) {
 	if w.reduceFunc == nil {
 		return
 	}
@@ -106,7 +106,7 @@ func (w *EvictWindow) SetApplyFunc(f functions.Apply) {
 	w.applyFunc = f
 }
 
-func (w *EvictWindow) SetReduceFunc(f functions.Reduce) {
+func (w *EvictWindow) SetReduceFunc(f functions.WindowReduce) {
 	w.reduceFunc = f
 }
 
@@ -142,18 +142,17 @@ func (w *EvictWindow) handleRecord(record types.Record, out Emitter) {
 	}
 }
 
-func (w *EvictWindow) emitWindow(records *windowing.WindowContents, out Emitter) {
+func (w *EvictWindow) emitWindow(content *windowing.WindowContents, out Emitter) {
 	// for TimeEvictor records without timestamp is invalid
 	// so for safty size should count only records with timestamp
-	w.evictor.EvictBefore(records, int64(records.Len()))
+	w.evictor.EvictBefore(content, int64(content.Len()))
 
-	windowEmitter := NewWindowEmitter(records.Time(), records.Keys(), out)
-	iterator := records.Iterator()
+	iterator := content.Iterator()
 	if w.reduceFunc != nil {
 		var acc types.Record
 		for iter := iterator; iter != nil; iter = iter.Next() {
 			if acc == nil {
-				acc = w.reduceFunc.Accmulater(iter.Value.(types.Record))
+				acc = w.reduceFunc.Accmulater(content.Window(), iter.Value.(types.Record))
 			} else {
 				acc = w.reduceFunc.Reduce(acc, iter.Value.(types.Record))
 			}
@@ -163,12 +162,12 @@ func (w *EvictWindow) emitWindow(records *windowing.WindowContents, out Emitter)
 			newl.PushBack(acc)
 		}
 		// TODO: encapsulation this
-		w.applyFunc.Apply(newl.Front(), windowEmitter)
+		w.applyFunc.Apply(content.Window(), newl.Front(), out)
 	} else {
-		w.applyFunc.Apply(iterator, windowEmitter)
+		w.applyFunc.Apply(content.Window(), iterator, out)
 	}
 
-	w.evictor.EvictAfter(records, int64(records.Len()))
+	w.evictor.EvictAfter(content, int64(content.Len()))
 }
 
 func (w *EvictWindow) registerCleanupTimer(wid windowing.WindowID, window windows.Window) {

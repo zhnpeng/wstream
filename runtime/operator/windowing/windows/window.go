@@ -18,3 +18,7 @@ func (w Window) Start() time.Time {
 func (w Window) End() time.Time {
 	return w.end
 }
+
+func (w Window) Time() time.Time {
+	return w.Start()
+}

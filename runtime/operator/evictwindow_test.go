@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/zhnpeng/wstream/runtime/operator/windowing/evictors"
+	"github.com/zhnpeng/wstream/runtime/operator/windowing/windows"
 	"github.com/zhnpeng/wstream/utils"
 
 	"github.com/google/go-cmp/cmp"
@@ -49,20 +50,25 @@ func (e *evictWindowTestEmitter) Dispose() {
 type evictWindowTestReduceFunc struct {
 }
 
-func (f *evictWindowTestReduceFunc) Accmulater(x types.Record) types.Record {
+func (f *evictWindowTestReduceFunc) Accmulater(window windows.Window, x types.Record) types.Record {
+	var t time.Time
+	if window.Start().Equal(t) {
+		// for count window window's time is the first record's time
+		t = x.Time()
+	} else {
+		t = window.Start()
+	}
 	ret := map[string]interface{}{
 		"A": cast.ToInt(x.Get("A")),
 		"B": cast.ToInt(x.Get("B")),
 	}
-	return types.NewMapRecord(time.Time{}, ret)
+	return types.NewMapRecord(t, ret)
 }
 
 func (f *evictWindowTestReduceFunc) Reduce(x types.Record, y types.Record) types.Record {
-	ret := map[string]interface{}{
-		"A": int(math.Max(cast.ToFloat64(x.Get("A")), cast.ToFloat64(y.Get("A")))),
-		"B": cast.ToInt(x.Get("B")) + cast.ToInt(y.Get("B")),
-	}
-	return types.NewMapRecord(time.Time{}, ret)
+	x.Set("A", int(math.Max(cast.ToFloat64(x.Get("A")), cast.ToFloat64(y.Get("A")))))
+	x.Set("B", cast.ToInt(x.Get("B"))+cast.ToInt(y.Get("B")))
+	return x
 }
 
 func TestEvictWindow_Run_Tumbling_EventTime_Window(t *testing.T) {

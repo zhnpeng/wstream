@@ -22,7 +22,7 @@ import (
 
 type byPassApplyFunc struct{}
 
-func (*byPassApplyFunc) Apply(records *list.Element, out functions.Emitter) {
+func (*byPassApplyFunc) Apply(window windows.Window, records *list.Element, out functions.Emitter) {
 	for elem := records; elem != nil; elem = elem.Next() {
 		out.Emit(elem.Value.(types.Item))
 	}
@@ -35,7 +35,7 @@ type Window struct {
 	assigner          assigners.WindowAssinger
 	trigger           triggers.Trigger
 	applyFunc         functions.Apply
-	reduceFunc        functions.Reduce
+	reduceFunc        functions.WindowReduce
 	out               Emitter
 	windowContentsMap sync.Map // map[windowing.WindowID]*windowing.WindowContents
 	watermarkTime     time.Time
@@ -104,7 +104,7 @@ func (w *Window) newApplyFunc() (udf functions.Apply) {
 	return
 }
 
-func (w *Window) newReduceFunc() (udf functions.Reduce) {
+func (w *Window) newReduceFunc() (udf functions.WindowReduce) {
 	if w.reduceFunc == nil {
 		return
 	}
@@ -126,7 +126,7 @@ func (w *Window) SetApplyFunc(f functions.Apply) {
 	w.applyFunc = f
 }
 
-func (w *Window) SetReduceFunc(f functions.Reduce) {
+func (w *Window) SetReduceFunc(f functions.WindowReduce) {
 	if f == nil {
 		logrus.Warnf("Passing a nil reduce function to window reduce")
 		return
@@ -157,16 +157,15 @@ func (w *Window) handleRecord(record types.Record, out Emitter) {
 		ctx := w.triggerContext.New(wid, contents.Len())
 		signal := w.trigger.OnItem(record, record.Time(), window, ctx)
 		if signal.IsFire() {
-			w.emitWindow(contents, out)
+			w.emitWindow(window, contents, out)
 		}
 		w.registerCleanupTimer(wid, window)
 	}
 }
 
-func (w *Window) emitWindow(contents *windowing.WindowContents, out Emitter) {
-	emitter := NewWindowEmitter(contents.Time(), contents.Keys(), out)
+func (w *Window) emitWindow(window windows.Window, contents *windowing.WindowContents, out Emitter) {
 	iterator := contents.Iterator()
-	w.applyFunc.Apply(iterator, emitter)
+	w.applyFunc.Apply(window, iterator, out)
 }
 
 func (w *Window) registerCleanupTimer(wid windowing.WindowID, window windows.Window) {
@@ -198,7 +197,7 @@ func (w *Window) OnProcessingTime(wid windowing.WindowID, t time.Time) {
 	contents := c.(*windowing.WindowContents)
 	signal := w.trigger.OnProcessingTime(t, wid.Window())
 	if signal.IsFire() {
-		w.emitWindow(contents, w.out)
+		w.emitWindow(wid.Window(), contents, w.out)
 		// dispose window content
 		contents.Dispose()
 		w.windowContentsMap.Delete(wid)
@@ -217,7 +216,7 @@ func (w *Window) OnEventTime(wid windowing.WindowID, t time.Time) {
 
 	signal := w.trigger.OnEventTime(t, wid.Window())
 	if signal.IsFire() {
-		w.emitWindow(contents, w.out)
+		w.emitWindow(wid.Window(), contents, w.out)
 		// dispose window content
 		contents.Dispose()
 		w.windowContentsMap.Delete(wid)
