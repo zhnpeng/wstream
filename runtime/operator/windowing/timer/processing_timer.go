@@ -2,6 +2,7 @@ package timer
 
 import (
 	"container/heap"
+	"sync"
 	"time"
 
 	"github.com/zhnpeng/wstream/runtime/operator/windowing"
@@ -15,6 +16,8 @@ type ProcessingTimer struct {
 	procExists map[windowing.WindowID]bool
 	procTicker *time.Ticker
 	procCurrT  time.Time
+	procMu     sync.Mutex
+	procMupt   sync.RWMutex
 }
 
 func NewProcessingTimer(handler TimerHandler, d time.Duration) *ProcessingTimer {
@@ -30,6 +33,8 @@ func NewProcessingTimer(handler TimerHandler, d time.Duration) *ProcessingTimer 
 }
 
 func (timer *ProcessingTimer) OnTime(t time.Time) {
+	timer.procMu.Lock()
+	defer timer.procMu.Unlock()
 	for timer.procHp.Len() > 0 {
 		if !timer.procHp.Top().t.After(t) {
 			item := heap.Pop(timer.procHp).(TimerHeapItem)
@@ -44,6 +49,8 @@ func (timer *ProcessingTimer) OnTime(t time.Time) {
 }
 
 func (timer *ProcessingTimer) RegisterWindow(wid windowing.WindowID) {
+	timer.procMu.Lock()
+	defer timer.procMu.Unlock()
 	if _, ok := timer.procExists[wid]; ok {
 		// already registered
 		return
@@ -60,10 +67,14 @@ func (timer *ProcessingTimer) CurrentTime() time.Time {
 }
 
 func (timer *ProcessingTimer) getProcessingTime() time.Time {
+	timer.procMupt.RLock()
+	defer timer.procMupt.RUnlock()
 	return timer.procCurrT
 }
 
 func (timer *ProcessingTimer) setProcessingTime(t time.Time) {
+	timer.procMupt.Lock()
+	defer timer.procMupt.Unlock()
 	timer.procCurrT = t
 }
 
