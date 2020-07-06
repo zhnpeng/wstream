@@ -25,8 +25,8 @@ func NewTumblingProcessingTimeWindow(period, offset int64) *TumblingProcessingTi
 	}
 }
 
-func (a *TumblingProcessingTimeWindow) AssignWindows(item types.Item, ctx AssignerContext) []windows.Window {
-	ts := ctx.GetCurrentProcessingTime().Unix()
+func (a *TumblingProcessingTimeWindow) AssignWindows(item types.Item, currentTime time.Time) []windows.Window {
+	ts := currentTime.Unix()
 	start := GetWindowStartWithOffset(ts, a.offset, a.period)
 	return []windows.Window{windows.NewTimeWindow(time.Unix(start, 0), time.Unix(start+a.period, 0))}
 }

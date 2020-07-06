@@ -10,9 +10,9 @@ type Timer interface {
 	// OnTime means OnProcessingTime or OnEventTime
 	OnTime(t time.Time)
 	// Register a window to timmer
-	RegisterWindow(wid windowing.WindowID, t time.Time)
+	RegisterWindow(wid windowing.WindowID)
 	// CurrentTime() return current processing time or event time
 	CurrentTime() time.Time
-	Start()
-	Stop()
+	Start() error
+	Stop() error
 }

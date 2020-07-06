@@ -13,6 +13,7 @@ import (
 	"github.com/zhnpeng/wstream/intfs"
 	"github.com/zhnpeng/wstream/runtime/operator/windowing"
 	"github.com/zhnpeng/wstream/runtime/operator/windowing/assigners"
+	"github.com/zhnpeng/wstream/runtime/operator/windowing/timer"
 	"github.com/zhnpeng/wstream/runtime/operator/windowing/triggers"
 	"github.com/zhnpeng/wstream/runtime/operator/windowing/windows"
 	"github.com/zhnpeng/wstream/types"
@@ -38,9 +39,8 @@ type Window struct {
 	out               Emitter
 	windowContentsMap sync.Map // map[windowing.WindowID]*windowing.WindowContents
 	watermarkTime     time.Time
-	wts               *WindowTimerService
-	triggerContext    *WindowTriggerContext
-	assignerContext   *WindowAssignerContext
+	timer             timer.Timer
+	triggerContext    *triggers.WindowTriggerContext
 }
 
 /*
@@ -73,10 +73,15 @@ func NewWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger) *Win
 
 		applyFunc: &byPassApplyFunc{},
 	}
-	w.wts = NewWindowTimerService(w, time.Second)
+	if assigner.IsEventTime() {
+		w.timer = timer.NewEventTimer(w)
+	} else {
+		// Count Window use a processing timer too
+		w.timer = timer.NewProcessingTimer(w, time.Second)
+	}
+	// w.wts = NewWindowTimerService(w, time.Second)
 	// bind this window to triggerContext factory
-	w.triggerContext = NewWindowTriggerContext(w.wts)
-	w.assignerContext = NewWindowAssignerContext(w.wts)
+	w.triggerContext = triggers.NewWindowTriggerContext()
 	return w
 }
 
@@ -130,12 +135,12 @@ func (w *Window) SetReduceFunc(f functions.Reduce) {
 }
 
 func (w *Window) handleRecord(record types.Record, out Emitter) {
-	assignedWindows := w.assigner.AssignWindows(record, w.assignerContext)
+	assignedWindows := w.assigner.AssignWindows(record, w.timer.CurrentTime())
 
 	for _, window := range assignedWindows {
 		if w.isWindowLate(window) {
 			// drop window if it is event time and late
-			logrus.Warnf("drop late window (%+v %+v) for record %+v, watermark time is %v", window.Start(), window.End(), record, w.wts.CurrentWatermarkTime())
+			logrus.Warnf("drop late window (%+v %+v) for record %+v, watermark time is %v", window.Start(), window.End(), record, w.timer.CurrentTime())
 			continue
 		}
 		k := utils.HashSlice(record.Key())
@@ -165,29 +170,27 @@ func (w *Window) emitWindow(contents *windowing.WindowContents, out Emitter) {
 }
 
 func (w *Window) registerCleanupTimer(wid windowing.WindowID, window windows.Window) {
-	if window.MaxTimestamp().Equal(time.Unix(math.MaxInt64, 0)) {
+	if window.End().Equal(time.Unix(math.MaxInt64, 0)) {
 		// ignore GlobalWindow
 		return
 	}
-	if w.assigner.IsEventTime() {
-		w.wts.RegisterEventTimer(wid, window.MaxTimestamp())
-	} else {
-		w.wts.RegisterProcessingTimer(wid, window.MaxTimestamp())
-	}
+	w.timer.RegisterWindow(wid)
 }
 
 func (w *Window) isWindowLate(window windows.Window) bool {
-	return w.assigner.IsEventTime() && window.MaxTimestamp().Before(w.wts.CurrentWatermarkTime())
+	return w.assigner.IsEventTime() && window.End().Before(w.timer.CurrentTime())
 }
 
 func (w *Window) handleWatermark(wm *types.Watermark, out Emitter) {
 	//window do multi way merge watermarks into one
 	//and drive event time with it
-	w.wts.Drive(wm.Time())
+	if w.assigner.IsEventTime() {
+		w.timer.OnTime(wm.Time())
+	}
 }
 
 // onProcessingTime is callback for processing timer service
-func (w *Window) onProcessingTime(wid windowing.WindowID, t time.Time) {
+func (w *Window) OnProcessingTime(wid windowing.WindowID, t time.Time) {
 	c, ok := w.windowContentsMap.Load(wid)
 	if !ok {
 		return
@@ -203,7 +206,7 @@ func (w *Window) onProcessingTime(wid windowing.WindowID, t time.Time) {
 }
 
 // onEventTIme is callback for event timer service
-func (w *Window) onEventTime(wid windowing.WindowID, t time.Time) {
+func (w *Window) OnEventTime(wid windowing.WindowID, t time.Time) {
 	c, ok := w.windowContentsMap.Load(wid)
 	if !ok {
 		return
@@ -222,12 +225,12 @@ func (w *Window) onEventTime(wid windowing.WindowID, t time.Time) {
 }
 
 func (w *Window) isCleanupTime(window windows.Window, t time.Time) bool {
-	return t.Equal(window.MaxTimestamp())
+	return t.Equal(window.End())
 }
 
 // check if should emit new watermark
 func (w *Window) likelyEmitWatermark() {
-	eventTime := w.wts.CurrentWatermarkTime()
+	eventTime := w.timer.CurrentTime()
 	if eventTime.After(w.watermarkTime) {
 		w.out.Emit(types.NewWatermark(eventTime))
 		w.watermarkTime = eventTime
@@ -237,8 +240,8 @@ func (w *Window) likelyEmitWatermark() {
 // Run this operator
 func (w *Window) Run(in Receiver, out Emitter) {
 	w.out = out
-	w.wts.Start()
-	defer w.wts.Stop()
+	w.timer.Start()
+	defer w.timer.Stop()
 	for {
 		item, ok := <-in.Next()
 		if !ok {

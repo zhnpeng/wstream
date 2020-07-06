@@ -6,6 +6,12 @@ import (
 	"github.com/zhnpeng/wstream/runtime/operator/windowing"
 )
 
+type TimerHandler interface {
+	OnProcessingTime(windowing.WindowID, time.Time)
+	OnEventTime(windowing.WindowID, time.Time)
+	Dispose()
+}
+
 type TimerHeap []TimerHeapItem
 
 type TimerHeapItem struct {

@@ -18,7 +18,3 @@ func (w Window) Start() time.Time {
 func (w Window) End() time.Time {
 	return w.end
 }
-
-func (w Window) MaxTimestamp() time.Time {
-	return w.end.Add(-1 * time.Second)
-}

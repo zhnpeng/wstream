@@ -27,7 +27,7 @@ func NewSlidingEventTimeWindoww(period, every, offset int64) *SlidingEventTimeWi
 	}
 }
 
-func (a *SlidingEventTimeWindoww) AssignWindows(item types.Item, ctx AssignerContext) []windows.Window {
+func (a *SlidingEventTimeWindoww) AssignWindows(item types.Item, currentTime time.Time) []windows.Window {
 	var ret []windows.Window
 	ts := item.Time().Unix()
 	lastStart := GetWindowStartWithOffset(ts, a.offset, a.every)

@@ -15,10 +15,6 @@ func NewEventTimeTrigger() *EventTimeTrigger {
 }
 
 func (trigger *EventTimeTrigger) OnItem(item types.Item, t time.Time, window windows.Window, ctx TriggerContext) TriggerSignal {
-	if window.MaxTimestamp().Before(ctx.GetCurrentEventTime()) {
-		return FIRE
-	}
-	ctx.RegisterEventTimer(window.MaxTimestamp())
 	return CONTINUE
 }
 
@@ -27,7 +23,7 @@ func (trigger *EventTimeTrigger) OnProcessingTime(t time.Time, window windows.Wi
 }
 
 func (trigger *EventTimeTrigger) OnEventTime(t time.Time, window windows.Window) TriggerSignal {
-	if t.Equal(window.MaxTimestamp()) {
+	if !t.Before(window.End()) {
 		return FIRE
 	}
 	return CONTINUE

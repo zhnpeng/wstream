@@ -1,6 +1,7 @@
 package operator
 
 import (
+	"fmt"
 	"math"
 	"sync"
 	"testing"
@@ -174,6 +175,7 @@ func TestWindow_Run_Tumbling_EventTime_Window(t *testing.T) {
 			},
 		),
 	}
+	fmt.Println(got)
 
 	if diff := cmp.Diff(got, want); diff != "" {
 		t.Error(diff)

@@ -9,7 +9,7 @@ import (
 )
 
 type WindowAssinger interface {
-	AssignWindows(types.Item, AssignerContext) []windows.Window
+	AssignWindows(item types.Item, currentTime time.Time) []windows.Window
 	GetDefaultTrigger() triggers.Trigger
 	IsEventTime() bool
 }

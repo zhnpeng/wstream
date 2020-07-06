@@ -25,7 +25,7 @@ func NewTumblingEventTimeWindow(period, offset int64) *TumblingEventTimeWindow {
 	}
 }
 
-func (a *TumblingEventTimeWindow) AssignWindows(item types.Item, ctx AssignerContext) []windows.Window {
+func (a *TumblingEventTimeWindow) AssignWindows(item types.Item, currentTime time.Time) []windows.Window {
 	ts := item.Time().Unix()
 	start := GetWindowStartWithOffset(ts, a.offset, a.period)
 	return []windows.Window{windows.NewTimeWindow(time.Unix(start, 0), time.Unix(start+a.period, 0))}

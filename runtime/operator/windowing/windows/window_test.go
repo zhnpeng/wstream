@@ -2,7 +2,6 @@ package windows
 
 import (
 	"testing"
-	"time"
 
 	"github.com/zhnpeng/wstream/utils"
 )
@@ -17,9 +16,5 @@ func TestNew(t *testing.T) {
 	}
 	if !w.End().Equal(end) {
 		t.Errorf("got = %v, want %v", w.End(), end)
-	}
-
-	if !w.MaxTimestamp().Equal(end.Add(-1 * time.Second)) {
-		t.Errorf("got = %v, want %v", w.MaxTimestamp(), end.Add(-1*time.Second))
 	}
 }

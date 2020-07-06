@@ -3,6 +3,7 @@ package assigners
 import (
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/zhnpeng/wstream/runtime/operator/windowing/triggers"
 	"github.com/zhnpeng/wstream/runtime/operator/windowing/windows"
@@ -14,7 +15,7 @@ func TestSlidingEventTimeWindoww_AssignWindows(t *testing.T) {
 	assigner := NewSlidingEventTimeWindoww(120, 60, 8)
 
 	dt := utils.ParseTime("2018-11-27 18:01:01")
-	got := assigner.AssignWindows(&types.MapRecord{T: dt}, nil)
+	got := assigner.AssignWindows(&types.MapRecord{T: dt}, time.Time{})
 	want := []windows.Window{
 		windows.NewTimeWindow(utils.ParseTime("2018-11-27 18:01:00"), utils.ParseTime("2018-11-27 18:03:00")),
 		windows.NewTimeWindow(utils.ParseTime("2018-11-27 18:00:00"), utils.ParseTime("2018-11-27 18:02:00")),

@@ -27,9 +27,9 @@ func NewSlidingProcessingTimeWindow(period, every, offset int64) *SlidingProcess
 	}
 }
 
-func (a *SlidingProcessingTimeWindow) AssignWindows(item types.Item, ctx AssignerContext) []windows.Window {
+func (a *SlidingProcessingTimeWindow) AssignWindows(item types.Item, currentTime time.Time) []windows.Window {
 	var ret []windows.Window
-	ts := ctx.GetCurrentProcessingTime().Unix()
+	ts := currentTime.Unix()
 	lastStart := GetWindowStartWithOffset(ts, a.offset, a.every)
 	for start := lastStart; start > ts-a.period; start -= a.every {
 		ret = append(ret, windows.NewTimeWindow(time.Unix(start, 0), time.Unix(start+a.period, 0)))

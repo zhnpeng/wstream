@@ -1,6 +1,8 @@
 package assigners
 
 import (
+	"time"
+
 	"github.com/zhnpeng/wstream/runtime/operator/windowing/triggers"
 	"github.com/zhnpeng/wstream/runtime/operator/windowing/windows"
 	"github.com/zhnpeng/wstream/types"
@@ -13,7 +15,7 @@ func NewGlobalWindow() *GlobalWindow {
 }
 
 // AssignWindows return all windows item was assigned to
-func (w *GlobalWindow) AssignWindows(item types.Item, ctx AssignerContext) []windows.Window {
+func (w *GlobalWindow) AssignWindows(item types.Item, currentTime time.Time) []windows.Window {
 	return []windows.Window{windows.GetGlobalWindow()}
 }
 

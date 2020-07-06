@@ -21,11 +21,8 @@ func (m *mockAC) GetCurrentProcessingTime() time.Time {
 func TestTumblingProcessingTimeWindow(t *testing.T) {
 	assigner := NewTumblingProcessingTimeWindow(60, 8)
 
-	dt := utils.ParseTime("2018-11-27 18:01:01")
-	ctx := &mockAC{
-		processingTime: dt,
-	}
-	got := assigner.AssignWindows(nil, ctx)
+	currentTime := utils.ParseTime("2018-11-27 18:01:01")
+	got := assigner.AssignWindows(nil, currentTime)
 	want := []windows.Window{
 		windows.NewTimeWindow(utils.ParseTime("2018-11-27 18:01:00"), utils.ParseTime("2018-11-27 18:02:00")),
 	}
