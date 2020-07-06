@@ -159,7 +159,7 @@ func (w *Window) handleRecord(record types.Record, out Emitter) {
 		if signal.IsFire() {
 			w.emitWindow(window, contents, out)
 		}
-		w.registerCleanupTimer(wid, window)
+		w.registerWindow(wid)
 	}
 }
 
@@ -168,8 +168,8 @@ func (w *Window) emitWindow(window windows.Window, contents *windowing.WindowCon
 	w.applyFunc.Apply(window, iterator, out)
 }
 
-func (w *Window) registerCleanupTimer(wid windowing.WindowID, window windows.Window) {
-	if window.End().Equal(time.Unix(math.MaxInt64, 0)) {
+func (w *Window) registerWindow(wid windowing.WindowID) {
+	if wid.Window().End().Equal(time.Unix(math.MaxInt64, 0)) {
 		// ignore GlobalWindow
 		return
 	}

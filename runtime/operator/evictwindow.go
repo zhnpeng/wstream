@@ -137,8 +137,7 @@ func (w *EvictWindow) handleRecord(record types.Record, out Emitter) {
 		if signal.IsFire() {
 			w.emitWindow(contents, out)
 		}
-		// TODO: ?????
-		w.registerCleanupTimer(wid, window)
+		w.registerWindow(wid)
 	}
 }
 
@@ -170,8 +169,8 @@ func (w *EvictWindow) emitWindow(content *windowing.WindowContents, out Emitter)
 	w.evictor.EvictAfter(content, int64(content.Len()))
 }
 
-func (w *EvictWindow) registerCleanupTimer(wid windowing.WindowID, window windows.Window) {
-	if window.End().Equal(time.Unix(math.MaxInt64, 0)) {
+func (w *EvictWindow) registerWindow(wid windowing.WindowID) {
+	if wid.Window().End().Equal(time.Unix(math.MaxInt64, 0)) {
 		return
 	}
 	w.timer.RegisterWindow(wid)
