@@ -79,7 +79,6 @@ func NewWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger) *Win
 		// Count Window use a processing timer too
 		w.timer = timer.NewProcessingTimer(w, time.Second)
 	}
-	// w.wts = NewWindowTimerService(w, time.Second)
 	// bind this window to triggerContext factory
 	w.triggerContext = triggers.NewWindowTriggerContext()
 	return w
@@ -188,7 +187,7 @@ func (w *Window) handleWatermark(wm *types.Watermark, out Emitter) {
 	}
 }
 
-// onProcessingTime is callback for processing timer service
+// OnProcessingTime is callback for processing timer service
 func (w *Window) OnProcessingTime(wid windowing.WindowID, t time.Time) {
 	c, ok := w.windowContentsMap.Load(wid)
 	if !ok {
@@ -204,7 +203,7 @@ func (w *Window) OnProcessingTime(wid windowing.WindowID, t time.Time) {
 	}
 }
 
-// onEventTIme is callback for event timer service
+// OnEventTime is callback for event timer service
 func (w *Window) OnEventTime(wid windowing.WindowID, t time.Time) {
 	c, ok := w.windowContentsMap.Load(wid)
 	if !ok {
