@@ -8,12 +8,8 @@ import (
 	"github.com/zhnpeng/wstream/utils/graph"
 )
 
-func (f *Flow) Transform() {
-	if f.transformed {
-		logrus.Warn("transform failed, flow already transformed.")
-		return
-	}
-	f.transformed = true
+// LocalTransform transform flow in local mode
+func (f *Flow) LocalTransform() {
 	f.transform()
 }
 

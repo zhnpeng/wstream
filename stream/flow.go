@@ -11,10 +11,9 @@ import (
 Flow is a DAG graph organized with streams
 */
 type Flow struct {
-	name        string
-	transformed bool
-	vertices    map[int]*StreamNode
-	graph       *graph.Mutable
+	name     string
+	vertices map[int]*StreamNode
+	graph    *graph.Mutable
 }
 
 // New a Flow
@@ -81,10 +80,10 @@ func (f *Flow) AddStreamEdge(from, to Stream) error {
 	return f.graph.AddEdge(fromID, toID)
 }
 
-// LeftMergeStream join right strem to the left
+// CombineStream join right strem to the left
 // right stream will not add to graph
 // any StreamNode connect to right stream will collect to the left
-func (f *Flow) LeftMergeStream(left, right Stream) {
+func (f *Flow) CombineStream(left, right Stream) {
 	if !f.existsStream(left) {
 		f.AddStream(left)
 	}
@@ -111,7 +110,7 @@ func (f *Flow) BFSBoth(v int, do func(v, w int, c int64)) {
 }
 
 func (f *Flow) Run() {
-	f.Transform()
+	f.LocalTransform()
 	var wg sync.WaitGroup
 	start := f.GetStreamNode(0)
 	wg.Add(1)

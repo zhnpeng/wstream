@@ -14,6 +14,6 @@ func (s *WindowedStream) Apply(applyFunc functions.Apply) *DataStream {
 	stream := s.toDataStream()
 	operator := s.operator.(WindowOperator)
 	operator.SetApplyFunc(applyFunc)
-	s.leftMerge(stream)
+	s.combine(stream)
 	return stream
 }

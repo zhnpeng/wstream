@@ -59,7 +59,7 @@ func (s *WindowedStream) toDataStream() *DataStream {
 	return NewDataStream(s.flow, s.parallel)
 }
 
-// left merge new stream to windowed stream and then return new stream
-func (s *WindowedStream) leftMerge(stream Stream) {
-	s.flow.LeftMergeStream(s, stream)
+// combine new stream to windowed stream and then return new stream
+func (s *WindowedStream) combine(stream Stream) {
+	s.flow.CombineStream(s, stream)
 }

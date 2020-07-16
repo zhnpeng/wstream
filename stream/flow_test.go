@@ -27,7 +27,7 @@ func TestFlow_Tumbling_Time_Window(t *testing.T) {
 		Reduce(&testWindowReduce{}).
 		Debug(outfunc)
 	// Debug
-	// flow.Transform()
+	// flow.LocalTransform()
 	// fmt.Println(reflect.TypeOf(flow.GetStream(0)))
 	// fmt.Println(flow.GetStream(0))
 	// fmt.Println(flow.GetTask(0))
