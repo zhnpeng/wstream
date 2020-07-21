@@ -1,10 +1,16 @@
 package stream
 
 import (
+	"encoding/gob"
+
 	"github.com/zhnpeng/wstream/intfs"
 	"github.com/zhnpeng/wstream/runtime/operator"
 	"github.com/zhnpeng/wstream/runtime/selector"
 )
+
+func init() {
+	gob.Register(&KeyedStream{})
+}
 
 type KeyedStream struct {
 	parallel int

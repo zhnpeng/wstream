@@ -16,7 +16,6 @@ type Flow struct {
 	graph    *graph.Mutable
 }
 
-// New a Flow
 func NewFlow(name string) *Flow {
 	return &Flow{
 		name:     name,
@@ -28,28 +27,28 @@ func NewFlow(name string) *Flow {
 // StreamNode assign unique for each stream
 // and combine stream with execution task
 type StreamNode struct {
-	id     int
-	stream Stream
-	Task   *execution.Task
+	ID     int
+	Stream Stream
+	task   *execution.Task
 }
 
-func newStreamNode(id int, stm Stream) *StreamNode {
+func newStreamNode(id int, s Stream) *StreamNode {
 	return &StreamNode{
-		id:     id,
-		stream: stm,
+		ID:     id,
+		Stream: s,
 	}
 }
 
 func (f *Flow) GetStream(id int) (stm Stream) {
 	if StreamNode, ok := f.vertices[id]; ok {
-		stm = StreamNode.stream
+		stm = StreamNode.Stream
 	}
 	return
 }
 
 func (f *Flow) GetTask(id int) (task *execution.Task) {
 	if t, ok := f.vertices[id]; ok {
-		task = t.Task
+		task = t.task
 	}
 	return
 }
@@ -75,8 +74,8 @@ func (f *Flow) AddStreamEdge(from, to Stream) error {
 	if !f.existsStream(to) {
 		f.AddStream(to)
 	}
-	fromID := from.GetStreamNode().id
-	toID := to.GetStreamNode().id
+	fromID := from.GetStreamNode().ID
+	toID := to.GetStreamNode().ID
 	return f.graph.AddEdge(fromID, toID)
 }
 
@@ -95,7 +94,7 @@ func (f *Flow) existsStream(stm Stream) bool {
 	if StreamNode == nil {
 		return false
 	}
-	if _, ok := f.vertices[StreamNode.id]; ok {
+	if _, ok := f.vertices[StreamNode.ID]; ok {
 		return true
 	}
 	return false
@@ -109,6 +108,7 @@ func (f *Flow) BFSBoth(v int, do func(v, w int, c int64)) {
 	graph.BFSAll(f.graph, v, do)
 }
 
+// Run in local mode
 func (f *Flow) Run() {
 	f.LocalTransform()
 	var wg sync.WaitGroup
@@ -116,10 +116,10 @@ func (f *Flow) Run() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		start.Task.Run()
+		start.task.Run()
 	}()
 	graph.BFSBoth(f.graph, 0, func(v, w int, c int64) {
-		task := f.GetStreamNode(w).Task
+		task := f.GetStreamNode(w).task
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -127,4 +127,10 @@ func (f *Flow) Run() {
 		}()
 	})
 	wg.Wait()
+}
+
+// RunDistrib run in distribution mode
+// TODO: implement this
+func (f *Flow) RunDistrib() {
+
 }
