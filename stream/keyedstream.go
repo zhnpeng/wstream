@@ -7,38 +7,38 @@ import (
 )
 
 type KeyedStream struct {
-	parallel int
-	selector intfs.Selector
-	operator intfs.Operator
+	Parallel  int
+	Selector_ intfs.Selector
+	Operator_ intfs.Operator
 
 	graph      *Flow
 	streamNode *StreamNode
 }
 
-func NewKeyedStream(graph *Flow, parallel int, keys []interface{}) *KeyedStream {
+func NewKeyedStream(graph *Flow, Parallel int, keys []interface{}) *KeyedStream {
 	return &KeyedStream{
-		graph:    graph,
-		parallel: parallel,
-		selector: selector.NewKeyBy(keys),
-		operator: operator.NewByPass(),
+		graph:     graph,
+		Parallel:  Parallel,
+		Selector_: selector.NewKeyBy(keys),
+		Operator_: operator.NewByPass(),
 	}
 }
 
 func (s *KeyedStream) Selector() intfs.Selector {
-	return s.selector.New()
+	return s.Selector_.New()
 }
 
 func (s *KeyedStream) Operator() intfs.Operator {
-	return s.operator.New()
+	return s.Operator_.New()
 }
 
-func (s *KeyedStream) Rescale(parallel int) *KeyedStream {
-	s.parallel = parallel
+func (s *KeyedStream) Rescale(Parallel int) *KeyedStream {
+	s.Parallel = Parallel
 	return s
 }
 
 func (s *KeyedStream) Parallelism() int {
-	return s.parallel
+	return s.Parallel
 }
 
 func (s *KeyedStream) SetStreamNode(node *StreamNode) {
@@ -50,11 +50,11 @@ func (s *KeyedStream) GetStreamNode() (node *StreamNode) {
 }
 
 func (s *KeyedStream) toDataStream() *DataStream {
-	return NewDataStream(s.graph, s.parallel)
+	return NewDataStream(s.graph, s.Parallel)
 }
 
 func (s *KeyedStream) toWindowedStream() *WindowedStream {
-	return NewWindowedStream(s.graph, s.parallel)
+	return NewWindowedStream(s.graph, s.Parallel)
 }
 
 func (s *KeyedStream) connect(stream Stream) error {

@@ -1,7 +1,10 @@
 package stream
 
 import (
+	"bytes"
+	"encoding/gob"
 	"fmt"
+	"reflect"
 	"sort"
 	"sync"
 	"testing"
@@ -9,6 +12,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/spf13/cast"
+	"github.com/stretchr/testify/require"
 	"github.com/zhnpeng/wstream/runtime/operator/windowing/windows"
 	"github.com/zhnpeng/wstream/types"
 	"github.com/zhnpeng/wstream/utils"
@@ -26,6 +30,7 @@ func TestFlow_Tumbling_Time_Window(t *testing.T) {
 		TimeWindow(2).
 		Reduce(&testWindowReduce{}).
 		Debug(outfunc)
+
 	// Debug
 	// flow.Transform()
 	// fmt.Println(reflect.TypeOf(flow.GetStream(0)))
@@ -137,6 +142,24 @@ func TestFlow_Multiplex_Rolling_Reduce(t *testing.T) {
 	outfunc1 := &testDebug{}
 	outfunc2 := &testDebug{}
 	src := source.MapChannels(input1, input2)
+
+	var buf bytes.Buffer
+	err := gob.NewEncoder(&buf).Encode(flow)
+	require.Nil(t, err)
+	decoder := gob.NewDecoder(bytes.NewReader(buf.Bytes()))
+	var nf Flow
+	err = decoder.Decode(&nf)
+	require.Nil(t, err)
+	// Debug
+	nf.Transform()
+	fmt.Println(reflect.TypeOf(nf.GetStream(0)))
+	fmt.Println(nf.GetStream(0))
+	fmt.Println(nf.GetTask(0))
+	nf.BFSBoth(0, func(v, w int, c int64) {
+		fmt.Println(reflect.TypeOf(nf.GetStream(w)))
+		fmt.Println(nf.GetStream(w))
+		fmt.Println(nf.GetTask(w))
+	})
 
 	src.Map(&testMapSetOne{}).
 		KeyBy("D1", "D2").

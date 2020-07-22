@@ -9,26 +9,26 @@ import (
 )
 
 func (f *Flow) Transform() {
-	if f.transformed {
-		logrus.Warn("transform failed, flow already transformed.")
+	if f.Transformed {
+		logrus.Warn("transform failed, flow already Transformed.")
 		return
 	}
-	f.transformed = true
+	f.Transformed = true
 	f.transform()
 }
 
 // Transform stream to executable
 func (f *Flow) transform() {
-	graph.BFSAll(f.graph, 0, func(v, w int, c int64) {
+	graph.BFSAll(f.Graph, 0, func(v, w int, c int64) {
 		fromNode := f.GetStreamNode(v)
 		toNode := f.GetStreamNode(w)
 		if fromNode.Task == nil {
 			//Create executable
-			fromNode.Task = f.StreamToTask(fromNode.stream)
+			fromNode.Task = f.StreamToTask(fromNode.Stream)
 		}
 		if toNode.Task == nil {
 			//Create executable
-			toNode.Task = f.StreamToTask(toNode.stream)
+			toNode.Task = f.StreamToTask(toNode.Stream)
 		}
 		if toNode.Task.RescaleNode == nil {
 			// is a broadcast node
