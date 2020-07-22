@@ -15,16 +15,16 @@ func (f *Flow) LocalTransform() {
 
 // Transform stream to executable
 func (f *Flow) transform() {
-	graph.BFSAll(f.graph, 0, func(v, w int, c int64) {
+	graph.BFSAll(f.Graph, 0, func(v, w int, c int64) {
 		fromNode := f.GetStreamNode(v)
 		toNode := f.GetStreamNode(w)
 		if fromNode.task == nil {
 			//Create executable
-			fromNode.task = f.StreamToTask(fromNode.stream)
+			fromNode.task = f.StreamToTask(fromNode.Stream)
 		}
 		if toNode.task == nil {
 			//Create executable
-			toNode.task = f.StreamToTask(toNode.stream)
+			toNode.task = f.StreamToTask(toNode.Stream)
 		}
 		if toNode.task.RescaleNode == nil {
 			// is a broadcast node

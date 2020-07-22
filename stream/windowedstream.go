@@ -1,12 +1,18 @@
 package stream
 
 import (
+	"encoding/gob"
+
 	"github.com/zhnpeng/wstream/intfs"
 	"github.com/zhnpeng/wstream/runtime/operator"
 	"github.com/zhnpeng/wstream/runtime/operator/windowing/assigners"
 	"github.com/zhnpeng/wstream/runtime/operator/windowing/evictors"
 	"github.com/zhnpeng/wstream/runtime/operator/windowing/triggers"
 )
+
+func init() {
+	gob.Register(&WindowedStream{})
+}
 
 type WindowedStream struct {
 	parallel   int

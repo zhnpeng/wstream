@@ -1,11 +1,17 @@
 package stream
 
 import (
+	"encoding/gob"
+
 	"github.com/zhnpeng/wstream/functions"
 	"github.com/zhnpeng/wstream/intfs"
 	"github.com/zhnpeng/wstream/runtime/operator"
 	"github.com/zhnpeng/wstream/runtime/selector"
 )
+
+func init() {
+	gob.Register(&DataStream{})
+}
 
 type DataStream struct {
 	parallel int

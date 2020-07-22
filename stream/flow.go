@@ -8,19 +8,19 @@ import (
 )
 
 /*
-Flow is a DAG graph organized with streams
+Flow is a DAG Graph organized with streams
 */
 type Flow struct {
-	name     string
-	vertices map[int]*StreamNode
-	graph    *graph.Mutable
+	Name     string
+	Vertices map[int]*StreamNode
+	Graph    *graph.Mutable
 }
 
 func NewFlow(name string) *Flow {
 	return &Flow{
-		name:     name,
-		vertices: make(map[int]*StreamNode),
-		graph:    graph.New(0),
+		Name:     name,
+		Vertices: make(map[int]*StreamNode),
+		Graph:    graph.New(0),
 	}
 }
 
@@ -40,30 +40,30 @@ func newStreamNode(id int, s Stream) *StreamNode {
 }
 
 func (f *Flow) GetStream(id int) (stm Stream) {
-	if StreamNode, ok := f.vertices[id]; ok {
+	if StreamNode, ok := f.Vertices[id]; ok {
 		stm = StreamNode.Stream
 	}
 	return
 }
 
 func (f *Flow) GetTask(id int) (task *execution.Task) {
-	if t, ok := f.vertices[id]; ok {
+	if t, ok := f.Vertices[id]; ok {
 		task = t.task
 	}
 	return
 }
 
-// Len return numbers of vertices of graph
+// Len return numbers of Vertices of Graph
 func (f *Flow) Len() int {
-	return len(f.vertices)
+	return len(f.Vertices)
 }
 
-// AddStream add a stream vertex to graph
+// AddStream add a stream vertex to Graph
 func (f *Flow) AddStream(stm Stream) {
-	id := f.graph.AddVertex()
+	id := f.Graph.AddVertex()
 	StreamNode := newStreamNode(id, stm)
 	stm.SetStreamNode(StreamNode)
-	f.vertices[id] = StreamNode
+	f.Vertices[id] = StreamNode
 }
 
 // AddStreamEdge add directed edge between two stream
@@ -76,11 +76,11 @@ func (f *Flow) AddStreamEdge(from, to Stream) error {
 	}
 	fromID := from.GetStreamNode().ID
 	toID := to.GetStreamNode().ID
-	return f.graph.AddEdge(fromID, toID)
+	return f.Graph.AddEdge(fromID, toID)
 }
 
 // CombineStream join right strem to the left
-// right stream will not add to graph
+// right stream will not add to Graph
 // any StreamNode connect to right stream will collect to the left
 func (f *Flow) CombineStream(left, right Stream) {
 	if !f.existsStream(left) {
@@ -94,18 +94,18 @@ func (f *Flow) existsStream(stm Stream) bool {
 	if StreamNode == nil {
 		return false
 	}
-	if _, ok := f.vertices[StreamNode.ID]; ok {
+	if _, ok := f.Vertices[StreamNode.ID]; ok {
 		return true
 	}
 	return false
 }
 
 func (f *Flow) GetStreamNode(id int) (StreamNode *StreamNode) {
-	return f.vertices[id]
+	return f.Vertices[id]
 }
 
 func (f *Flow) BFSBoth(v int, do func(v, w int, c int64)) {
-	graph.BFSAll(f.graph, v, do)
+	graph.BFSAll(f.Graph, v, do)
 }
 
 // Run in local mode
@@ -118,7 +118,7 @@ func (f *Flow) Run() {
 		defer wg.Done()
 		start.task.Run()
 	}()
-	graph.BFSBoth(f.graph, 0, func(v, w int, c int64) {
+	graph.BFSBoth(f.Graph, 0, func(v, w int, c int64) {
 		task := f.GetStreamNode(w).task
 		wg.Add(1)
 		go func() {
