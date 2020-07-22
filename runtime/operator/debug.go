@@ -1,16 +1,16 @@
 package operator
 
 import (
-	"github.com/zhnpeng/wstream/functions"
+	"github.com/zhnpeng/wstream/funcintfs"
 	"github.com/zhnpeng/wstream/intfs"
 	"github.com/zhnpeng/wstream/types"
 )
 
 type Debug struct {
-	function functions.Debug
+	function funcintfs.Debug
 }
 
-func NewDebug(function functions.Debug) *Debug {
+func NewDebug(function funcintfs.Debug) *Debug {
 	if function == nil {
 		panic("Debug function must not be nil")
 	}

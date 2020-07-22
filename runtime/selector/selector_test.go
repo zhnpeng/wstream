@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/zhnpeng/wstream/functions"
+	"github.com/zhnpeng/wstream/funcintfs"
 	"github.com/zhnpeng/wstream/types"
 )
 
@@ -16,7 +16,7 @@ func (t *testSelect) Select(record types.Record, size int) int {
 
 func TestSelector_Select(t *testing.T) {
 	type fields struct {
-		function functions.Select
+		function funcintfs.Select
 	}
 	type args struct {
 		record types.Record
@@ -58,7 +58,7 @@ func TestSelector_Select(t *testing.T) {
 
 func TestNewSelector(t *testing.T) {
 	type args struct {
-		fn functions.Select
+		fn funcintfs.Select
 	}
 	tests := []struct {
 		name string

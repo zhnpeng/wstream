@@ -4,16 +4,16 @@ import (
 	"bytes"
 	"encoding/gob"
 
-	"github.com/zhnpeng/wstream/functions"
+	"github.com/zhnpeng/wstream/funcintfs"
 	"github.com/zhnpeng/wstream/intfs"
 	"github.com/zhnpeng/wstream/types"
 )
 
 type FlatMap struct {
-	function functions.FlatMap
+	function funcintfs.FlatMap
 }
 
-func NewFlatMap(function functions.FlatMap) *FlatMap {
+func NewFlatMap(function funcintfs.FlatMap) *FlatMap {
 	if function == nil {
 		panic("flatmap function must not be nil")
 	}
@@ -25,7 +25,7 @@ func (m *FlatMap) New() intfs.Operator {
 	return NewFlatMap(udf)
 }
 
-func (m *FlatMap) newFunction() (udf functions.FlatMap) {
+func (m *FlatMap) newFunction() (udf funcintfs.FlatMap) {
 	encodedBytes := encodeFunction(m.function)
 	reader := bytes.NewReader(encodedBytes)
 	decoder := gob.NewDecoder(reader)

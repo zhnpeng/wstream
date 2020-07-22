@@ -1,9 +1,15 @@
 package stream
 
 import (
+	"encoding/gob"
+
 	"github.com/zhnpeng/wstream/runtime/operator"
 	"github.com/zhnpeng/wstream/types"
 )
+
+func init() {
+	gob.Register(&SourceStream{})
+}
 
 // SourceStream accept channels as inputs
 type SourceStream struct {

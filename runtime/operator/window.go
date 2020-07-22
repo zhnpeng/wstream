@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
-	"github.com/zhnpeng/wstream/functions"
+	"github.com/zhnpeng/wstream/funcintfs"
 	"github.com/zhnpeng/wstream/intfs"
 	"github.com/zhnpeng/wstream/runtime/operator/windowing"
 	"github.com/zhnpeng/wstream/runtime/operator/windowing/assigners"
@@ -22,7 +22,7 @@ import (
 
 type byPassApplyFunc struct{}
 
-func (*byPassApplyFunc) Apply(window windows.Window, records *list.Element, out functions.Emitter) {
+func (*byPassApplyFunc) Apply(window windows.Window, records *list.Element, out funcintfs.Emitter) {
 	for elem := records; elem != nil; elem = elem.Next() {
 		out.Emit(elem.Value.(types.Item))
 	}
@@ -34,8 +34,8 @@ func (*byPassApplyFunc) Apply(window windows.Window, records *list.Element, out 
 type Window struct {
 	assigner          assigners.WindowAssinger
 	trigger           triggers.Trigger
-	applyFunc         functions.Apply
-	reduceFunc        functions.WindowReduce
+	applyFunc         funcintfs.Apply
+	reduceFunc        funcintfs.WindowReduce
 	out               Emitter
 	windowContentsMap sync.Map // map[windowing.WindowID]*windowing.WindowContents
 	watermarkTime     time.Time
@@ -92,7 +92,7 @@ func (w *Window) New() intfs.Operator {
 	return window
 }
 
-func (w *Window) newApplyFunc() (udf functions.Apply) {
+func (w *Window) newApplyFunc() (udf funcintfs.Apply) {
 	encodedBytes := encodeFunction(w.applyFunc)
 	reader := bytes.NewReader(encodedBytes)
 	decoder := gob.NewDecoder(reader)
@@ -103,7 +103,7 @@ func (w *Window) newApplyFunc() (udf functions.Apply) {
 	return
 }
 
-func (w *Window) newReduceFunc() (udf functions.WindowReduce) {
+func (w *Window) newReduceFunc() (udf funcintfs.WindowReduce) {
 	if w.reduceFunc == nil {
 		return
 	}
@@ -117,7 +117,7 @@ func (w *Window) newReduceFunc() (udf functions.WindowReduce) {
 	return
 }
 
-func (w *Window) SetApplyFunc(f functions.Apply) {
+func (w *Window) SetApplyFunc(f funcintfs.Apply) {
 	if f == nil {
 		logrus.Warnf("Passing a nil apply function to window apply")
 		return
@@ -125,7 +125,7 @@ func (w *Window) SetApplyFunc(f functions.Apply) {
 	w.applyFunc = f
 }
 
-func (w *Window) SetReduceFunc(f functions.WindowReduce) {
+func (w *Window) SetReduceFunc(f funcintfs.WindowReduce) {
 	if f == nil {
 		logrus.Warnf("Passing a nil reduce function to window reduce")
 		return

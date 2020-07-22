@@ -4,16 +4,16 @@ import (
 	"bytes"
 	"encoding/gob"
 
-	"github.com/zhnpeng/wstream/functions"
+	"github.com/zhnpeng/wstream/funcintfs"
 	"github.com/zhnpeng/wstream/intfs"
 	"github.com/zhnpeng/wstream/types"
 )
 
 type Output struct {
-	function functions.Output
+	function funcintfs.Output
 }
 
-func NewOutput(function functions.Output) *Output {
+func NewOutput(function funcintfs.Output) *Output {
 	if function == nil {
 		panic("output function must not be nil")
 	}
@@ -30,7 +30,7 @@ func (m *Output) handleRecord(record types.Record, out Emitter) {
 	out.Emit(record)
 }
 
-func (m *Output) newFunction() (udf functions.Output) {
+func (m *Output) newFunction() (udf funcintfs.Output) {
 	encodedBytes := encodeFunction(m.function)
 	reader := bytes.NewReader(encodedBytes)
 	decoder := gob.NewDecoder(reader)

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/gob"
 
-	"github.com/zhnpeng/wstream/functions"
+	"github.com/zhnpeng/wstream/funcintfs"
 	"github.com/zhnpeng/wstream/intfs"
 	"github.com/zhnpeng/wstream/types"
 	"github.com/zhnpeng/wstream/utils"
@@ -12,11 +12,11 @@ import (
 
 // Reduce is a rolling reduce in datastream and keyedstream
 type Reduce struct {
-	function         functions.Reduce
+	function         funcintfs.Reduce
 	keyedAccumulator map[utils.KeyID]types.Record
 }
 
-func NewReduce(function functions.Reduce) *Reduce {
+func NewReduce(function funcintfs.Reduce) *Reduce {
 	if function == nil {
 		panic("reduce function must not be nil")
 	}
@@ -31,7 +31,7 @@ func (m *Reduce) New() intfs.Operator {
 	return NewReduce(udf)
 }
 
-func (m *Reduce) newFunction() (udf functions.Reduce) {
+func (m *Reduce) newFunction() (udf funcintfs.Reduce) {
 	encodedBytes := encodeFunction(m.function)
 	reader := bytes.NewReader(encodedBytes)
 	decoder := gob.NewDecoder(reader)

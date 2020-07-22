@@ -1,4 +1,4 @@
-package functions
+package funcintfs
 
 import (
 	"github.com/zhnpeng/wstream/runtime/operator/windowing/windows"

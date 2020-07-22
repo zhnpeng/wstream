@@ -4,16 +4,16 @@ import (
 	"bytes"
 	"encoding/gob"
 
-	"github.com/zhnpeng/wstream/functions"
+	"github.com/zhnpeng/wstream/funcintfs"
 	"github.com/zhnpeng/wstream/intfs"
 	"github.com/zhnpeng/wstream/types"
 )
 
 type Map struct {
-	function functions.Map
+	function funcintfs.Map
 }
 
-func NewMap(function functions.Map) *Map {
+func NewMap(function funcintfs.Map) *Map {
 	if function == nil {
 		panic("map function must not be nil")
 	}
@@ -25,7 +25,7 @@ func (m *Map) New() intfs.Operator {
 	return NewMap(udf)
 }
 
-func (m *Map) newFunction() (udf functions.Map) {
+func (m *Map) newFunction() (udf funcintfs.Map) {
 	encodedBytes := encodeFunction(m.function)
 	reader := bytes.NewReader(encodedBytes)
 	decoder := gob.NewDecoder(reader)

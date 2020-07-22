@@ -1,16 +1,16 @@
 package selector
 
 import (
-	"github.com/zhnpeng/wstream/functions"
+	"github.com/zhnpeng/wstream/funcintfs"
 	"github.com/zhnpeng/wstream/intfs"
 	"github.com/zhnpeng/wstream/types"
 )
 
 type Selector struct {
-	function functions.Select
+	function funcintfs.Select
 }
 
-func NewSelector(fn functions.Select) *Selector {
+func NewSelector(fn funcintfs.Select) *Selector {
 	return &Selector{
 		function: fn,
 	}

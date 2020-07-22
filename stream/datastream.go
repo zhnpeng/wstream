@@ -1,18 +1,18 @@
 package stream
 
 import (
-	"github.com/zhnpeng/wstream/functions"
-	"github.com/zhnpeng/wstream/intfs"
+	"github.com/zhnpeng/wstream/funcintfs"
 	"github.com/zhnpeng/wstream/runtime/operator"
 	"github.com/zhnpeng/wstream/runtime/selector"
 )
 
 type DataStream struct {
-	parallel int
-	operator intfs.Operator
+	Parallel int
+	// operator intfs.Operator
+	OperatorFunc interface{}
 
 	// flow reference
-	streamNode *StreamNode
+	StreamNode *StreamNode
 	flow       *Flow
 }
 
@@ -27,9 +27,9 @@ func NewDataStream(flow *Flow, parallel int) *DataStream {
 	}
 }
 
-func (s *DataStream) Operator() intfs.Operator {
-	return s.operator.New()
-}
+// func (s *DataStream) Operator() intfs.Operator {
+// 	return s.operator.New()
+// }
 
 func (s *DataStream) Parallelism() int {
 	return s.parallel
@@ -43,11 +43,11 @@ func (s *DataStream) clone() *DataStream {
 }
 
 func (s *DataStream) SetStreamNode(node *StreamNode) {
-	s.streamNode = node
+	s.StreamNode = node
 }
 
 func (s *DataStream) GetStreamNode() (node *StreamNode) {
-	return s.streamNode
+	return s.StreamNode
 }
 
 func (s *DataStream) toKeyedStream(keys []interface{}) *KeyedStream {
@@ -62,7 +62,7 @@ func (s *DataStream) connect(stream Stream) error {
 	return s.flow.AddStreamEdge(s, stream)
 }
 
-func (s *DataStream) Debug(debugFunc functions.Debug) *DataStream {
+func (s *DataStream) Debug(debugFunc funcintfs.Debug) *DataStream {
 	stream := s.clone()
 	stream.operator = operator.NewDebug(debugFunc)
 	s.connect(stream)

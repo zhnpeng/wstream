@@ -7,19 +7,19 @@ import (
 const initialMapSize = 4
 
 // Mutable represents a directed graph with a fixed number
-// of vertices and weighted outEdges that can be added or removed.
+// of vertices and weighted OutEdges that can be added or removed.
 type Mutable struct {
-	// The map outEdges[v] contains the mapping {w:c} if there is an edge
+	// The map OutEdges[v] contains the mapping {w:c} if there is an edge
 	// from v to w, and c is the cost assigned to this edge.
-	outEdges []map[int]int64
-	inEdges  []map[int]int64 //in-degree
+	OutEdges []map[int]int64
+	InEdges  []map[int]int64 //in-degree
 }
 
-// New constructs a new graph with n vertices, numbered from 0 to n-1, and no outEdges.
+// New constructs a new graph with n vertices, numbered from 0 to n-1, and no OutEdges.
 func New(n int) *Mutable {
 	return &Mutable{
-		outEdges: make([]map[int]int64, n),
-		inEdges:  make([]map[int]int64, n),
+		OutEdges: make([]map[int]int64, n),
+		InEdges:  make([]map[int]int64, n),
 	}
 }
 
@@ -30,7 +30,7 @@ func (g *Mutable) String() string {
 
 // Order returns the number of vertices in the graph.
 func (g *Mutable) Order() int {
-	return len(g.outEdges)
+	return len(g.OutEdges)
 }
 
 // Visit calls the do function for each neighbor w of v,
@@ -40,10 +40,10 @@ func (g *Mutable) Order() int {
 //
 // The iteration order is not specified and is not guaranteed
 // to be the same every time.
-// It is safe to delete, but not to add, outEdges adjacent to v
+// It is safe to delete, but not to add, OutEdges adjacent to v
 // during a call to this method.
 func (g *Mutable) Visit(v int, do func(w int, c int64) bool) bool {
-	for w, c := range g.outEdges[v] {
+	for w, c := range g.OutEdges[v] {
 		if do(w, c) {
 			return true
 		}
@@ -55,13 +55,13 @@ func (g *Mutable) Visit(v int, do func(w int, c int64) bool) bool {
 // Each edge will be visited twice.
 func (g *Mutable) VisitBoth(v int, doIn func(w int, c int64) bool, doOut func(w int, c int64) bool) bool {
 	// visit in-degree
-	for w, c := range g.inEdges[v] {
+	for w, c := range g.InEdges[v] {
 		if doIn(w, c) {
 			return true
 		}
 	}
 	// visit out-degree
-	for w, c := range g.outEdges[v] {
+	for w, c := range g.OutEdges[v] {
 		if doOut(w, c) {
 			return true
 		}
@@ -71,12 +71,12 @@ func (g *Mutable) VisitBoth(v int, doIn func(w int, c int64) bool, doOut func(w 
 
 // OutDegree returns the number of outward directed edges from v.
 func (g *Mutable) OutDegree(v int) int {
-	return len(g.outEdges[v])
+	return len(g.OutEdges[v])
 }
 
 // InDegree returns the number of inward directed edges to v
 func (g *Mutable) InDegree(v int) int {
-	return len(g.inEdges[v])
+	return len(g.InEdges[v])
 }
 
 // Edge tells if there is an edge from v to w.
@@ -84,7 +84,7 @@ func (g *Mutable) Edge(v, w int) bool {
 	if v < 0 || v >= g.Order() {
 		return false
 	}
-	_, ok := g.outEdges[v][w]
+	_, ok := g.OutEdges[v][w]
 	return ok
 }
 
@@ -93,14 +93,14 @@ func (g *Mutable) Cost(v, w int) int64 {
 	if v < 0 || v >= g.Order() {
 		return 0
 	}
-	return g.outEdges[v][w]
+	return g.OutEdges[v][w]
 }
 
 // AddVertex add a new vertex to the end and return its id
 func (g *Mutable) AddVertex() (id int) {
-	id = len(g.outEdges)
-	g.outEdges = append(g.outEdges, make(map[int]int64, initialMapSize))
-	g.inEdges = append(g.inEdges, make(map[int]int64, initialMapSize))
+	id = len(g.OutEdges)
+	g.OutEdges = append(g.OutEdges, make(map[int]int64, initialMapSize))
+	g.InEdges = append(g.InEdges, make(map[int]int64, initialMapSize))
 	return
 }
 
@@ -123,22 +123,22 @@ func (g *Mutable) AddEdge(v, w int) error {
 // It overwrites the previous cost if this edge already exists.
 func (g *Mutable) AddEdgeCost(v, w int, c int64) error {
 	// Make sure not to break internal state.
-	if w < 0 || w >= len(g.outEdges) {
+	if w < 0 || w >= len(g.OutEdges) {
 		return errors.Errorf("vertex out of range: %d", w)
 	}
-	if g.outEdges[v] == nil {
-		g.outEdges[v] = make(map[int]int64, initialMapSize)
+	if g.OutEdges[v] == nil {
+		g.OutEdges[v] = make(map[int]int64, initialMapSize)
 	}
-	if g.inEdges[w] == nil {
-		g.inEdges[w] = make(map[int]int64, initialMapSize)
+	if g.InEdges[w] == nil {
+		g.InEdges[w] = make(map[int]int64, initialMapSize)
 	}
-	g.outEdges[v][w] = c
-	g.inEdges[w][v] = c
+	g.OutEdges[v][w] = c
+	g.InEdges[w][v] = c
 	return nil
 }
 
-// AddEdgeBoth inserts outEdges with zero cost between v and w.
-// It removes the previous costs if these outEdges already exist.
+// AddEdgeBoth inserts OutEdges with zero cost between v and w.
+// It removes the previous costs if these OutEdges already exist.
 func (g *Mutable) AddEdgeBoth(v, w int) {
 	g.AddEdgeCost(v, w, 0)
 	if v != w {
@@ -146,8 +146,8 @@ func (g *Mutable) AddEdgeBoth(v, w int) {
 	}
 }
 
-// AddEdgeBothCost inserts outEdges with cost c between v and w.
-// It overwrites the previous costs if these outEdges already exist.
+// AddEdgeBothCost inserts OutEdges with cost c between v and w.
+// It overwrites the previous costs if these OutEdges already exist.
 func (g *Mutable) AddEdgeBothCost(v, w int, c int64) {
 	g.AddEdgeCost(v, w, c)
 	if v != w {
@@ -157,10 +157,10 @@ func (g *Mutable) AddEdgeBothCost(v, w int, c int64) {
 
 // DeleteEdge removes an edge from v to w.
 func (g *Mutable) DeleteEdge(v, w int) {
-	delete(g.outEdges[v], w)
+	delete(g.OutEdges[v], w)
 }
 
-// DeleteEdgeBoth removes all outEdges between v and w.
+// DeleteEdgeBoth removes all OutEdges between v and w.
 func (g *Mutable) DeleteEdgeBoth(v, w int) {
 	g.DeleteEdge(v, w)
 	if v != w {

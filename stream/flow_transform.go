@@ -15,30 +15,30 @@ func (f *Flow) LocalTransform() {
 
 // Transform stream to executable
 func (f *Flow) transform() {
-	graph.BFSAll(f.graph, 0, func(v, w int, c int64) {
+	graph.BFSAll(f.Graph, 0, func(v, w int, c int64) {
 		fromNode := f.GetStreamNode(v)
 		toNode := f.GetStreamNode(w)
-		if fromNode.Task == nil {
+		if fromNode.task == nil {
 			//Create executable
-			fromNode.Task = f.StreamToTask(fromNode.stream)
+			fromNode.task = f.StreamToTask(fromNode.Stream)
 		}
-		if toNode.Task == nil {
+		if toNode.task == nil {
 			//Create executable
-			toNode.Task = f.StreamToTask(toNode.stream)
+			toNode.task = f.StreamToTask(toNode.Stream)
 		}
-		if toNode.Task.RescaleNode == nil {
+		if toNode.task.RescaleNode == nil {
 			// is a broadcast node
-			for i, n := range fromNode.Task.BroadcastNodes {
+			for i, n := range fromNode.task.BroadcastNodes {
 				edge := make(execution.Edge)
 				n.AddOutEdge(edge.Out())
-				toNode.Task.BroadcastNodes[i].AddInEdge(edge.In())
+				toNode.task.BroadcastNodes[i].AddInEdge(edge.In())
 			}
 		} else {
 			// is a rescale node
-			for _, n := range fromNode.Task.BroadcastNodes {
+			for _, n := range fromNode.task.BroadcastNodes {
 				edge := make(execution.Edge)
 				n.AddOutEdge(edge.Out())
-				toNode.Task.RescaleNode.AddInEdge(edge.In())
+				toNode.task.RescaleNode.AddInEdge(edge.In())
 			}
 		}
 	})
