@@ -3,26 +3,24 @@ package stream
 import (
 	"time"
 
-	"github.com/zhnpeng/wstream/runtime/operator"
-
-	"github.com/zhnpeng/wstream/functions"
+	"github.com/zhnpeng/wstream/funcintfs"
 )
 
 func (s *SourceStream) AssignTimeWithPeriodicWatermark(
-	function functions.AssignTimeWithPeriodicWatermark,
+	function funcintfs.AssignTimeWithPeriodicWatermark,
 	period time.Duration,
 ) *DataStream {
 	stream := s.clone()
-	stream.operator = operator.NewTimeWithPeriodicWatermarkAssigner(function, period)
+	stream.OperatorFunc = function
 	s.connect(stream)
 	return stream
 }
 
 func (s *SourceStream) AssignTimeWithPuncatuatedWatermark(
-	function functions.TimestampWithPunctuatedWatermar,
+	function funcintfs.TimestampWithPunctuatedWatermar,
 ) *DataStream {
 	stream := s.clone()
-	stream.operator = operator.NewTimeWithPunctuatedWatermarkAssigner(function)
+	stream.OperatorFunc = function
 	s.connect(stream)
 	return stream
 }

@@ -9,6 +9,6 @@ require (
 	github.com/pkg/errors v0.8.1
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/cast v1.3.0
+	github.com/stretchr/testify v1.2.2
 	github.com/tinylib/msgp v1.1.0
-	github.com/wandouz/wstream v0.3.0 // indirect
 )

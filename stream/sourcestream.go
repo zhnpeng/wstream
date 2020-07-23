@@ -3,7 +3,6 @@ package stream
 import (
 	"encoding/gob"
 
-	"github.com/zhnpeng/wstream/runtime/operator"
 	"github.com/zhnpeng/wstream/types"
 )
 
@@ -20,8 +19,7 @@ type SourceStream struct {
 func NewSourceStream(flow *Flow) *SourceStream {
 	stm := &SourceStream{
 		DataStream: DataStream{
-			flow:     flow,
-			operator: operator.NewByPass(),
+			flow: flow,
 		},
 	}
 	flow.AddStream(stm)
@@ -35,7 +33,7 @@ func (s *SourceStream) Inputs() []chan types.Item {
 func (s *SourceStream) Channels(inputs ...chan types.Item) *SourceStream {
 	for _, input := range inputs {
 		s.inputs = append(s.inputs, input)
-		s.DataStream.parallel++
+		s.DataStream.Parallel++
 	}
 	return s
 }
@@ -44,7 +42,7 @@ func (s *SourceStream) MapChannels(inputs ...chan map[string]interface{}) *Sourc
 	for _, input := range inputs {
 		ain := make(chan types.Item)
 		s.inputs = append(s.inputs, ain)
-		s.DataStream.parallel++
+		s.DataStream.Parallel++
 		go func(in chan map[string]interface{}) {
 			for {
 				m, ok := <-in

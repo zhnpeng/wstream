@@ -1,13 +1,10 @@
 package stream
 
-import (
-	"github.com/zhnpeng/wstream/functions"
-)
+import "github.com/zhnpeng/wstream/funcintfs"
 
-func (s *WindowedStream) Reduce(reduceFunc functions.WindowReduce) *DataStream {
+func (s *WindowedStream) Reduce(reduceFunc funcintfs.WindowReduce) *DataStream {
 	stream := s.toDataStream()
-	operator := s.operator.(WindowOperator)
-	operator.SetReduceFunc(reduceFunc)
+	s.ReduceFunc = reduceFunc
 	s.combine(stream)
 	return stream
 }

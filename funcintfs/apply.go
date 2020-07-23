@@ -1,4 +1,4 @@
-package functions
+package funcintfs
 
 import (
 	"container/list"

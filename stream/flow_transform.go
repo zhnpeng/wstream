@@ -1,8 +1,6 @@
 package stream
 
 import (
-	"context"
-
 	"github.com/sirupsen/logrus"
 	"github.com/zhnpeng/wstream/runtime/execution"
 	"github.com/zhnpeng/wstream/utils/graph"
@@ -45,94 +43,17 @@ func (f *Flow) transform() {
 }
 
 func (f *Flow) StreamToTask(stm Stream) *execution.Task {
-	switch stm.(type) {
+	switch vstm := stm.(type) {
 	case *KeyedStream:
-		return f.KeyedStreamToTask(stm.(*KeyedStream))
+		return vstm.toTask()
 	case *DataStream:
-		return f.DataStreamToTask(stm.(*DataStream))
+		return vstm.toTask()
 	case *WindowedStream:
-		return f.WindowedStreamToTask(stm.(*WindowedStream))
+		return vstm.toTask()
 	case *SourceStream:
-		return f.SourceStreamToTask(stm.(*SourceStream))
+		return vstm.toTask()
 	default:
 		logrus.Errorf("got unexpected stream: %+v", stm)
 	}
 	return nil
-}
-
-func (f *Flow) SourceStreamToTask(stm *SourceStream) (task *execution.Task) {
-	broadcastNodes := make([]execution.Node, 0, stm.Parallelism())
-	for _, input := range stm.Inputs() {
-		node := execution.NewBroadcastNode(
-			context.Background(),
-			stm.Operator(),
-			execution.NewReceiver(),
-			execution.NewEmitter(),
-		)
-		node.AddInEdge(execution.Edge(input).In())
-		broadcastNodes = append(broadcastNodes, node)
-	}
-	task = &execution.Task{
-		BroadcastNodes: broadcastNodes,
-	}
-	return
-}
-
-func (f *Flow) DataStreamToTask(stm *DataStream) (task *execution.Task) {
-	broadcastNodes := make([]execution.Node, 0, stm.Parallelism())
-	for i := 0; i < stm.Parallelism(); i++ {
-		node := execution.NewBroadcastNode(
-			context.Background(),
-			stm.Operator(),
-			execution.NewReceiver(),
-			execution.NewEmitter(),
-		)
-		broadcastNodes = append(broadcastNodes, node)
-	}
-	task = &execution.Task{
-		BroadcastNodes: broadcastNodes,
-	}
-	return
-}
-
-func (f *Flow) KeyedStreamToTask(stm *KeyedStream) (task *execution.Task) {
-	rescaleNode := execution.NewRescaleNode(
-		context.Background(),
-		stm.Selector(),
-	)
-	broadcastNodes := make([]execution.Node, 0, stm.Parallelism())
-	for i := 0; i < stm.Parallelism(); i++ {
-		broadcastNode := execution.NewBroadcastNode(
-			context.Background(),
-			stm.Operator(),
-			execution.NewReceiver(),
-			execution.NewEmitter(),
-		)
-		edge := make(execution.Edge)
-		rescaleNode.AddOutEdge(edge.Out())
-		broadcastNode.AddInEdge(edge.In())
-		broadcastNodes = append(broadcastNodes, broadcastNode)
-	}
-	task = &execution.Task{
-		RescaleNode:    rescaleNode,
-		BroadcastNodes: broadcastNodes,
-	}
-	return
-}
-
-func (f *Flow) WindowedStreamToTask(stm *WindowedStream) (task *execution.Task) {
-	broadcastNodes := make([]execution.Node, 0, stm.Parallelism())
-	for i := 0; i < stm.Parallelism(); i++ {
-		node := execution.NewBroadcastNode(
-			context.Background(),
-			stm.Operator(),
-			execution.NewReceiver(),
-			execution.NewEmitter(),
-		)
-		broadcastNodes = append(broadcastNodes, node)
-	}
-	task = &execution.Task{
-		BroadcastNodes: broadcastNodes,
-	}
-	return
 }

@@ -3,13 +3,13 @@ package operator
 import (
 	"testing"
 
-	"github.com/zhnpeng/wstream/functions"
+	"github.com/zhnpeng/wstream/funcintfs"
 	"github.com/zhnpeng/wstream/types"
 )
 
 type testFlatMap struct{}
 
-func (t *testFlatMap) FlatMap(r types.Record, out functions.Emitter) {
+func (t *testFlatMap) FlatMap(r types.Record, out funcintfs.Emitter) {
 }
 
 func TestFlatMap(t *testing.T) {

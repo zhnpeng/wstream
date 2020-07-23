@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
-	"github.com/zhnpeng/wstream/functions"
+	"github.com/zhnpeng/wstream/funcintfs"
 	"github.com/zhnpeng/wstream/intfs"
 	"github.com/zhnpeng/wstream/runtime/operator/windowing"
 	"github.com/zhnpeng/wstream/runtime/operator/windowing/assigners"
@@ -29,8 +29,8 @@ type EvictWindow struct {
 	assigner          assigners.WindowAssinger
 	trigger           triggers.Trigger
 	evictor           evictors.Evictor
-	applyFunc         functions.Apply
-	reduceFunc        functions.WindowReduce
+	applyFunc         funcintfs.Apply
+	reduceFunc        funcintfs.WindowReduce
 	out               Emitter
 	windowContentsMap sync.Map // map[windowing.WindowID]*windowing.WindowContents
 	watermarkTime     time.Time
@@ -77,7 +77,7 @@ func (w *EvictWindow) New() intfs.Operator {
 	return window
 }
 
-func (w *EvictWindow) newApplyFunc() (udf functions.Apply) {
+func (w *EvictWindow) newApplyFunc() (udf funcintfs.Apply) {
 	encodedBytes := encodeFunction(w.applyFunc)
 	reader := bytes.NewReader(encodedBytes)
 	decoder := gob.NewDecoder(reader)
@@ -88,7 +88,7 @@ func (w *EvictWindow) newApplyFunc() (udf functions.Apply) {
 	return
 }
 
-func (w *EvictWindow) newReduceFunc() (udf functions.WindowReduce) {
+func (w *EvictWindow) newReduceFunc() (udf funcintfs.WindowReduce) {
 	if w.reduceFunc == nil {
 		return
 	}
@@ -102,11 +102,11 @@ func (w *EvictWindow) newReduceFunc() (udf functions.WindowReduce) {
 	return
 }
 
-func (w *EvictWindow) SetApplyFunc(f functions.Apply) {
+func (w *EvictWindow) SetApplyFunc(f funcintfs.Apply) {
 	w.applyFunc = f
 }
 
-func (w *EvictWindow) SetReduceFunc(f functions.WindowReduce) {
+func (w *EvictWindow) SetReduceFunc(f funcintfs.WindowReduce) {
 	w.reduceFunc = f
 }
 

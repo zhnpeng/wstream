@@ -23,5 +23,6 @@ github.com/tinylib/msgp v1.1.0 h1:9fQd+ICuRIu/ue4vxJZu6/LzxN0HwMds2nq/0cFvxHU=
 github.com/tinylib/msgp v1.1.0/go.mod h1:+d+yLhGm8mzTaHzB+wgMYrodPfmZrzkirds8fDWklFE=
 github.com/wandouz/wstream v0.3.0 h1:8qVTZY57WsbFmoGsH/rw3BZKIMn35QWyJA2WOSIKMYY=
 github.com/wandouz/wstream v0.3.0/go.mod h1:6RbNT06SrZ2XAtRcp9GP95jcNDCbQ3CxPQUByaYuxMQ=
+github.com/wandouz/wstream v0.3.1 h1:CG6igeMvbxX0Ry1K8NdmydsiAjxrSwTrQWfwoqgHCks=
 golang.org/x/sys v0.0.0-20190422165155-953cdadca894 h1:Cz4ceDQGXuKRnVBDTS23GTn/pU5OE2C0WrNTOYK1Uuc=
 golang.org/x/sys v0.0.0-20190422165155-953cdadca894/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=

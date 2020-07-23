@@ -4,16 +4,16 @@ import (
 	"bytes"
 	"encoding/gob"
 
-	"github.com/zhnpeng/wstream/functions"
+	"github.com/zhnpeng/wstream/funcintfs"
 	"github.com/zhnpeng/wstream/intfs"
 	"github.com/zhnpeng/wstream/types"
 )
 
 type Filter struct {
-	function functions.Filter
+	function funcintfs.Filter
 }
 
-func NewFilter(function functions.Filter) *Filter {
+func NewFilter(function funcintfs.Filter) *Filter {
 	if function == nil {
 		panic("filter function must not be nil")
 	}
@@ -25,7 +25,7 @@ func (f *Filter) New() intfs.Operator {
 	return NewFilter(udf)
 }
 
-func (f *Filter) newFunction() (udf functions.Filter) {
+func (f *Filter) newFunction() (udf funcintfs.Filter) {
 	encodedBytes := encodeFunction(f.function)
 	reader := bytes.NewReader(encodedBytes)
 	decoder := gob.NewDecoder(reader)

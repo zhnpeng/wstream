@@ -1,9 +1,11 @@
 package stream
 
 import (
+	"context"
 	"encoding/gob"
 
 	"github.com/zhnpeng/wstream/intfs"
+	"github.com/zhnpeng/wstream/runtime/execution"
 	"github.com/zhnpeng/wstream/runtime/operator"
 	"github.com/zhnpeng/wstream/runtime/selector"
 )
@@ -13,38 +15,30 @@ func init() {
 }
 
 type KeyedStream struct {
-	parallel int
-	selector intfs.Selector
-	operator intfs.Operator
+	Parallel int
+	Selector intfs.Selector
+	Operator intfs.Operator
 
 	graph      *Flow
 	streamNode *StreamNode
 }
 
-func NewKeyedStream(graph *Flow, parallel int, keys []interface{}) *KeyedStream {
+func NewKeyedStream(graph *Flow, Parallel int, keys []interface{}) *KeyedStream {
 	return &KeyedStream{
 		graph:    graph,
-		parallel: parallel,
-		selector: selector.NewKeyBy(keys),
-		operator: operator.NewByPass(),
+		Parallel: Parallel,
+		Selector: selector.NewKeyBy(keys),
+		Operator: operator.NewByPass(),
 	}
 }
 
-func (s *KeyedStream) Selector() intfs.Selector {
-	return s.selector.New()
-}
-
-func (s *KeyedStream) Operator() intfs.Operator {
-	return s.operator.New()
-}
-
-func (s *KeyedStream) Rescale(parallel int) *KeyedStream {
-	s.parallel = parallel
+func (s *KeyedStream) Rescale(Parallel int) *KeyedStream {
+	s.Parallel = Parallel
 	return s
 }
 
 func (s *KeyedStream) Parallelism() int {
-	return s.parallel
+	return s.Parallel
 }
 
 func (s *KeyedStream) SetStreamNode(node *StreamNode) {
@@ -56,11 +50,36 @@ func (s *KeyedStream) GetStreamNode() (node *StreamNode) {
 }
 
 func (s *KeyedStream) toDataStream() *DataStream {
-	return NewDataStream(s.graph, s.parallel)
+	return NewDataStream(s.graph, s.Parallel)
 }
 
 func (s *KeyedStream) toWindowedStream() *WindowedStream {
-	return NewWindowedStream(s.graph, s.parallel)
+	return NewWindowedStream(s.graph, s.Parallel)
+}
+
+func (s *KeyedStream) toTask() *execution.Task {
+	rescaleNode := execution.NewRescaleNode(
+		context.Background(),
+		s.Selector,
+	)
+	broadcastNodes := make([]execution.Node, 0, s.Parallelism())
+	for i := 0; i < s.Parallelism(); i++ {
+		optr := operator.NewByPass()
+		broadcastNode := execution.NewBroadcastNode(
+			context.Background(),
+			optr,
+			execution.NewReceiver(),
+			execution.NewEmitter(),
+		)
+		edge := make(execution.Edge)
+		rescaleNode.AddOutEdge(edge.Out())
+		broadcastNode.AddInEdge(edge.In())
+		broadcastNodes = append(broadcastNodes, broadcastNode)
+	}
+	return &execution.Task{
+		RescaleNode:    rescaleNode,
+		BroadcastNodes: broadcastNodes,
+	}
 }
 
 func (s *KeyedStream) connect(stream Stream) error {

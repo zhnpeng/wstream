@@ -7,20 +7,20 @@ import (
 	"sync"
 	"time"
 
-	"github.com/zhnpeng/wstream/functions"
+	"github.com/zhnpeng/wstream/funcintfs"
 	"github.com/zhnpeng/wstream/intfs"
 	"github.com/zhnpeng/wstream/types"
 )
 
 type TimeWithPeriodicWatermarkAssigner struct {
-	function          functions.AssignTimeWithPeriodicWatermark
+	function          funcintfs.AssignTimeWithPeriodicWatermark
 	period            time.Duration
 	prevItemTimestamp int64
 	prevWatermark     *types.Watermark
 }
 
 func NewTimeWithPeriodicWatermarkAssigner(
-	function functions.AssignTimeWithPeriodicWatermark,
+	function funcintfs.AssignTimeWithPeriodicWatermark,
 	period time.Duration,
 ) *TimeWithPeriodicWatermarkAssigner {
 	if function == nil {
@@ -38,7 +38,7 @@ func (f *TimeWithPeriodicWatermarkAssigner) New() intfs.Operator {
 	return NewTimeWithPeriodicWatermarkAssigner(udf, f.period)
 }
 
-func (f *TimeWithPeriodicWatermarkAssigner) newFunction() (udf functions.AssignTimeWithPeriodicWatermark) {
+func (f *TimeWithPeriodicWatermarkAssigner) newFunction() (udf funcintfs.AssignTimeWithPeriodicWatermark) {
 	encodedBytes := encodeFunction(f.function)
 	reader := bytes.NewReader(encodedBytes)
 	decoder := gob.NewDecoder(reader)

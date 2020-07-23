@@ -11,9 +11,10 @@ import (
 Flow is a DAG Graph organized with streams
 */
 type Flow struct {
-	Name     string
-	Vertices map[int]*StreamNode
-	Graph    *graph.Mutable
+	Name        string
+	Transformed bool
+	Vertices    map[int]*StreamNode
+	Graph       *graph.Mutable
 }
 
 func NewFlow(name string) *Flow {
@@ -53,7 +54,6 @@ func (f *Flow) GetTask(id int) (task *execution.Task) {
 	return
 }
 
-// Len return numbers of Vertices of Graph
 func (f *Flow) Len() int {
 	return len(f.Vertices)
 }

@@ -1,13 +1,12 @@
 package stream
 
 import (
-	"github.com/zhnpeng/wstream/functions"
-	"github.com/zhnpeng/wstream/runtime/operator"
+	"github.com/zhnpeng/wstream/funcintfs"
 )
 
-func (s *KeyedStream) Reduce(reduceFunc functions.Reduce) *DataStream {
+func (s *KeyedStream) Reduce(reduceFunc funcintfs.Reduce) *DataStream {
 	stream := s.toDataStream()
-	stream.operator = operator.NewReduce(reduceFunc)
+	stream.OperatorFunc = reduceFunc
 	s.connect(stream)
 	return stream
 }

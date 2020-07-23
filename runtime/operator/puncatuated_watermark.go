@@ -5,18 +5,18 @@ import (
 	"encoding/gob"
 	"time"
 
-	"github.com/zhnpeng/wstream/functions"
+	"github.com/zhnpeng/wstream/funcintfs"
 	"github.com/zhnpeng/wstream/intfs"
 	"github.com/zhnpeng/wstream/types"
 )
 
 type TimeWithPunctuatedWatermarkAssigner struct {
-	function          functions.TimestampWithPunctuatedWatermar
+	function          funcintfs.TimestampWithPunctuatedWatermar
 	prevItemTimestamp int64
 	prevWatermark     *types.Watermark
 }
 
-func NewTimeWithPunctuatedWatermarkAssigner(function functions.TimestampWithPunctuatedWatermar) *TimeWithPunctuatedWatermarkAssigner {
+func NewTimeWithPunctuatedWatermarkAssigner(function funcintfs.TimestampWithPunctuatedWatermar) *TimeWithPunctuatedWatermarkAssigner {
 	if function == nil {
 		panic("TimestampWithPunctuatedWatermar function must not be nil")
 	}
@@ -31,7 +31,7 @@ func (f *TimeWithPunctuatedWatermarkAssigner) New() intfs.Operator {
 	return NewTimeWithPunctuatedWatermarkAssigner(udf)
 }
 
-func (f *TimeWithPunctuatedWatermarkAssigner) newFunction() (udf functions.TimestampWithPunctuatedWatermar) {
+func (f *TimeWithPunctuatedWatermarkAssigner) newFunction() (udf funcintfs.TimestampWithPunctuatedWatermar) {
 	encodedBytes := encodeFunction(f.function)
 	reader := bytes.NewReader(encodedBytes)
 	decoder := gob.NewDecoder(reader)

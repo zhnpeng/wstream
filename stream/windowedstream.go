@@ -1,9 +1,11 @@
 package stream
 
 import (
+	"context"
 	"encoding/gob"
 
-	"github.com/zhnpeng/wstream/intfs"
+	"github.com/zhnpeng/wstream/funcintfs"
+	"github.com/zhnpeng/wstream/runtime/execution"
 	"github.com/zhnpeng/wstream/runtime/operator"
 	"github.com/zhnpeng/wstream/runtime/operator/windowing/assigners"
 	"github.com/zhnpeng/wstream/runtime/operator/windowing/evictors"
@@ -15,54 +17,74 @@ func init() {
 }
 
 type WindowedStream struct {
-	parallel   int
-	assigner   assigners.WindowAssinger
-	trigger    triggers.Trigger
-	evictor    evictors.Evictor
-	operator   intfs.Operator
+	Parallel   int
+	Assigner   assigners.WindowAssinger
+	TheTrigger triggers.Trigger
+	Evictor    evictors.Evictor
+
+	ReduceFunc funcintfs.WindowReduce
+	ApplyFunc  funcintfs.Apply
+
+	StreamNode *StreamNode
 	flow       *Flow
-	streamNode *StreamNode
 }
 
 func NewWindowedStream(flow *Flow, parallel int) *WindowedStream {
 	return &WindowedStream{
 		flow:     flow,
-		parallel: parallel,
+		Parallel: parallel,
 	}
 }
 
 func (s *WindowedStream) Trigger(trigger triggers.Trigger) *WindowedStream {
-	s.trigger = trigger
-	s.operator = operator.NewWindow(s.assigner, s.trigger)
+	s.TheTrigger = trigger
 	return s
 }
 
 func (s *WindowedStream) Evict(evictor evictors.Evictor) *WindowedStream {
-	s.evictor = evictor
-	if evictor != nil {
-		s.operator = operator.NewEvictWindow(s.assigner, s.trigger, evictor)
-	}
+	s.Evictor = evictor
 	return s
 }
 
-func (s *WindowedStream) Operator() intfs.Operator {
-	return s.operator.New()
-}
-
 func (s *WindowedStream) Parallelism() int {
-	return s.parallel
+	return s.Parallel
 }
 
 func (s *WindowedStream) SetStreamNode(node *StreamNode) {
-	s.streamNode = node
+	s.StreamNode = node
 }
 
 func (s *WindowedStream) GetStreamNode() (node *StreamNode) {
-	return s.streamNode
+	return s.StreamNode
 }
 
 func (s *WindowedStream) toDataStream() *DataStream {
-	return NewDataStream(s.flow, s.parallel)
+	return NewDataStream(s.flow, s.Parallel)
+}
+
+// toTask only work in local model
+func (s *WindowedStream) toTask() *execution.Task {
+	broadcastNodes := make([]execution.Node, 0, s.Parallelism())
+	for i := 0; i < s.Parallelism(); i++ {
+		var optr operator.WindowOperator
+		if s.Evictor != nil {
+			optr = operator.NewEvictWindow(s.Assigner, s.TheTrigger, s.Evictor)
+		} else {
+			optr = operator.NewWindow(s.Assigner, s.TheTrigger)
+		}
+		optr.SetReduceFunc(s.ReduceFunc)
+		optr.SetApplyFunc(s.ApplyFunc)
+		node := execution.NewBroadcastNode(
+			context.Background(),
+			optr,
+			execution.NewReceiver(),
+			execution.NewEmitter(),
+		)
+		broadcastNodes = append(broadcastNodes, node)
+	}
+	return &execution.Task{
+		BroadcastNodes: broadcastNodes,
+	}
 }
 
 // combine new stream to windowed stream and then return new stream

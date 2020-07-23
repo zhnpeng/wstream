@@ -1,13 +1,12 @@
 package stream
 
 import (
-	"github.com/zhnpeng/wstream/functions"
-	"github.com/zhnpeng/wstream/runtime/operator"
+	"github.com/zhnpeng/wstream/funcintfs"
 )
 
-func (s *DataStream) FlatMap(fn functions.FlatMap) *DataStream {
+func (s *DataStream) FlatMap(fn funcintfs.FlatMap) *DataStream {
 	stream := s.clone()
-	stream.operator = operator.NewFlatMap(fn)
+	stream.OperatorFunc = fn
 	s.connect(stream)
 	return stream
 }

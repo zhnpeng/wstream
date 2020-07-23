@@ -6,15 +6,13 @@ import (
 
 	"github.com/zhnpeng/wstream/runtime/operator/windowing/triggers"
 
-	"github.com/zhnpeng/wstream/runtime/operator"
 	"github.com/zhnpeng/wstream/runtime/operator/windowing/assigners"
 )
 
 // Window allow user custom Window behavior
 func (s *KeyedStream) Window(assigner assigners.WindowAssinger) *WindowedStream {
 	stream := s.toWindowedStream()
-	stream.assigner = assigner
-	stream.operator = operator.NewWindow(assigner, nil)
+	stream.Assigner = assigner
 	s.connect(stream)
 	return stream
 }

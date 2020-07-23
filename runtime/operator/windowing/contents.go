@@ -4,7 +4,7 @@ import (
 	"container/list"
 	"time"
 
-	"github.com/zhnpeng/wstream/functions"
+	"github.com/zhnpeng/wstream/funcintfs"
 	"github.com/zhnpeng/wstream/runtime/operator/windowing/windows"
 	"github.com/zhnpeng/wstream/types"
 )
@@ -17,12 +17,12 @@ type WindowContents struct {
 	keys       []interface{}
 	window     windows.Window
 	elements   *list.List
-	reduceFunc functions.WindowReduce
+	reduceFunc funcintfs.WindowReduce
 }
 
 // NewWindowContents if window is a TimeWindow collection's T is window's start ts
 // else is the first record's time
-func NewWindowContents(window windows.Window, t time.Time, keys []interface{}, reduceFunc functions.WindowReduce) *WindowContents {
+func NewWindowContents(window windows.Window, t time.Time, keys []interface{}, reduceFunc funcintfs.WindowReduce) *WindowContents {
 	return &WindowContents{
 		keys:       keys,
 		window:     window,
