@@ -18,7 +18,7 @@ import (
 	"github.com/zhnpeng/wstream/utils"
 )
 
-var debug = true
+var debug = false
 
 func TestFlow_Tumbling_Time_Window(t *testing.T) {
 	input1 := make(chan map[string]interface{})
@@ -144,6 +144,7 @@ func TestFlow_Tumbling_Time_Window(t *testing.T) {
 		t.Error(diff)
 	}
 }
+
 func TestFlow_Multiplex_Rolling_Reduce(t *testing.T) {
 	input1 := make(chan map[string]interface{})
 	input2 := make(chan map[string]interface{})

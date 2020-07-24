@@ -73,8 +73,12 @@ func (s *WindowedStream) toTask() *execution.Task {
 		} else {
 			optr = operator.NewWindow(s.Assigner, s.TheTrigger)
 		}
-		optr.SetReduceFunc(s.ReduceFunc)
-		optr.SetApplyFunc(s.ApplyFunc)
+		if s.ReduceFunc != nil {
+			optr.SetReduceFunc(s.ReduceFunc)
+		}
+		if s.ApplyFunc != nil {
+			optr.SetApplyFunc(s.ApplyFunc)
+		}
 		node := execution.NewBroadcastNode(
 			context.Background(),
 			optr,

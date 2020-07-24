@@ -3,6 +3,7 @@ package stream
 import (
 	"encoding/gob"
 
+	"github.com/zhnpeng/wstream/runtime/execution"
 	"github.com/zhnpeng/wstream/types"
 )
 
@@ -36,6 +37,15 @@ func (s *SourceStream) Channels(inputs ...chan types.Item) *SourceStream {
 		s.DataStream.Parallel++
 	}
 	return s
+}
+
+func (s *SourceStream) toTask() *execution.Task {
+	// TODO: find a better implement to add source input channel to task's nodes
+	task := s.DataStream.toTask()
+	for i, node := range task.BroadcastNodes {
+		node.AddInEdge(s.inputs[i])
+	}
+	return task
 }
 
 func (s *SourceStream) MapChannels(inputs ...chan map[string]interface{}) *SourceStream {
