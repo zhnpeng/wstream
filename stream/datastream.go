@@ -3,8 +3,8 @@ package stream
 import (
 	"context"
 	"encoding/gob"
-	"fmt"
 
+	"github.com/pkg/errors"
 	"github.com/zhnpeng/wstream/funcintfs"
 	"github.com/zhnpeng/wstream/intfs"
 	"github.com/zhnpeng/wstream/runtime/execution"
@@ -17,17 +17,13 @@ func init() {
 }
 
 type DataStream struct {
-	Parallel int
-
 	// OperatorFunc is builtin functions, must be registed in gob
 	// if OperatorFunc is nil, means a bypass operator
 	OperatorFunc interface{}
+	Parallel     int
 
-	// StreamNode in flow's graph
-	StreamNode *StreamNode
-
-	// flow reference is not exported
-	flow *Flow
+	flow *Flow // flow reference is not exported
+	fnid int   // flow node id in flow's graph
 }
 
 /*
@@ -52,12 +48,12 @@ func (s *DataStream) clone() *DataStream {
 	}
 }
 
-func (s *DataStream) SetStreamNode(node *StreamNode) {
-	s.StreamNode = node
+func (s *DataStream) SetFlowNode(node *FlowNode) {
+	s.fnid = node.ID
 }
 
-func (s *DataStream) GetStreamNode() (node *StreamNode) {
-	return s.StreamNode
+func (s *DataStream) GetFlowNode() (node *FlowNode) {
+	return s.flow.GetFlowNode(s.fnid)
 }
 
 func (s *DataStream) toKeyedStream(keys []interface{}) *KeyedStream {
@@ -72,17 +68,23 @@ func (s *DataStream) toTask() *execution.Task {
 	broadcastNodes := make([]execution.Node, 0, s.Parallelism())
 	for i := 0; i < s.Parallelism(); i++ {
 		var optr intfs.Operator
-		switch theFunc := s.OperatorFunc.(type) {
-		case funcintfs.Map:
-			optr = operator.NewMap(theFunc)
-		case funcintfs.FlatMap:
-			optr = operator.NewFlatMap(theFunc)
-		case funcintfs.Reduce:
-			optr = operator.NewReduce(theFunc)
-		case funcintfs.Output:
-			optr = operator.NewOutput(theFunc)
-		default:
-			panic(fmt.Sprintf("not support %T", theFunc))
+		if s.OperatorFunc == nil {
+			optr = operator.NewByPass()
+		} else {
+			switch theFunc := s.OperatorFunc.(type) {
+			case funcintfs.Map:
+				optr = operator.NewMap(theFunc)
+			case funcintfs.FlatMap:
+				optr = operator.NewFlatMap(theFunc)
+			case funcintfs.Reduce:
+				optr = operator.NewReduce(theFunc)
+			case funcintfs.Output:
+				optr = operator.NewOutput(theFunc)
+			case funcintfs.Debug:
+				optr = operator.NewDebug(theFunc)
+			default:
+				panic(errors.Errorf("Not Support Func Type: %T", theFunc))
+			}
 		}
 		node := execution.NewBroadcastNode(
 			context.Background(),

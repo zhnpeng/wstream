@@ -25,8 +25,8 @@ type WindowedStream struct {
 	ReduceFunc funcintfs.WindowReduce
 	ApplyFunc  funcintfs.Apply
 
-	StreamNode *StreamNode
-	flow       *Flow
+	FlowNode *FlowNode
+	flow     *Flow
 }
 
 func NewWindowedStream(flow *Flow, parallel int) *WindowedStream {
@@ -50,12 +50,12 @@ func (s *WindowedStream) Parallelism() int {
 	return s.Parallel
 }
 
-func (s *WindowedStream) SetStreamNode(node *StreamNode) {
-	s.StreamNode = node
+func (s *WindowedStream) SetFlowNode(node *FlowNode) {
+	s.FlowNode = node
 }
 
-func (s *WindowedStream) GetStreamNode() (node *StreamNode) {
-	return s.StreamNode
+func (s *WindowedStream) GetFlowNode() (node *FlowNode) {
+	return s.FlowNode
 }
 
 func (s *WindowedStream) toDataStream() *DataStream {

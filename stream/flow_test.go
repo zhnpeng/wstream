@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/gob"
 	"fmt"
-	"reflect"
 	"sort"
 	"sync"
 	"testing"
@@ -32,15 +31,13 @@ func TestFlow_Tumbling_Time_Window(t *testing.T) {
 		Debug(outfunc)
 
 	// Debug
-	// flow.LocalTransform()
-	// fmt.Println(reflect.TypeOf(flow.GetStream(0)))
-	// fmt.Println(flow.GetStream(0))
-	// fmt.Println(flow.GetTask(0))
-	// flow.BFSBoth(0, func(v, w int, c int64) {
-	// 	fmt.Println(reflect.TypeOf(flow.GetStream(w)))
-	// 	fmt.Println(flow.GetStream(w))
-	// 	fmt.Println(flow.GetTask(w))
-	// })
+	flow.LocalTransform()
+	fmt.Printf("%T, %+v\n", flow.GetStream(0), flow.GetStream(0))
+	fmt.Printf("%T, %+v\n", flow.GetTask(0), flow.GetTask(0))
+	flow.BFSBoth(0, func(v, w int, c int64) {
+		fmt.Printf("%T, %+v\n", flow.GetStream(w), flow.GetStream(w))
+		fmt.Printf("%T, %+v\n", flow.GetTask(w), flow.GetTask(w))
+	})
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
@@ -150,16 +147,6 @@ func TestFlow_Multiplex_Rolling_Reduce(t *testing.T) {
 	var nf Flow
 	err = decoder.Decode(&nf)
 	require.Nil(t, err)
-	// Debug
-	nf.LocalTransform()
-	fmt.Println(reflect.TypeOf(nf.GetStream(0)))
-	fmt.Println(nf.GetStream(0))
-	fmt.Println(nf.GetTask(0))
-	nf.BFSBoth(0, func(v, w int, c int64) {
-		fmt.Println(reflect.TypeOf(nf.GetStream(w)))
-		fmt.Println(nf.GetStream(w))
-		fmt.Println(nf.GetTask(w))
-	})
 
 	src.Map(&testMapSetOne{}).
 		KeyBy("D1", "D2").
@@ -170,6 +157,15 @@ func TestFlow_Multiplex_Rolling_Reduce(t *testing.T) {
 		KeyBy("D1").
 		Reduce(&testReduce{}).
 		Debug(outfunc2)
+
+	// Debug
+	flow.LocalTransform()
+	fmt.Printf("%T, %+v\n", flow.GetStream(0), flow.GetStream(0))
+	fmt.Printf("%T, %+v\n", flow.GetTask(0), flow.GetTask(0))
+	flow.BFSBoth(0, func(v, w int, c int64) {
+		fmt.Printf("%T, %+v\n", flow.GetStream(w), flow.GetStream(w))
+		fmt.Printf("%T, %+v\n", flow.GetTask(w), flow.GetTask(w))
+	})
 
 	var wg sync.WaitGroup
 	wg.Add(1)

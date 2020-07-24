@@ -2,6 +2,6 @@ package stream
 
 type Stream interface {
 	Parallelism() int
-	SetStreamNode(node *StreamNode)
-	GetStreamNode() (node *StreamNode)
+	SetFlowNode(node *FlowNode)
+	GetFlowNode() (node *FlowNode)
 }

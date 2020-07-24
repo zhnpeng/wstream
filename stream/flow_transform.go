@@ -14,8 +14,8 @@ func (f *Flow) LocalTransform() {
 // Transform stream to executable
 func (f *Flow) transform() {
 	graph.BFSAll(f.Graph, 0, func(v, w int, c int64) {
-		fromNode := f.GetStreamNode(v)
-		toNode := f.GetStreamNode(w)
+		fromNode := f.GetFlowNode(v)
+		toNode := f.GetFlowNode(w)
 		if fromNode.task == nil {
 			//Create executable
 			fromNode.task = f.StreamToTask(fromNode.Stream)
