@@ -18,15 +18,16 @@ type KeyedStream struct {
 	Parallel int
 	Selector intfs.Selector
 
-	graph    *Flow
-	FlowNode *FlowNode
+	flow *Flow
+	fnid int
 }
 
-func NewKeyedStream(graph *Flow, Parallel int, keys []interface{}) *KeyedStream {
+func NewKeyedStream(flow *Flow, Parallel int, keys []interface{}) *KeyedStream {
 	return &KeyedStream{
-		graph:    graph,
+		flow:     flow,
 		Parallel: Parallel,
 		Selector: selector.NewKeyBy(keys),
+		fnid:     -1,
 	}
 }
 
@@ -40,19 +41,19 @@ func (s *KeyedStream) Parallelism() int {
 }
 
 func (s *KeyedStream) SetFlowNode(node *FlowNode) {
-	s.FlowNode = node
+	s.fnid = node.ID
 }
 
 func (s *KeyedStream) GetFlowNode() (node *FlowNode) {
-	return s.FlowNode
+	return s.flow.GetFlowNode(s.fnid)
 }
 
 func (s *KeyedStream) toDataStream() *DataStream {
-	return NewDataStream(s.graph, s.Parallel)
+	return NewDataStream(s.flow, s.Parallel)
 }
 
 func (s *KeyedStream) toWindowedStream() *WindowedStream {
-	return NewWindowedStream(s.graph, s.Parallel)
+	return NewWindowedStream(s.flow, s.Parallel)
 }
 
 func (s *KeyedStream) toTask() *execution.Task {
@@ -81,5 +82,5 @@ func (s *KeyedStream) toTask() *execution.Task {
 }
 
 func (s *KeyedStream) connect(stream Stream) error {
-	return s.graph.AddStreamEdge(s, stream)
+	return s.flow.AddStreamEdge(s, stream)
 }

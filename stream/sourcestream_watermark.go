@@ -10,16 +10,17 @@ func (s *SourceStream) AssignTimeWithPeriodicWatermark(
 	function funcintfs.AssignTimeWithPeriodicWatermark,
 	period time.Duration,
 ) *DataStream {
-	stream := s.clone()
+	stream := s.toDataStream()
 	stream.OperatorFunc = function
+	stream.OperatorArgs = append(stream.OperatorArgs, period)
 	s.connect(stream)
 	return stream
 }
 
 func (s *SourceStream) AssignTimeWithPuncatuatedWatermark(
-	function funcintfs.TimestampWithPunctuatedWatermar,
+	function funcintfs.TimestampWithPunctuatedWatermark,
 ) *DataStream {
-	stream := s.clone()
+	stream := s.toDataStream()
 	stream.OperatorFunc = function
 	s.connect(stream)
 	return stream

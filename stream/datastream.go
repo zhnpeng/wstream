@@ -3,6 +3,7 @@ package stream
 import (
 	"context"
 	"encoding/gob"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/zhnpeng/wstream/funcintfs"
@@ -20,6 +21,7 @@ type DataStream struct {
 	// OperatorFunc is builtin functions, must be registed in gob
 	// if OperatorFunc is nil, means a bypass operator
 	OperatorFunc interface{}
+	OperatorArgs []interface{} // support basic type only
 	Parallel     int
 
 	flow *Flow // flow reference is not exported
@@ -34,18 +36,12 @@ func NewDataStream(flow *Flow, parallel int) *DataStream {
 	return &DataStream{
 		Parallel: parallel,
 		flow:     flow,
+		fnid:     -1,
 	}
 }
 
 func (s *DataStream) Parallelism() int {
 	return s.Parallel
-}
-
-func (s *DataStream) clone() *DataStream {
-	return &DataStream{
-		flow:     s.flow,
-		Parallel: s.Parallel,
-	}
 }
 
 func (s *DataStream) SetFlowNode(node *FlowNode) {
@@ -54,6 +50,14 @@ func (s *DataStream) SetFlowNode(node *FlowNode) {
 
 func (s *DataStream) GetFlowNode() (node *FlowNode) {
 	return s.flow.GetFlowNode(s.fnid)
+}
+
+func (s *DataStream) toDataStream() *DataStream {
+	return &DataStream{
+		flow:     s.flow,
+		Parallel: s.Parallel,
+		fnid:     -1,
+	}
 }
 
 func (s *DataStream) toKeyedStream(keys []interface{}) *KeyedStream {
@@ -82,6 +86,10 @@ func (s *DataStream) toTask() *execution.Task {
 				optr = operator.NewOutput(theFunc)
 			case funcintfs.Debug:
 				optr = operator.NewDebug(theFunc)
+			case funcintfs.AssignTimeWithPeriodicWatermark:
+				optr = operator.NewTimeWithPeriodicWatermarkAssigner(theFunc, s.OperatorArgs[0].(time.Duration))
+			case funcintfs.TimestampWithPunctuatedWatermark:
+				optr = operator.NewTimeWithPunctuatedWatermarkAssigner(theFunc)
 			default:
 				panic(errors.Errorf("Not Support Func Type: %T", theFunc))
 			}
@@ -101,11 +109,4 @@ func (s *DataStream) toTask() *execution.Task {
 
 func (s *DataStream) connect(stream Stream) error {
 	return s.flow.AddStreamEdge(s, stream)
-}
-
-func (s *DataStream) Debug(debugFunc funcintfs.Debug) *DataStream {
-	stream := s.clone()
-	stream.OperatorFunc = debugFunc
-	s.connect(stream)
-	return stream
 }

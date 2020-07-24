@@ -8,7 +8,11 @@ import (
 
 // LocalTransform transform flow in local mode
 func (f *Flow) LocalTransform() {
+	if f.transformed {
+		return
+	}
 	f.transform()
+	f.transformed = true
 }
 
 // Transform stream to executable

@@ -10,12 +10,15 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
 	"github.com/stretchr/testify/require"
 	"github.com/zhnpeng/wstream/runtime/operator/windowing/windows"
 	"github.com/zhnpeng/wstream/types"
 	"github.com/zhnpeng/wstream/utils"
 )
+
+var debug = true
 
 func TestFlow_Tumbling_Time_Window(t *testing.T) {
 	input1 := make(chan map[string]interface{})
@@ -30,19 +33,25 @@ func TestFlow_Tumbling_Time_Window(t *testing.T) {
 		Reduce(&testWindowReduce{}).
 		Debug(outfunc)
 
-	// Debug
-	flow.LocalTransform()
-	fmt.Printf("%T, %+v\n", flow.GetStream(0), flow.GetStream(0))
-	fmt.Printf("%T, %+v\n", flow.GetTask(0), flow.GetTask(0))
-	flow.BFSBoth(0, func(v, w int, c int64) {
-		fmt.Printf("%T, %+v\n", flow.GetStream(w), flow.GetStream(w))
-		fmt.Printf("%T, %+v\n", flow.GetTask(w), flow.GetTask(w))
-	})
+	if debug {
+		flow.LocalTransform()
+		fmt.Printf("%T, %+v\n", flow.GetStream(0), flow.GetStream(0))
+		fmt.Printf("%T, %+v\n", flow.GetTask(0), flow.GetTask(0))
+		fmt.Printf("%+v\n", flow.Graph)
+		flow.BFSBoth(0, func(v, w int, c int64) {
+			fmt.Printf("%T, %+v\n", flow.GetStream(w), flow.GetStream(w))
+			fmt.Printf("%T, %+v\n", flow.GetTask(w), flow.GetTask(w))
+		})
+	}
+
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		for _, m := range dataset1 {
+			if debug {
+				logrus.Debugf("input1 <- %v", m)
+			}
 			input1 <- m
 		}
 		close(input1)
@@ -51,6 +60,9 @@ func TestFlow_Tumbling_Time_Window(t *testing.T) {
 	go func() {
 		defer wg.Done()
 		for _, m := range dataset2 {
+			if debug {
+				logrus.Debugf("input2 <- %v", m)
+			}
 			input2 <- m
 		}
 		close(input2)
@@ -158,14 +170,17 @@ func TestFlow_Multiplex_Rolling_Reduce(t *testing.T) {
 		Reduce(&testReduce{}).
 		Debug(outfunc2)
 
-	// Debug
-	flow.LocalTransform()
-	fmt.Printf("%T, %+v\n", flow.GetStream(0), flow.GetStream(0))
-	fmt.Printf("%T, %+v\n", flow.GetTask(0), flow.GetTask(0))
-	flow.BFSBoth(0, func(v, w int, c int64) {
-		fmt.Printf("%T, %+v\n", flow.GetStream(w), flow.GetStream(w))
-		fmt.Printf("%T, %+v\n", flow.GetTask(w), flow.GetTask(w))
-	})
+	if debug {
+
+		// Debug
+		flow.LocalTransform()
+		fmt.Printf("%T, %+v\n", flow.GetStream(0), flow.GetStream(0))
+		fmt.Printf("%T, %+v\n", flow.GetTask(0), flow.GetTask(0))
+		flow.BFSBoth(0, func(v, w int, c int64) {
+			fmt.Printf("%T, %+v\n", flow.GetStream(w), flow.GetStream(w))
+			fmt.Printf("%T, %+v\n", flow.GetTask(w), flow.GetTask(w))
+		})
+	}
 
 	var wg sync.WaitGroup
 	wg.Add(1)

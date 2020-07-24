@@ -5,7 +5,7 @@ import (
 )
 
 func (s *DataStream) FlatMap(fn funcintfs.FlatMap) *DataStream {
-	stream := s.clone()
+	stream := s.toDataStream()
 	stream.OperatorFunc = fn
 	s.connect(stream)
 	return stream

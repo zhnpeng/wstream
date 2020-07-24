@@ -15,6 +15,8 @@ type Flow struct {
 	Transformed bool
 	Vertices    map[int]*FlowNode
 	Graph       *graph.Mutable
+
+	transformed bool
 }
 
 func NewFlow(name string) *Flow {
@@ -33,7 +35,7 @@ type FlowNode struct {
 	task   *execution.Task
 }
 
-func newFlowNode(id int, s Stream) *FlowNode {
+func NewFlowNode(id int, s Stream) *FlowNode {
 	return &FlowNode{
 		ID:     id,
 		Stream: s,
@@ -61,7 +63,7 @@ func (f *Flow) Len() int {
 // AddStream add a stream vertex to Graph
 func (f *Flow) AddStream(stm Stream) {
 	id := f.Graph.AddVertex()
-	flowNode := newFlowNode(id, stm)
+	flowNode := NewFlowNode(id, stm)
 	stm.SetFlowNode(flowNode)
 	f.Vertices[id] = flowNode
 }
@@ -90,17 +92,17 @@ func (f *Flow) CombineStream(left, right Stream) {
 }
 
 func (f *Flow) existsStream(stm Stream) bool {
-	FlowNode := stm.GetFlowNode()
-	if FlowNode == nil {
+	flowNode := stm.GetFlowNode()
+	if flowNode == nil {
 		return false
 	}
-	if _, ok := f.Vertices[FlowNode.ID]; ok {
+	if _, ok := f.Vertices[flowNode.ID]; ok {
 		return true
 	}
 	return false
 }
 
-func (f *Flow) GetFlowNode(id int) (FlowNode *FlowNode) {
+func (f *Flow) GetFlowNode(id int) *FlowNode {
 	return f.Vertices[id]
 }
 

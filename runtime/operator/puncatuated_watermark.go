@@ -11,12 +11,12 @@ import (
 )
 
 type TimeWithPunctuatedWatermarkAssigner struct {
-	function          funcintfs.TimestampWithPunctuatedWatermar
+	function          funcintfs.TimestampWithPunctuatedWatermark
 	prevItemTimestamp int64
 	prevWatermark     *types.Watermark
 }
 
-func NewTimeWithPunctuatedWatermarkAssigner(function funcintfs.TimestampWithPunctuatedWatermar) *TimeWithPunctuatedWatermarkAssigner {
+func NewTimeWithPunctuatedWatermarkAssigner(function funcintfs.TimestampWithPunctuatedWatermark) *TimeWithPunctuatedWatermarkAssigner {
 	if function == nil {
 		panic("TimestampWithPunctuatedWatermar function must not be nil")
 	}
@@ -31,7 +31,7 @@ func (f *TimeWithPunctuatedWatermarkAssigner) New() intfs.Operator {
 	return NewTimeWithPunctuatedWatermarkAssigner(udf)
 }
 
-func (f *TimeWithPunctuatedWatermarkAssigner) newFunction() (udf funcintfs.TimestampWithPunctuatedWatermar) {
+func (f *TimeWithPunctuatedWatermarkAssigner) newFunction() (udf funcintfs.TimestampWithPunctuatedWatermark) {
 	encodedBytes := encodeFunction(f.function)
 	reader := bytes.NewReader(encodedBytes)
 	decoder := gob.NewDecoder(reader)

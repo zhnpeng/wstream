@@ -5,7 +5,7 @@ import (
 )
 
 func (s *DataStream) Output(outputFunc funcintfs.Output) *DataStream {
-	stream := s.clone()
+	stream := s.toDataStream()
 	stream.OperatorFunc = outputFunc
 	s.connect(stream)
 	return stream

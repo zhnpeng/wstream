@@ -2,6 +2,7 @@ package execution
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/zhnpeng/wstream/intfs"
@@ -43,6 +44,10 @@ func (n *BroadcastNode) AddOutEdge(outEdge OutEdge) {
 
 func (n *BroadcastNode) AddOutEdges(outs ...OutEdge) {
 	n.out.Adds(outs...)
+}
+
+func (n *BroadcastNode) String() string {
+	return fmt.Sprintf("in: %v, out: %v", n.in, n.out)
 }
 
 func (n *BroadcastNode) Run() {

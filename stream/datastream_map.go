@@ -5,7 +5,7 @@ import (
 )
 
 func (s *DataStream) Map(mapFunc funcintfs.Map) *DataStream {
-	stream := s.clone()
+	stream := s.toDataStream()
 	stream.OperatorFunc = mapFunc
 	s.connect(stream)
 	return stream
