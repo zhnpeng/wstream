@@ -32,7 +32,8 @@ func NewFlow(name string) *Flow {
 type FlowNode struct {
 	ID     int
 	Stream Stream
-	task   *execution.Task
+
+	task *execution.Task
 }
 
 func NewFlowNode(id int, s Stream) *FlowNode {

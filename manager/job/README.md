@@ -1,3 +1,0 @@
-job manager
-
-manage stream

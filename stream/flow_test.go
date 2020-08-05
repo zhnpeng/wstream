@@ -1,8 +1,6 @@
 package stream
 
 import (
-	"bytes"
-	"encoding/gob"
 	"fmt"
 	"sort"
 	"sync"
@@ -12,13 +10,12 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
-	"github.com/stretchr/testify/require"
 	"github.com/zhnpeng/wstream/runtime/operator/windowing/windows"
 	"github.com/zhnpeng/wstream/types"
 	"github.com/zhnpeng/wstream/utils"
 )
 
-var debug = false
+var debug = true
 
 func TestFlow_Tumbling_Time_Window(t *testing.T) {
 	input1 := make(chan map[string]interface{})
@@ -137,6 +134,11 @@ func TestFlow_Tumbling_Time_Window(t *testing.T) {
 			},
 		},
 	}
+	if debug {
+		for _, item := range got {
+			fmt.Println(item)
+		}
+	}
 	if diff := cmp.Diff(got, want); diff != "" {
 		for _, r := range got {
 			fmt.Println(r)
@@ -153,14 +155,6 @@ func TestFlow_Multiplex_Rolling_Reduce(t *testing.T) {
 	outfunc2 := &testDebug{}
 	src := source.MapChannels(input1, input2)
 
-	var buf bytes.Buffer
-	err := gob.NewEncoder(&buf).Encode(flow)
-	require.Nil(t, err)
-	decoder := gob.NewDecoder(bytes.NewReader(buf.Bytes()))
-	var nf Flow
-	err = decoder.Decode(&nf)
-	require.Nil(t, err)
-
 	src.Map(&testMapSetOne{}).
 		KeyBy("D1", "D2").
 		Reduce(&testReduce{}).
@@ -171,8 +165,15 @@ func TestFlow_Multiplex_Rolling_Reduce(t *testing.T) {
 		Reduce(&testReduce{}).
 		Debug(outfunc2)
 
-	if debug {
+	// var buf bytes.Buffer
+	// err := gob.NewEncoder(&buf).Encode(flow)
+	// require.Nil(t, err)
+	// decoder := gob.NewDecoder(bytes.NewReader(buf.Bytes()))
+	// var nf Flow
+	// err = decoder.Decode(&nf)
+	// require.Nil(t, err)
 
+	if debug {
 		// Debug
 		flow.LocalTransform()
 		fmt.Printf("%T, %+v\n", flow.GetStream(0), flow.GetStream(0))
