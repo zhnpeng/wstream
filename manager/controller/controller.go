@@ -3,8 +3,8 @@ package controller
 import (
 	"context"
 
-	"github.com/coreos/etcd/clientv3"
-	"github.com/coreos/etcd/clientv3/concurrency"
+	"go.etcd.io/etcd/clientv3"
+	"go.etcd.io/etcd/clientv3/concurrency"
 	"github.com/sirupsen/logrus"
 )
 
@@ -12,9 +12,10 @@ import (
 var LeaderKeyPrefix = "/controller/"
 
 type Controller struct {
-	etcdClient *clientv3.Client
-	endpoint   string
-	active     chan struct{}
+	endpoint string
+
+	elect  *concurrency.Election
+	active chan struct{}
 }
 
 func NewControoler() *Controller {
@@ -24,19 +25,13 @@ func NewControoler() *Controller {
 }
 
 func (c *Controller) Run() {
-	go c.compaign(c.etcdClient, LeaderKeyPrefix, c.endpoint)
+	go c.Compaign()
 	<-c.active
 }
 
-func (c *Controller) compaign(cli *clientv3.Client, pfx string, val string) {
+func (c *Controller) Compaign() {
 	for {
-		s, err := concurrency.NewSession(cli, concurrency.WithTTL(5))
-		if err != nil {
-			logrus.Errorf("retry compaign because of err: %v", err)
-			continue
-		}
-		elect := concurrency.NewElection(s, pfx)
-		if err = elect.Campaign(context.TODO(), val); err != nil {
+		if err := c.elect.Campaign(context.TODO(), c.endpoint); err != nil {
 			logrus.Errorf("retry compaign because of err: %v", err)
 			continue
 		}
@@ -45,4 +40,12 @@ func (c *Controller) compaign(cli *clientv3.Client, pfx string, val string) {
 		c.active <- struct{}{}
 		return
 	}
+}
+
+func NewElect(cli *clientv3.Client, pfx string, ttl int) (*concurrency.Election, error) {
+	s, err := concurrency.NewSession(cli, concurrency.WithTTL(ttl))
+	if err != nil {
+		return nil, err
+	}
+	return concurrency.NewElection(s, pfx), nil
 }
