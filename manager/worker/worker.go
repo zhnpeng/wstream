@@ -1,6 +1,11 @@
 package worker
 
 import (
+	"net"
+
+	"github.com/zhnpeng/wstream/manager/worker/pb"
+	"google.golang.org/grpc"
+
 	"github.com/coreos/etcd/clientv3"
 	sdetcdv3 "github.com/go-kit/kit/sd/etcdv3"
 	"gopkg.in/tomb.v1"
@@ -9,8 +14,6 @@ import (
 type Worker interface {
 	Key() string
 	Endpoint() string
-	Bind() error
-	Service() (Service, error)
 	Run()
 	Wait() error
 	Kill(reason error)
@@ -23,8 +26,8 @@ type Worker interface {
 var WorkerKeyPrefix = "/wstream/worker/"
 
 type worker struct {
-	client   *clientv3.Client
-	endpoint string
+	client  *clientv3.Client
+	address string // ip:port
 
 	registrar sdetcdv3.Registrar
 	tomb.Tomb
@@ -37,7 +40,17 @@ func NewWorker() *worker {
 	return &worker{}
 }
 
-func (w *worker) Run() {
+func (w *worker) Run() error {
+	lis, err := net.Listen("tcp", w.address)
+	if err != nil {
+		return err
+	}
+	srv := grpc.NewServer()
+	pb.RegisterTestServer(srv, NewService())
+	if err := srv.Serve(lis); err != nil {
+		return err
+	}
+	return nil
 }
 
 // Register service at startup
@@ -47,8 +60,4 @@ func (w *worker) Register() {
 
 func (w *worker) Deregister() {
 	w.registrar.Deregister()
-}
-
-func (w *worker) Service() (Service, error) {
-	return NewService(), nil
 }
