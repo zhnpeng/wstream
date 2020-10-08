@@ -6,6 +6,7 @@ require (
 	github.com/OneOfOne/xxhash v1.2.5
 	github.com/coreos/bbolt v1.3.5 // indirect
 	github.com/coreos/etcd v3.3.25+incompatible
+	github.com/eapache/queue v1.1.0 // indirect
 	github.com/go-kit/kit v0.8.0
 	github.com/golang/protobuf v1.4.2
 	github.com/google/go-cmp v0.5.0
