@@ -35,6 +35,7 @@ func TestFlow_Tumbling_Time_Window(t *testing.T) {
 		fmt.Printf("%T, %+v\n", flow.GetStream(0), flow.GetStream(0))
 		fmt.Printf("%T, %+v\n", flow.GetTask(0), flow.GetTask(0))
 		fmt.Printf("%+v\n", flow.Graph)
+		fmt.Println("++++++++++++++++++")
 		flow.BFSBoth(0, func(v, w int, c int64) {
 			fmt.Printf("%T, %+v\n", flow.GetStream(w), flow.GetStream(w))
 			fmt.Printf("%T, %+v\n", flow.GetTask(w), flow.GetTask(w))
@@ -70,7 +71,6 @@ func TestFlow_Tumbling_Time_Window(t *testing.T) {
 	got := outfunc.Records
 	if len(got) != 7 {
 		t.Errorf("length of got records not right got %d, want %d", len(outfunc.Records), 7)
-		return
 	}
 	sort.SliceStable(got, func(i, j int) bool {
 		ri := got[i]
@@ -134,11 +134,6 @@ func TestFlow_Tumbling_Time_Window(t *testing.T) {
 				"X": 2,
 			},
 		},
-	}
-	if debug {
-		for _, item := range got {
-			fmt.Println(item)
-		}
 	}
 	if diff := cmp.Diff(got, want); diff != "" {
 		for _, r := range got {

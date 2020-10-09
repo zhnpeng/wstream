@@ -2,7 +2,6 @@ package execution
 
 import (
 	"container/heap"
-	"fmt"
 	"time"
 
 	"github.com/zhnpeng/wstream/intfs"
@@ -67,7 +66,6 @@ func (m *WatermarkMerger) run() {
 		}
 		for m.wmHeap.Len() > 0 {
 			item := heap.Pop(m.wmHeap).(WatermarkHeapItem)
-			fmt.Println(item.item)
 			if item.item.Time().After(m.watermark.Time()) {
 				m.output.Emit(item.item)
 				m.watermark.T = item.item.Time()

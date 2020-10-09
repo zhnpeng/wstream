@@ -79,6 +79,7 @@ func (s *WindowedStream) toTask() *execution.Task {
 		if s.ApplyFunc != nil {
 			optr.SetApplyFunc(s.ApplyFunc)
 		}
+		// TODO: 这里不对，可能是多对一的网络，现在这里是一对一的
 		node := execution.NewExecutionNode(
 			context.Background(),
 			optr,

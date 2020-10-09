@@ -63,8 +63,6 @@ func (s *KeyedStream) toTask() *execution.Task {
 			context.Background(),
 			operator.NewRescale(s.Selector),
 		)
-		edge := make(execution.Edge)
-		node.AddInEdge(edge.In())
 		nodes = append(nodes, node)
 	}
 	return &execution.Task{
