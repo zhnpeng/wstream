@@ -42,7 +42,7 @@ func (s *SourceStream) Channels(inputs ...chan types.Item) *SourceStream {
 func (s *SourceStream) toTask() *execution.Task {
 	// TODO: find a better implement to add source input channel to task's nodes
 	task := s.DataStream.toTask()
-	for i, node := range task.BroadcastNodes {
+	for i, node := range task.Nodes {
 		node.AddInEdge(s.inputs[i])
 	}
 	return task

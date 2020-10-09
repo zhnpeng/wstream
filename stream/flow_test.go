@@ -70,6 +70,7 @@ func TestFlow_Tumbling_Time_Window(t *testing.T) {
 	got := outfunc.Records
 	if len(got) != 7 {
 		t.Errorf("length of got records not right got %d, want %d", len(outfunc.Records), 7)
+		return
 	}
 	sort.SliceStable(got, func(i, j int) bool {
 		ri := got[i]

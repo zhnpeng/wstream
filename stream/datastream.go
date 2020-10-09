@@ -69,7 +69,7 @@ func (s *DataStream) toRescaleStream(parallel int, selector *selector.Selector) 
 }
 
 func (s *DataStream) toTask() *execution.Task {
-	broadcastNodes := make([]execution.Node, 0, s.Parallelism())
+	nodes := make([]execution.Node, 0, s.Parallelism())
 	for i := 0; i < s.Parallelism(); i++ {
 		var optr intfs.Operator
 		if s.OperatorFunc == nil {
@@ -94,16 +94,14 @@ func (s *DataStream) toTask() *execution.Task {
 				panic(errors.Errorf("Not Support Func Type: %T", theFunc))
 			}
 		}
-		node := execution.NewBroadcastNode(
+		node := execution.NewExecutionNode(
 			context.Background(),
 			optr,
-			execution.NewReceiver(),
-			execution.NewEmitter(),
 		)
-		broadcastNodes = append(broadcastNodes, node)
+		nodes = append(nodes, node)
 	}
 	return &execution.Task{
-		BroadcastNodes: broadcastNodes,
+		Nodes: nodes,
 	}
 }
 

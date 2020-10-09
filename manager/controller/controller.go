@@ -3,9 +3,9 @@ package controller
 import (
 	"context"
 
+	"github.com/sirupsen/logrus"
 	"go.etcd.io/etcd/clientv3"
 	"go.etcd.io/etcd/clientv3/concurrency"
-	"github.com/sirupsen/logrus"
 )
 
 // LeaderKeyPrefix, use this key prefix to get controller endpoint

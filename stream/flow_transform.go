@@ -28,21 +28,21 @@ func (f *Flow) transform() {
 			//Create executable
 			toNode.task = f.StreamToTask(toNode.Stream)
 		}
-		if toNode.task.RescaleNode == nil {
-			// is a broadcast node
-			for i, n := range fromNode.task.BroadcastNodes {
-				edge := make(execution.Edge)
-				n.AddOutEdge(edge.Out())
-				toNode.task.BroadcastNodes[i].AddInEdge(edge.In())
-			}
-		} else {
-			// is a rescale node
-			for _, n := range fromNode.task.BroadcastNodes {
-				edge := make(execution.Edge)
-				n.AddOutEdge(edge.Out())
-				toNode.task.RescaleNode.AddInEdge(edge.In())
-			}
+		// if toNode.task.RescaleNode == nil {
+		// is a broadcast node
+		for i, n := range fromNode.task.Nodes {
+			edge := make(execution.Edge)
+			n.AddOutEdge(edge.Out())
+			toNode.task.Nodes[i].AddInEdge(edge.In())
 		}
+		// } else {
+		// is a rescale node
+		// 	for _, n := range fromNode.task.BroadcastNodes {
+		// 		edge := make(execution.Edge)
+		// 		n.AddOutEdge(edge.Out())
+		// 		toNode.task.RescaleNode.AddInEdge(edge.In())
+		// 	}
+		// }
 	})
 }
 

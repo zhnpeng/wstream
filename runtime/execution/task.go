@@ -1,32 +1,14 @@
 package execution
 
-import (
-	"sync"
-)
+import "sync"
 
-/*
-Task is a logical node aginst to stream node
-1. RescaleNodes should only exists in rescaling task, for example keyby
-2. The number of RescaleNodes should lte than upstream task's parallelism
-3. Each RescaleNode should accept more than one upstream taks's output as input
-4. For better performance RescaleNodes is a slice, because every node is an execution unit,
-   if there is only one RescaleNode there may be a problem for performance
-*/
 type Task struct {
-	RescaleNode    Node
-	BroadcastNodes []Node
+	Nodes []Node
 }
 
 func (t *Task) Run() {
 	var wg sync.WaitGroup
-	if t.RescaleNode != nil {
-		wg.Add(1)
-		go func(sn Node) {
-			defer wg.Done()
-			sn.Run()
-		}(t.RescaleNode)
-	}
-	for _, n := range t.BroadcastNodes {
+	for _, n := range t.Nodes {
 		wg.Add(1)
 		go func(bn Node) {
 			defer wg.Done()

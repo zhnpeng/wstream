@@ -46,14 +46,14 @@ func (recv *Receiver) Run() {
 
 	emitter := NewSingleEmitter(recv.output)
 	merger := NewWatermarkMerger(len(recv.inEdges), emitter, 0)
-	//fire up watermakr merger
+	// fire up watermark merger
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		merger.Run()
 	}()
 
-	//fire up input inEdges
+	// fire up input inEdges
 	for id, ch := range recv.inEdges {
 		wg.Add(1)
 		go func(_id int, _ch InEdge) {
@@ -64,19 +64,19 @@ func (recv *Receiver) Run() {
 					merger.CloseOne(_id)
 					return
 				}
-				switch item.(type) {
+				switch v := item.(type) {
 				case *types.Watermark:
-					// multiway merge watermark from multiple inputs to one
-					merger.Push(_id, item.(*types.Watermark))
+					// multi way merge watermark from multiple inputs to one
+					merger.Push(_id, v)
 				default:
-					recv.output <- item
+					recv.output <- v
 				}
 			}
 		}(id, ch)
 	}
 	wg.Wait()
 	// dispose self before return
-	defer recv.Dispose()
+	recv.Dispose()
 }
 
 func (recv *Receiver) Dispose() {

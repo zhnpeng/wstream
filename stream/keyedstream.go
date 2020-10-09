@@ -57,27 +57,18 @@ func (s *KeyedStream) toWindowedStream() *WindowedStream {
 }
 
 func (s *KeyedStream) toTask() *execution.Task {
-	rescaleNode := execution.NewRescaleNode(
-		context.Background(),
-		s.Selector,
-	)
-	broadcastNodes := make([]execution.Node, 0, s.Parallelism())
+	nodes := make([]execution.Node, 0, s.Parallelism())
 	for i := 0; i < s.Parallelism(); i++ {
-		optr := operator.NewByPass()
-		broadcastNode := execution.NewBroadcastNode(
+		node := execution.NewExecutionNode(
 			context.Background(),
-			optr,
-			execution.NewReceiver(),
-			execution.NewEmitter(),
+			operator.NewRescale(s.Selector),
 		)
 		edge := make(execution.Edge)
-		rescaleNode.AddOutEdge(edge.Out())
-		broadcastNode.AddInEdge(edge.In())
-		broadcastNodes = append(broadcastNodes, broadcastNode)
+		node.AddInEdge(edge.In())
+		nodes = append(nodes, node)
 	}
 	return &execution.Task{
-		RescaleNode:    rescaleNode,
-		BroadcastNodes: broadcastNodes,
+		Nodes: nodes,
 	}
 }
 

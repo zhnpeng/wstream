@@ -65,7 +65,7 @@ func (s *WindowedStream) toDataStream() *DataStream {
 
 // toTask only work in local model
 func (s *WindowedStream) toTask() *execution.Task {
-	broadcastNodes := make([]execution.Node, 0, s.Parallelism())
+	nodes := make([]execution.Node, 0, s.Parallelism())
 	for i := 0; i < s.Parallelism(); i++ {
 		var optr operator.WindowOperator
 		if s.Evictor != nil {
@@ -79,16 +79,14 @@ func (s *WindowedStream) toTask() *execution.Task {
 		if s.ApplyFunc != nil {
 			optr.SetApplyFunc(s.ApplyFunc)
 		}
-		node := execution.NewBroadcastNode(
+		node := execution.NewExecutionNode(
 			context.Background(),
 			optr,
-			execution.NewReceiver(),
-			execution.NewEmitter(),
 		)
-		broadcastNodes = append(broadcastNodes, node)
+		nodes = append(nodes, node)
 	}
 	return &execution.Task{
-		BroadcastNodes: broadcastNodes,
+		Nodes: nodes,
 	}
 }
 
