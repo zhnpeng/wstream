@@ -21,28 +21,27 @@ func (f *Flow) transform() {
 		fromNode := f.GetFlowNode(v)
 		toNode := f.GetFlowNode(w)
 		if fromNode.task == nil {
-			//Create executable
 			fromNode.task = f.StreamToTask(fromNode.Stream)
 		}
 		if toNode.task == nil {
-			//Create executable
 			toNode.task = f.StreamToTask(toNode.Stream)
 		}
-		// if toNode.task.RescaleNode == nil {
-		// is a broadcast node
-		for i, n := range fromNode.task.Nodes {
-			edge := make(execution.Edge)
-			n.AddOutEdge(edge.Out())
-			toNode.task.Nodes[i].AddInEdge(edge.In())
+		// TODO: 这是临时代码，使用更好的方式构建网络
+		if _, ok := fromNode.Stream.(*KeyedStream); ok {
+			for _, fromN := range fromNode.task.Nodes {
+				for _, toN := range toNode.task.Nodes {
+					edge := make(execution.Edge)
+					fromN.AddOutEdge(edge.Out())
+					toN.AddInEdge(edge.In())
+				}
+			}
+		} else {
+			for i, n := range fromNode.task.Nodes {
+				edge := make(execution.Edge)
+				n.AddOutEdge(edge.Out())
+				toNode.task.Nodes[i].AddInEdge(edge.In())
+			}
 		}
-		// } else {
-		// is a rescale node
-		// 	for _, n := range fromNode.task.BroadcastNodes {
-		// 		edge := make(execution.Edge)
-		// 		n.AddOutEdge(edge.Out())
-		// 		toNode.task.RescaleNode.AddInEdge(edge.In())
-		// 	}
-		// }
 	})
 }
 
