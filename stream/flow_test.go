@@ -321,6 +321,123 @@ func TestFlow_Multiplex_Rolling_Reduce(t *testing.T) {
 	}
 }
 
+// TestFlow_Multiplex_KeyBy_Rolling_Reduce 是测试2个多对多网络
+func TestFlow_Multiplex_KeyBy_Rolling_Reduce(t *testing.T) {
+	input1 := make(chan map[string]interface{})
+	input2 := make(chan map[string]interface{})
+	flow, source := New("multiplex_rolling_reduce")
+	outfunc1 := &testDebug{}
+	outfunc2 := &testDebug{}
+	src := source.MapChannels(input1, input2).Map(&testMapSetOne{}).KeyBy("D1", "D2")
+
+	src.Reduce(&testReduce{}).
+		Debug(outfunc1)
+
+	src.Reduce(&testReduce{}).
+		Debug(outfunc2)
+
+	if debug {
+		// Debug
+		flow.LocalTransform()
+		fmt.Printf("%T, %+v\n", flow.GetStream(0), flow.GetStream(0))
+		fmt.Printf("%T, %+v\n", flow.GetTask(0), flow.GetTask(0))
+		flow.BFSBoth(0, func(v, w int, c int64) {
+			fmt.Printf("%T, %+v\n", flow.GetStream(w), flow.GetStream(w))
+			fmt.Printf("%T, %+v\n", flow.GetTask(w), flow.GetTask(w))
+		})
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for _, m := range dataset3 {
+			input1 <- m
+		}
+		close(input1)
+	}()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for _, m := range dataset4 {
+			input2 <- m
+		}
+		close(input2)
+	}()
+	flow.Run()
+	wg.Wait()
+	sort.Slice(outfunc1.Records, func(i, j int) bool {
+		ri := outfunc1.Records[i]
+		rj := outfunc1.Records[j]
+		ki := fmt.Sprintf("%v%d", ri.Key(), ri.Get("X"))
+		kj := fmt.Sprintf("%v%d", rj.Key(), rj.Get("X"))
+		return ki < kj
+	})
+	sort.Slice(outfunc2.Records, func(i, j int) bool {
+		ri := outfunc2.Records[i]
+		rj := outfunc2.Records[j]
+		ki := fmt.Sprintf("%v%d", ri.Key(), ri.Get("X"))
+		kj := fmt.Sprintf("%v%d", rj.Key(), rj.Get("X"))
+		return ki < kj
+	})
+	want1 := []types.Record{
+		&types.MapRecord{
+			K: []interface{}{"A", "A"},
+			V: map[string]interface{}{
+				"X": 1,
+			},
+		},
+		&types.MapRecord{
+			K: []interface{}{"A", "B"},
+			V: map[string]interface{}{
+				"X": 1,
+			},
+		},
+		&types.MapRecord{
+			K: []interface{}{"A", "B"},
+			V: map[string]interface{}{
+				"X": 2,
+			},
+		},
+		&types.MapRecord{
+			K: []interface{}{"B", "B"},
+			V: map[string]interface{}{
+				"X": 1,
+			},
+		},
+		&types.MapRecord{
+			K: []interface{}{"B", "B"},
+			V: map[string]interface{}{
+				"X": 2,
+			},
+		},
+		&types.MapRecord{
+			K: []interface{}{"B", "C"},
+			V: map[string]interface{}{
+				"X": 1,
+			},
+		},
+		&types.MapRecord{
+			K: []interface{}{"C", "C"},
+			V: map[string]interface{}{
+				"X": 1,
+			},
+		},
+		&types.MapRecord{
+			K: []interface{}{"C", "C"},
+			V: map[string]interface{}{
+				"X": 2,
+			},
+		},
+	}
+	if diff := cmp.Diff(outfunc1.Records, want1); diff != "" {
+		t.Fatal(diff)
+	}
+	if diff := cmp.Diff(outfunc2.Records, want1); diff != "" {
+		t.Fatal(diff)
+	}
+}
+
 // Functions
 type testMapSetOne struct{}
 

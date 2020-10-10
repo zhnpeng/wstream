@@ -1,6 +1,8 @@
 package execution
 
-import "github.com/zhnpeng/wstream/types"
+import (
+	"github.com/zhnpeng/wstream/types"
+)
 
 type InEdge = <-chan types.Item
 

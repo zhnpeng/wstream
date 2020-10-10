@@ -38,7 +38,7 @@ func (this *Rescale) newFunction() (udf funcintfs.Select) {
 
 func (this *Rescale) handleRecord(record types.Record, out Emitter) {
 	index := this.function.Select(record, out.Length())
-	_ = out.EmitTo(index, record)
+	out.EmitTo(index, record)
 }
 
 func (this *Rescale) handleWatermark(wm *types.Watermark, out Emitter) {

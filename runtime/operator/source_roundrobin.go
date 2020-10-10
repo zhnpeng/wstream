@@ -27,7 +27,7 @@ func (m *SourceRoundrobin) handleRecord(record types.Record, out Emitter) {
 	// get key values, then calculate index, then emit to partition by index
 	cnt := atomic.AddInt64(&m.count, 1)
 	index := cnt % int64(out.Length())
-	_ = out.EmitTo(int(index), record)
+	out.EmitTo(int(index), record)
 }
 
 func (m *SourceRoundrobin) handleWatermark(wm *types.Watermark, out Emitter) {

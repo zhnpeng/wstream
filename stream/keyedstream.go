@@ -59,9 +59,11 @@ func (s *KeyedStream) toWindowedStream() *WindowedStream {
 func (s *KeyedStream) toTask() *execution.Task {
 	nodes := make([]execution.Node, 0, s.Parallelism())
 	for i := 0; i < s.Parallelism(); i++ {
-		node := execution.NewExecutionNode(
+		node := execution.NewRawExecutionNode(
 			context.Background(),
 			operator.NewRescale(s.Selector),
+			execution.NewReceiver(),
+			execution.NewGroupEmitter(),
 		)
 		nodes = append(nodes, node)
 	}

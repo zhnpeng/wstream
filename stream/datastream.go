@@ -94,7 +94,6 @@ func (s *DataStream) toTask() *execution.Task {
 				panic(errors.Errorf("Not Support Func Type: %T", theFunc))
 			}
 		}
-		// TODO: 这里不对，可能是多对一的网络，现在这里是一对一的
 		node := execution.NewExecutionNode(
 			context.Background(),
 			optr,

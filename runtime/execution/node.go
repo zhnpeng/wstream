@@ -10,14 +10,16 @@ import (
 
 type Node interface {
 	AddInEdge(InEdge)
+	AddInEdges(...InEdge)
 	AddOutEdge(OutEdge)
+	AddOutEdges(...OutEdge)
 	Run()
 }
 
 type ExecutionNode struct {
 	ctx      context.Context
 	in       *Receiver
-	out      *Emitter
+	out      Emitter
 	operator intfs.Operator
 }
 
@@ -26,7 +28,16 @@ func NewExecutionNode(ctx context.Context, operator intfs.Operator) *ExecutionNo
 		ctx:      ctx,
 		operator: operator,
 		in:       NewReceiver(),
-		out:      NewEmitter(),
+		out:      NewMultiEmitter(),
+	}
+}
+
+func NewRawExecutionNode(ctx context.Context, operator intfs.Operator, in *Receiver, out Emitter) *ExecutionNode {
+	return &ExecutionNode{
+		ctx:      ctx,
+		operator: operator,
+		in:       in,
+		out:      out,
 	}
 }
 

@@ -29,11 +29,13 @@ func (f *Flow) transform() {
 		// TODO: 这是临时代码，使用更好的方式构建网络
 		if _, ok := fromNode.Stream.(*KeyedStream); ok {
 			for _, fromN := range fromNode.task.Nodes {
+				var groupEdges []execution.OutEdge
 				for _, toN := range toNode.task.Nodes {
 					edge := make(execution.Edge)
-					fromN.AddOutEdge(edge.Out())
 					toN.AddInEdge(edge.In())
+					groupEdges = append(groupEdges, edge.Out())
 				}
+				fromN.AddOutEdges(groupEdges...)
 			}
 		} else {
 			for i, n := range fromNode.task.Nodes {
