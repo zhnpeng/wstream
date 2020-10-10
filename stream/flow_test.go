@@ -35,7 +35,6 @@ func TestFlow_Tumbling_Time_Window(t *testing.T) {
 		fmt.Printf("%T, %+v\n", flow.GetStream(0), flow.GetStream(0))
 		fmt.Printf("%T, %+v\n", flow.GetTask(0), flow.GetTask(0))
 		fmt.Printf("%+v\n", flow.Graph)
-		fmt.Println("++++++++++++++++++")
 		flow.BFSBoth(0, func(v, w int, c int64) {
 			fmt.Printf("%T, %+v\n", flow.GetStream(w), flow.GetStream(w))
 			fmt.Printf("%T, %+v\n", flow.GetTask(w), flow.GetTask(w))

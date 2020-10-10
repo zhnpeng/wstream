@@ -56,7 +56,7 @@ func (s *KeyedStream) toWindowedStream() *WindowedStream {
 	return NewWindowedStream(s.flow, s.Parallel)
 }
 
-func (s *KeyedStream) toTask() *execution.Task {
+func (s *KeyedStream) ToTask() *execution.Task {
 	nodes := make([]execution.Node, 0, s.Parallelism())
 	for i := 0; i < s.Parallelism(); i++ {
 		node := execution.NewRawExecutionNode(

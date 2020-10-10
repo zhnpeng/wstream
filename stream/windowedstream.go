@@ -63,8 +63,8 @@ func (s *WindowedStream) toDataStream() *DataStream {
 	return NewDataStream(s.flow, s.Parallel)
 }
 
-// toTask only work in local model
-func (s *WindowedStream) toTask() *execution.Task {
+// ToTask only work in local model
+func (s *WindowedStream) ToTask() *execution.Task {
 	nodes := make([]execution.Node, 0, s.Parallelism())
 	for i := 0; i < s.Parallelism(); i++ {
 		var optr operator.WindowOperator

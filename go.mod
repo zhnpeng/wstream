@@ -16,6 +16,7 @@ require (
 	github.com/spf13/cast v1.3.0
 	github.com/tinylib/msgp v1.1.0
 	go.etcd.io/etcd v0.0.0-20191023171146-3cf2f69b5738
+	golang.org/x/tools v0.0.0-20190524140312-2c0ae7006135
 	google.golang.org/grpc v1.27.0
 	google.golang.org/protobuf v1.25.0
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7

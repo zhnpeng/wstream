@@ -1,7 +1,6 @@
 package stream
 
 import (
-	"github.com/sirupsen/logrus"
 	"github.com/zhnpeng/wstream/runtime/execution"
 	"github.com/zhnpeng/wstream/utils/graph"
 )
@@ -21,13 +20,16 @@ func (f *Flow) transform() {
 		fromNode := f.GetFlowNode(v)
 		toNode := f.GetFlowNode(w)
 		if fromNode.task == nil {
-			fromNode.task = f.StreamToTask(fromNode.Stream)
+			fromNode.task = fromNode.Stream.ToTask()
 		}
 		if toNode.task == nil {
-			toNode.task = f.StreamToTask(toNode.Stream)
+			toNode.task = toNode.Stream.ToTask()
 		}
-		// TODO: 这是临时代码，使用更好的方式构建网络
-		if _, ok := fromNode.Stream.(*KeyedStream); ok {
+		// 这里为了stream和execution完全解耦，选择在这里判断stream类型
+		// 来构建底层执行网络，而不是在stream带上跟execution任何相关信息
+		// 但是这样比较割裂，按道理stream应该知道底层网络是怎样构建的
+		switch fromNode.Stream.(type) {
+		case *KeyedStream, *RescaledStream:
 			for _, fromN := range fromNode.task.Nodes {
 				var groupEdges []execution.OutEdge
 				for _, toN := range toNode.task.Nodes {
@@ -37,7 +39,7 @@ func (f *Flow) transform() {
 				}
 				fromN.AddOutEdges(groupEdges...)
 			}
-		} else {
+		default:
 			for i, n := range fromNode.task.Nodes {
 				edge := make(execution.Edge)
 				n.AddOutEdge(edge.Out())
@@ -45,20 +47,4 @@ func (f *Flow) transform() {
 			}
 		}
 	})
-}
-
-func (f *Flow) StreamToTask(stm Stream) *execution.Task {
-	switch vstm := stm.(type) {
-	case *KeyedStream:
-		return vstm.toTask()
-	case *DataStream:
-		return vstm.toTask()
-	case *WindowedStream:
-		return vstm.toTask()
-	case *SourceStream:
-		return vstm.toTask()
-	default:
-		logrus.Errorf("got unexpected stream: %+v", stm)
-	}
-	return nil
 }

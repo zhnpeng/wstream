@@ -39,9 +39,9 @@ func (s *SourceStream) Channels(inputs ...chan types.Item) *SourceStream {
 	return s
 }
 
-func (s *SourceStream) toTask() *execution.Task {
+func (s *SourceStream) ToTask() *execution.Task {
 	// TODO: find a better implement to add source input channel to task's nodes
-	task := s.DataStream.toTask()
+	task := s.DataStream.ToTask()
 	for i, node := range task.Nodes {
 		node.AddInEdge(s.inputs[i])
 	}

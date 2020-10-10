@@ -68,7 +68,7 @@ func (s *DataStream) toRescaleStream(parallel int, selector *selector.Selector) 
 	return NewRescaledStream(s.flow, parallel, selector)
 }
 
-func (s *DataStream) toTask() *execution.Task {
+func (s *DataStream) ToTask() *execution.Task {
 	nodes := make([]execution.Node, 0, s.Parallelism())
 	for i := 0; i < s.Parallelism(); i++ {
 		var optr intfs.Operator

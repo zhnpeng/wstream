@@ -23,7 +23,7 @@ func NewRescaledStream(flow *Flow, parallel int, selector intfs.Selector) *Resca
 	return stm
 }
 
-func (s *RescaledStream) toTask() *execution.Task {
+func (s *RescaledStream) ToTask() *execution.Task {
 	nodes := make([]execution.Node, 0, s.Parallelism())
 	for i := 0; i < s.Parallelism(); i++ {
 		node := execution.NewExecutionNode(
