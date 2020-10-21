@@ -1,3 +1,6 @@
+## notices
+ 
+- support mac os only
 
 ## download & version
 
@@ -6,7 +9,7 @@ https://github.com/etcd-io/etcd/releases
 etcd-v3.3.25-darwin-amd64.zip
 ```
 
-## quick start
+## quick start etcd
 
 start a single-member cluster of etcd:
 
@@ -20,3 +23,9 @@ Next, let's set a single key, and then retrieve it:
 etcdctl put mykey "this is awesome"
 etcdctl get mykey
 ```
+
+## start webui e3w
+
+```cd webui```
+
+```./e3w```

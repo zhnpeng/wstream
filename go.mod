@@ -19,6 +19,7 @@ require (
 	golang.org/x/tools v0.0.0-20190524140312-2c0ae7006135
 	google.golang.org/grpc v1.27.0
 	google.golang.org/protobuf v1.25.0
+	gopkg.in/ini.v1 v1.62.0
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7
 )
 
