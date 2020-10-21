@@ -25,6 +25,7 @@ func NewDistribEdge(conn net.Conn) *DistribEdge {
 
 func (n *DistribEdge) In() execution.InEdge {
 	go func() {
+		// TODO: go run once?
 		defer com.CatchPanic()
 		for {
 			select {
@@ -49,6 +50,7 @@ func (n *DistribEdge) In() execution.InEdge {
 
 func (n *DistribEdge) Out() execution.OutEdge {
 	go func() {
+		// TODO: go run once?
 		defer com.CatchPanic()
 		for {
 			select {
