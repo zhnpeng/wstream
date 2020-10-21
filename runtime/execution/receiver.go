@@ -20,7 +20,7 @@ type Receiver struct {
 
 func NewReceiver() *Receiver {
 	return &Receiver{
-		output: make(Edge),
+		output: NewLocalEdge(),
 	}
 }
 
@@ -44,7 +44,7 @@ func (recv *Receiver) Run() {
 	recv.running = true
 	recv.mu.Unlock()
 
-	emitter := NewSingleEmitter(recv.output)
+	emitter := NewSingleEmitter(recv.output.Out())
 	merger := NewWatermarkMerger(len(recv.inEdges), emitter, 0)
 	// fire up watermark merger
 	wg.Add(1)
@@ -69,7 +69,7 @@ func (recv *Receiver) Run() {
 					// multi way merge watermark from multiple inputs to one
 					merger.Push(_id, v)
 				default:
-					recv.output <- v
+					recv.output.Out() <- v
 				}
 			}
 		}(id, ch)
@@ -80,10 +80,10 @@ func (recv *Receiver) Run() {
 }
 
 func (recv *Receiver) Dispose() {
-	close(recv.output)
+	close(recv.output.Out())
 }
 
 // Next will run reciver if it is not running
 func (recv *Receiver) Next() <-chan types.Item {
-	return recv.output
+	return recv.output.In()
 }
