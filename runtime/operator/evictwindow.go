@@ -113,13 +113,13 @@ func (w *EvictWindow) SetReduceFunc(f funcintfs.WindowReduce) {
 func (w *EvictWindow) handleRecord(record types.Record, out Emitter) {
 	assignedWindows := w.assigner.AssignWindows(record, w.timer.CurrentTime())
 
+	k := utils.HashSlice(record.Key())
 	for _, window := range assignedWindows {
 		if w.isWindowLate(window) {
 			// drop window if it is event time and late
 			logrus.Warnf("drop late window %+v for record %+v", window, record)
 			continue
 		}
-		k := utils.HashSlice(record.Key())
 		wid := windowing.NewWindowID(k, window)
 		var contents *windowing.WindowContents
 		if c, ok := w.windowContentsMap.Load(wid); ok {
