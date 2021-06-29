@@ -53,5 +53,5 @@ func main() {
 
 ## TODO
 
-* [] local multiplexer to connect/join multiple stream/flow in decoupling way
-* [] remote multiplexer support custom transport protocol
+* [ ] local multiplexer to connect/join multiple stream/flow in decoupling way
+* [ ] remote multiplexer support custom transport protocol
