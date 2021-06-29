@@ -50,3 +50,8 @@ func main() {
 ### Reduce with tumbling event time window
 
 [examples/windows/tumbling_time_window.go](examples/windows/tumbling_time_window.go)
+
+## TODO
+
+* [] local multiplexer to connect/join multiple stream/flow in decoupling way
+* [] remote multiplexer support custom transport protocol
