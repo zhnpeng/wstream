@@ -13,7 +13,7 @@ func (s *SourceStream) AssignTimeWithPeriodicWatermark(
 	stream := s.toDataStream()
 	stream.OperatorFunc = function
 	stream.OperatorArgs = append(stream.OperatorArgs, period)
-	s.connect(stream)
+	_ = s.connect(stream)
 	return stream
 }
 
@@ -22,6 +22,6 @@ func (s *SourceStream) AssignTimeWithPuncatuatedWatermark(
 ) *DataStream {
 	stream := s.toDataStream()
 	stream.OperatorFunc = function
-	s.connect(stream)
+	_ = s.connect(stream)
 	return stream
 }
