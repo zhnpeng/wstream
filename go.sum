@@ -26,3 +26,5 @@ github.com/wandouz/wstream v0.3.0/go.mod h1:6RbNT06SrZ2XAtRcp9GP95jcNDCbQ3CxPQUB
 github.com/wandouz/wstream v0.3.1 h1:CG6igeMvbxX0Ry1K8NdmydsiAjxrSwTrQWfwoqgHCks=
 golang.org/x/sys v0.0.0-20190422165155-953cdadca894 h1:Cz4ceDQGXuKRnVBDTS23GTn/pU5OE2C0WrNTOYK1Uuc=
 golang.org/x/sys v0.0.0-20190422165155-953cdadca894/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 h1:uRGJdciOHaEIrze2W8Q3AKkepLTh2hOroT7a+7czfdQ=
+gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7/go.mod h1:dt/ZhP58zS4L8KSrWDmTeBkI65Dw0HsyUHuEVlX15mw=

@@ -11,4 +11,5 @@ require (
 	github.com/spf13/cast v1.3.0
 	github.com/stretchr/testify v1.2.2
 	github.com/tinylib/msgp v1.1.0
+	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7
 )
