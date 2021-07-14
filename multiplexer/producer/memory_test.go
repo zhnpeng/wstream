@@ -38,7 +38,7 @@ func TestMemory_Produce_Linkage(t *testing.T) {
 				t.Errorf("Got: %d, Want %d", got, i)
 			}
 		} else {
-			t.Fatal("unexpected chanel status")
+			t.Fatal("unexpected channel status")
 		}
 	}
 
