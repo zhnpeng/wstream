@@ -23,6 +23,18 @@ func (p *BasicProducer) Write(msg multiplexer.Message) {
 	p.messages.Enqueue(msg)
 }
 
-func (p *BasicProducer) Produce(ctx context.Context) {
-	p.Done()
+func (p *BasicProducer) messageForLoop(ctx context.Context, onMessage func(msg multiplexer.Message)) {
+	defer p.Done()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case msg, ok := <-p.messages.Dequeue():
+			if ok {
+				onMessage(msg)
+			} else {
+				return
+			}
+		}
+	}
 }

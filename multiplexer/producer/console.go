@@ -12,24 +12,8 @@ type Console struct {
 	Format string
 }
 
-func (p *Console) messageForLoop(ctx context.Context) {
-	defer p.Done()
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case msg, ok := <-p.messages.Dequeue():
-			if ok {
-				p.onMessage(msg)
-			} else {
-				return
-			}
-		}
-	}
-}
-
 func (p *Console) Produce(ctx context.Context) {
-	p.messageForLoop(ctx)
+	p.messageForLoop(ctx, p.onMessage)
 }
 
 func (p *Console) onMessage(msg multiplexer.Message) {
