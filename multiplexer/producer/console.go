@@ -13,7 +13,9 @@ type Console struct {
 }
 
 func (p *Console) Produce(ctx context.Context) {
-	p.messageForLoop(ctx, p.onMessage)
+	p.Initialized()
+	go p.controlLoop(ctx)
+	p.messageLoop(p.onMessage)
 }
 
 func (p *Console) onMessage(msg multiplexer.Message) {

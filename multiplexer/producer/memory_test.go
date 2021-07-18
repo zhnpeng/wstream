@@ -3,26 +3,24 @@ package producer
 import (
 	"context"
 	"fmt"
+	"sync"
 	"testing"
 
 	"github.com/spf13/cast"
 
 	"github.com/zhnpeng/wstream/multiplexer"
 	"github.com/zhnpeng/wstream/types"
-	"gopkg.in/tomb.v1"
 )
 
 func TestMemory_Produce_Linkage(t *testing.T) {
 	output := make(multiplexer.MessageQueue, 11)
 	p := &Memory{
-		BasicProducer: &BasicProducer{
-			Tomb:     &tomb.Tomb{},
-			messages: make(chan multiplexer.Message, 10),
-		},
-		output: output,
+		BasicProducer: NewBasicProducer(10),
+		mutex:         &sync.Mutex{},
 	}
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	go p.Produce(ctx)
+	p.Link(output)
 
 	for i := 0; i < 10; i++ {
 		p.Write(multiplexer.Message{
@@ -37,8 +35,6 @@ func TestMemory_Produce_Linkage(t *testing.T) {
 			if got != i {
 				t.Errorf("Got: %d, Want %d", got, i)
 			}
-		} else {
-			t.Fatal("unexpected channel status")
 		}
 	}
 
