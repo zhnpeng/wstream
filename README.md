@@ -1,5 +1,5 @@
 # wstream
-[![Build Status](https://travis-ci.org/zhnpeng/wstream.svg?branch=master)](https://travis-ci.org/zhnpeng/wstream)
+[![Build Status](https://travis-ci.com/zhnpeng/wstream.svg?branch=master)](https://travis-ci.com/zhnpeng/wstream)
 [![codecov](https://codecov.io/gh/zhnpeng/wstream/branch/master/graph/badge.svg)](https://codecov.io/gh/zhnpeng/wstream)
 
 streaming processing API for golang
