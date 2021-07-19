@@ -69,7 +69,7 @@ func (p *Socket) writeMessage(msg multiplexer.Message) error {
 			return err
 		}
 	}
-
+	return nil
 }
 
 func (p *Socket) onMessage(msg multiplexer.Message) {

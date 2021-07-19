@@ -26,11 +26,15 @@ func TestMemory_Produce_Linkage(t *testing.T) {
 		p.Write(multiplexer.Message{
 			Data: types.NewRawMapRecord(map[string]interface{}{
 				"value": i,
-			}),
+			}).AsRow(),
 		})
 
 		if msg, ok := <-output; ok {
-			got := cast.ToInt(msg.Data.(types.Record).Get("value"))
+			record, err := msg.Data.AsMapRecord()
+			if err != nil {
+				t.Fatal(err)
+			}
+			got := cast.ToInt(record.Get("value"))
 			fmt.Println(got)
 			if got != i {
 				t.Errorf("Got: %d, Want %d", got, i)

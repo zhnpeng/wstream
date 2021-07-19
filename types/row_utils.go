@@ -2,11 +2,7 @@ package types
 
 //EncodeItem convert Item to Row then encode row
 func EncodeItem(item Item) ([]byte, error) {
-	var encodedBytes []byte
-	row, err := item.AsRow()
-	if err != nil {
-		return encodedBytes, err
-	}
+	row := item.AsRow()
 	return EncodeRow(row)
 }
 

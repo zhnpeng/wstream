@@ -41,13 +41,13 @@ func (wm *Watermark) After(x *Watermark) bool {
 	return wm.Time().After(x.Time())
 }
 
-func (wm *Watermark) AsRow() (Row, error) {
+func (wm *Watermark) AsRow() Row {
 	encodedBytes, err := wm.MarshalMsg(nil)
 	if err != nil {
-		return Row{}, err
+		panic(err)
 	}
 	return Row{
 		itemType: TypeWatermark,
 		item:     encodedBytes,
-	}, nil
+	}
 }

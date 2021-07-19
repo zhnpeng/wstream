@@ -22,7 +22,7 @@ func TestConsole_Produce(t *testing.T) {
 		p.Write(multiplexer.Message{
 			Data: types.NewRawMapRecord(map[string]interface{}{
 				"value": i,
-			}),
+			}).AsRow(),
 		})
 	}
 

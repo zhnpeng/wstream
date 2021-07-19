@@ -8,7 +8,7 @@ type Message struct {
 	Topic        string
 	PartitionID  int
 	PartitionCnt int
-	Data         types.Item
+	Data         types.Row
 }
 
 type MessageQueue chan Message

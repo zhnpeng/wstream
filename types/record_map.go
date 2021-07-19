@@ -38,15 +38,15 @@ func (m *MapRecord) Type() ItemType {
 	return TypeMapRecord
 }
 
-func (m *MapRecord) AsRow() (Row, error) {
+func (m *MapRecord) AsRow() Row {
 	encodedBytes, err := m.MarshalMsg(nil)
 	if err != nil {
-		return Row{}, err
+		panic(err)
 	}
 	return Row{
 		itemType: TypeMapRecord,
 		item:     encodedBytes,
-	}, nil
+	}
 }
 
 func (m *MapRecord) Clone() Item {

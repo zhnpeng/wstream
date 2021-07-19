@@ -5,7 +5,7 @@ import "time"
 type Item interface {
 	Type() ItemType
 	Clone() Item
-	AsRow() (Row, error)
+	AsRow() Row
 	Time() time.Time
 	SetTime(t time.Time)
 }

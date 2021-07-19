@@ -34,15 +34,15 @@ func (tuple *TupleRecord) SetTime(t time.Time) {
 	tuple.T = t
 }
 
-func (tuple *TupleRecord) AsRow() (Row, error) {
+func (tuple *TupleRecord) AsRow() Row {
 	encodedBytes, err := tuple.MarshalMsg(nil)
 	if err != nil {
-		return Row{}, err
+		panic(err)
 	}
 	return Row{
 		itemType: TypeTupleRecord,
 		item:     encodedBytes,
-	}, nil
+	}
 }
 
 func (tuple *TupleRecord) Clone() Item {
