@@ -19,31 +19,32 @@ func (p *Memory) Produce(ctx context.Context) {
 	p.messageLoop(p.onMessage)
 }
 
-func (p *Memory) Link(output multiplexer.MessageQueue) {
+func (p *Memory) Connect(output multiplexer.MessageQueue) {
 	p.mutex.Lock()
 	p.output = output
 	p.mutex.Unlock()
-	p.SetState(StateActive)
+	p.SetState(multiplexer.StateActive)
 }
 
-func (p *Memory) UnLink(output multiplexer.MessageQueue) {
+func (p *Memory) Disconnect() {
 	p.mutex.Lock()
 	close(p.output)
 	p.output = nil
-	p.mutex.Unlock()
-	p.SetState(StateInActive)
+	p.SetState(multiplexer.StateInActive)
 }
 
 func (p *Memory) onMessage(msg multiplexer.Message) {
-	// TODO: recover output to closed channel error?
-	if !p.IsActive() {
-		// skip locking, if is not active
-		return
-	}
-	p.mutex.Lock()
-	output := p.output
-	p.mutex.Unlock()
-	if output != nil {
+	if output := p.tryConnect(); output != nil {
 		output <- msg
 	}
+}
+
+func (p *Memory) tryConnect() multiplexer.MessageQueue {
+	if !p.IsActive() {
+		// skip locking, if is not active
+		return nil
+	}
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
+	return p.output
 }

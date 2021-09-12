@@ -9,21 +9,9 @@ import (
 	"github.com/zhnpeng/wstream/multiplexer"
 )
 
-type State int32
-
-const (
-	StateInitializing = State(iota)
-	StateInitialed    = State(iota)
-	StateInActive     = State(iota)
-	// StateActive represent for ready to process data
-	StateActive  = State(iota)
-	StateStopped = State(iota)
-	numStates    = iota
-)
-
 type ProducerWithState interface {
-	GetState() State
-	SetState(State)
+	GetState() multiplexer.State
+	SetState(multiplexer.State)
 }
 
 type Producer interface {
@@ -35,32 +23,33 @@ type Producer interface {
 
 type ProducerState struct {
 	state int32
+	done  chan struct{}
 }
 
 func NewProducerState() *ProducerState {
 	return &ProducerState{
-		state: int32(StateInitializing),
+		state: int32(multiplexer.StateInitializing),
 	}
 }
 
-func (s *ProducerState) GetState() State {
-	return State(atomic.LoadInt32(&s.state))
+func (s *ProducerState) GetState() multiplexer.State {
+	return multiplexer.State(atomic.LoadInt32(&s.state))
 }
 
-func (s *ProducerState) SetState(newState State) {
+func (s *ProducerState) SetState(newState multiplexer.State) {
 	atomic.SwapInt32(&s.state, int32(newState))
 }
 
 func (s *ProducerState) Initialized() bool {
-	return atomic.CompareAndSwapInt32(&s.state, int32(StateInitializing), int32(StateInitialed))
+	return atomic.CompareAndSwapInt32(&s.state, int32(multiplexer.StateInitializing), int32(multiplexer.StateInitialed))
 }
 
 func (s *ProducerState) IsInitialized() bool {
-	return s.GetState() >= StateInitialed
+	return s.GetState() >= multiplexer.StateInitialed
 }
 
 func (s *ProducerState) IsActive() bool {
-	return s.GetState() == StateActive
+	return s.GetState() == multiplexer.StateActive
 }
 
 type BasicProducer struct {
@@ -71,9 +60,9 @@ type BasicProducer struct {
 
 func NewBasicProducer(size int) *BasicProducer {
 	return &BasicProducer{
-		&tomb.Tomb{},
-		NewProducerState(),
-		make(multiplexer.MessageQueue, size),
+		Tomb:          &tomb.Tomb{},
+		ProducerState: NewProducerState(),
+		messages:      make(multiplexer.MessageQueue, size),
 	}
 }
 
@@ -82,8 +71,8 @@ func (p *BasicProducer) Write(msg multiplexer.Message) {
 }
 
 func (p *BasicProducer) controlLoop(ctx context.Context) {
-	defer p.Done()
-	defer p.SetState(StateStopped)
+	defer p.Kill(nil)
+	defer p.SetState(multiplexer.StateStopped)
 	for {
 		select {
 		case <-ctx.Done():
@@ -100,6 +89,8 @@ func (p *BasicProducer) messageLoop(onMessage func(msg multiplexer.Message)) {
 				onMessage(msg)
 			}
 		case <-p.Dying():
+			// TODO: add on stop?
+			p.Done()
 			return
 		}
 	}

@@ -20,7 +20,8 @@ func TestMemory_Produce_Linkage(t *testing.T) {
 	}
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	go p.Produce(ctx)
-	p.Link(output)
+	p.Connect(output)
+	defer p.Disconnect()
 
 	for i := 0; i < 10; i++ {
 		p.Write(multiplexer.Message{
