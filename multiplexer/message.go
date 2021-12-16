@@ -12,11 +12,3 @@ type Message struct {
 }
 
 type MessageQueue chan Message
-
-func (q MessageQueue) Enqueue(msg Message) {
-	q <- msg
-}
-
-func (q MessageQueue) Dequeue() <-chan Message {
-	return q
-}
