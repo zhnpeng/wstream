@@ -1,23 +1,36 @@
 package producer
 
 import (
-	"context"
 	"fmt"
-
 	"github.com/zhnpeng/wstream/multiplexer"
 )
 
-type Console struct {
-	*BasicProducer
+type ConsoleProducer struct {
+	ID string
 	Format string
+	Sender multiplexer.MessageQueue
 }
 
-func (p *Console) Produce(ctx context.Context) {
-	p.Initialized()
-	go p.controlLoop(ctx)
-	p.messageLoop(p.onMessage)
+func NewConsoleProducer(id string, format string) *ConsoleProducer {
+	output := make(multiplexer.MessageQueue, 100)
+	ret := &ConsoleProducer{
+		ID:     id,
+		Format: format,
+		Sender: output,
+	}
+	go ret.run()
+	return ret
 }
 
-func (p *Console) onMessage(msg multiplexer.Message) {
-	fmt.Printf(p.Format, msg)
+func (p *ConsoleProducer) run() {
+	for {
+		select {
+			case msg, ok := <- p.Sender:
+				if !ok {
+					return
+				}
+				fmt.Printf(p.Format, msg)
+		}
+	}
 }
+
