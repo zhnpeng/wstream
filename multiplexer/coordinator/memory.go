@@ -1,37 +1,45 @@
 package coordinator
 
 import (
-	"github.com/zhnpeng/wstream/multiplexer"
+	"github.com/zhnpeng/wstream/multiplexer/common"
 	"sync"
 )
 
-var memoryCoordinators = sync.Map{}
+var memoryCoordinators = map[string]*MemoryCoordinator{}
+var mutex = sync.Mutex{}
 
-func GetOrCreateMemoryCoordinator(id string) *MemoryCoordinator {
-	ret, _ := memoryCoordinators.LoadOrStore(id, NewMemoryCoordinator(id))
-	return ret.(*MemoryCoordinator)
-}
-
-func GetOrCreateMemoryCoordinatorConsumer(id string) multiplexer.MessageQueue {
-	coord := GetOrCreateMemoryCoordinator(id)
-	return coord.input
-}
-
-func GetOrCreateMemoryCoordinatorProducer(id string) multiplexer.MessageQueue {
-	coord := GetOrCreateMemoryCoordinator(id)
+func GetOrCreateMemoryCoordinatorConsumer(id string) common.MessageQueue {
+	mutex.Lock()
+	defer mutex.Unlock()
+	coord := memoryCoordinators[id]
+	if coord == nil {
+		coord = NewMemoryCoordinator(id)
+		memoryCoordinators[id] = coord
+	}
 	return coord.output
+}
+
+func GetOrCreateMemoryCoordinatorProducer(id string) common.MessageQueue {
+	mutex.Lock()
+	defer mutex.Unlock()
+	coord := memoryCoordinators[id]
+	if coord == nil {
+		coord = NewMemoryCoordinator(id)
+		memoryCoordinators[id] = coord
+	}
+	return coord.input
 }
 
 type MemoryCoordinator struct {
 	id string
 
-	input multiplexer.MessageQueue
-	output multiplexer.MessageQueue
+	input  common.MessageQueue
+	output common.MessageQueue
 }
 
 func NewMemoryCoordinator(id string) *MemoryCoordinator {
-	inputQueue := make(multiplexer.MessageQueue)
-	outputQueue := make(multiplexer.MessageQueue)
+	inputQueue := make(common.MessageQueue)
+	outputQueue := make(common.MessageQueue)
 
 	corrd := &MemoryCoordinator{
 		id: id,
@@ -57,5 +65,7 @@ func (c *MemoryCoordinator) run() {
 }
 
 func (c *MemoryCoordinator) dispose() {
-	memoryCoordinators.Delete(c.id)
+	mutex.Lock()
+	defer mutex.Unlock()
+	delete(memoryCoordinators, c.id)
 }

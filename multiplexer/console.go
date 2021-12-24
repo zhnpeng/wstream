@@ -1,18 +1,18 @@
-package producer
+package multiplexer
 
 import (
 	"fmt"
-	"github.com/zhnpeng/wstream/multiplexer"
+	"github.com/zhnpeng/wstream/multiplexer/common"
 )
 
 type ConsoleProducer struct {
 	ID string
 	Format string
-	Sender multiplexer.MessageQueue
+	Sender common.MessageQueue
 }
 
 func NewConsoleProducer(id string, format string) *ConsoleProducer {
-	output := make(multiplexer.MessageQueue, 100)
+	output := make(common.MessageQueue, 100)
 	ret := &ConsoleProducer{
 		ID:     id,
 		Format: format,

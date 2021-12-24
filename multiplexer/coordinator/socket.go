@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"github.com/sirupsen/logrus"
 	"github.com/tinylib/msgp/msgp"
-	"github.com/zhnpeng/wstream/multiplexer"
+	"github.com/zhnpeng/wstream/multiplexer/common"
 	"io"
 	"net"
 	"os"
@@ -15,12 +15,12 @@ import (
 var socketConsumerCoordinators = sync.Map{}
 var socketProducerCoordinators = sync.Map{}
 
-func GetOrCreateSocketCoordinatorConsumer(id string, params SocketConsumerParams) multiplexer.MessageQueue {
+func GetOrCreateSocketCoordinatorConsumer(id string, params SocketConsumerParams) common.MessageQueue {
 	coord, _ := socketConsumerCoordinators.LoadOrStore(id, NewSocketConsumerCoordinator(id, params))
 	return coord.(*SocketConsumerCoordinator).input
 }
 
-func GetOrCreateSocketCoordinatorProducer(id string, params SocketProducerParams) multiplexer.MessageQueue {
+func GetOrCreateSocketCoordinatorProducer(id string, params SocketProducerParams) common.MessageQueue {
 	coord, _ := socketProducerCoordinators.LoadOrStore(id, NewSocketProducerCoordinator(id, params))
 	return coord.(*SocketProducerCoordinator).output
 }
@@ -41,13 +41,13 @@ type SocketConsumerCoordinator struct {
 	fileMode os.FileMode
 	logger logrus.Logger
 
-	input multiplexer.MessageQueue
-	listener          io.Closer
+	input    common.MessageQueue
+	listener io.Closer
 	mutex             sync.Mutex
 }
 
 func NewSocketConsumerCoordinator(id string, params SocketConsumerParams) *SocketConsumerCoordinator {
-	queue := make(multiplexer.MessageQueue)
+	queue := make(common.MessageQueue)
 	corrd := &SocketConsumerCoordinator{
 		id: id,
 		input: queue,
@@ -106,7 +106,7 @@ func (c *SocketConsumerCoordinator) run() {
 
 func (c *SocketConsumerCoordinator) handleMessageFromConnection(conn net.Conn) {
 	for {
-		var msg multiplexer.Message
+		var msg common.Message
 		err := msgp.Decode(conn, &msg)
 		if err != nil {
 			c.logger.Warning("Failed to decode msg")
@@ -160,7 +160,7 @@ type SocketProducerParams struct {
 type SocketProducerCoordinator struct {
 	id string
 
-	output multiplexer.MessageQueue
+	output common.MessageQueue
 
 	conn net.Conn
 
@@ -174,7 +174,7 @@ type SocketProducerCoordinator struct {
 }
 
 func NewSocketProducerCoordinator(id string, params SocketProducerParams) *SocketProducerCoordinator {
-	queue := make(multiplexer.MessageQueue)
+	queue := make(common.MessageQueue)
 
 	corrd := &SocketProducerCoordinator{
 		id: id,
@@ -226,7 +226,7 @@ func (c *SocketProducerCoordinator) closeConnection() error {
 	return nil
 }
 
-func (c *SocketProducerCoordinator) writeMessage(msg multiplexer.Message) error {
+func (c *SocketProducerCoordinator) writeMessage(msg common.Message) error {
 	err := msgp.Encode(&c.buffer, &msg)
 	if err != nil {
 		return err
@@ -243,7 +243,7 @@ func (c *SocketProducerCoordinator) writeMessage(msg multiplexer.Message) error 
 	return nil
 }
 
-func (c *SocketProducerCoordinator) onMessage(msg multiplexer.Message) {
+func (c *SocketProducerCoordinator) onMessage(msg common.Message) {
 	if c.tryConnect() != nil {
 		err := c.writeMessage(msg)
 		if err != nil {
