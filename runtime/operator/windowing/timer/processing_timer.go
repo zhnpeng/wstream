@@ -10,8 +10,8 @@ import (
 
 type ProcessingTimer struct {
 	handler TimerHandler
-	stoped  chan struct{}
 
+	stopped    chan struct{}
 	procHp     *TimerHeap
 	procExists map[windowing.WindowID]bool
 	procTicker *time.Ticker
@@ -23,8 +23,8 @@ type ProcessingTimer struct {
 func NewProcessingTimer(handler TimerHandler, d time.Duration) *ProcessingTimer {
 	return &ProcessingTimer{
 		handler: handler,
-		stoped:  make(chan struct{}),
 
+		stopped:    make(chan struct{}),
 		procHp:     &TimerHeap{},
 		procExists: make(map[windowing.WindowID]bool),
 		procTicker: time.NewTicker(d),
@@ -56,8 +56,10 @@ func (timer *ProcessingTimer) RegisterWindow(wid windowing.WindowID) {
 		return
 	}
 	timer.procExists[wid] = true
+	// processing time use ingress time instead of window.end
+	ingress := time.Now()
 	heap.Push(timer.procHp, TimerHeapItem{
-		t:   wid.Window().End(),
+		t:   ingress,
 		wid: wid,
 	})
 }
@@ -87,7 +89,7 @@ func (timer *ProcessingTimer) Start() error {
 				t = t.Truncate(time.Second)
 				timer.setProcessingTime(t)
 				timer.OnTime(t)
-			case <-timer.stoped:
+			case <-timer.stopped:
 				timer.handler.Dispose()
 				return
 			}
@@ -97,6 +99,6 @@ func (timer *ProcessingTimer) Start() error {
 }
 
 func (timer *ProcessingTimer) Stop() error {
-	close(timer.stoped)
+	close(timer.stopped)
 	return nil
 }
