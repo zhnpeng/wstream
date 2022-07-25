@@ -83,7 +83,7 @@ func NewWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger) *Win
 		w.timer = timer.NewEventTimer(w)
 	} else {
 		// Count Window use a processing timer too
-		w.timer = timer.NewProcessingTimer(w, time.Second)
+		w.timer = timer.NewProcessingTimer(w, time.Second, 5*time.Second)
 	}
 	// bind this window to triggerContext factory
 	w.triggerContext = triggers.NewWindowTriggerContext()
