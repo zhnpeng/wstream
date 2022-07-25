@@ -62,7 +62,8 @@ func NewEvictWindow(assigner assigners.WindowAssinger, trigger triggers.Trigger,
 		w.timer = timer.NewEventTimer(w)
 	} else {
 		// Count Window use a processing timer too
-		w.timer = timer.NewProcessingTimer(w, time.Second)
+		// TODO: every and delay params need to be configurable, and delay in fact should pass into a trigger instead of a timer
+		w.timer = timer.NewProcessingTimer(w, time.Second, 10*time.Second)
 	}
 	// TriggerContext factory
 	w.triggerContext = triggers.NewWindowTriggerContext()

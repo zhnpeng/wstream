@@ -10,6 +10,7 @@ import (
 
 type ProcessingTimer struct {
 	handler TimerHandler
+	delay   time.Duration
 
 	stopped    chan struct{}
 	procHp     *TimerHeap
@@ -20,14 +21,15 @@ type ProcessingTimer struct {
 	procMupt   sync.RWMutex
 }
 
-func NewProcessingTimer(handler TimerHandler, d time.Duration) *ProcessingTimer {
+func NewProcessingTimer(handler TimerHandler, every time.Duration, delay time.Duration) *ProcessingTimer {
 	return &ProcessingTimer{
 		handler: handler,
+		delay:   delay,
 
 		stopped:    make(chan struct{}),
 		procHp:     &TimerHeap{},
 		procExists: make(map[windowing.WindowID]bool),
-		procTicker: time.NewTicker(d),
+		procTicker: time.NewTicker(every),
 		procCurrT:  time.Now(),
 	}
 }
@@ -36,7 +38,8 @@ func (timer *ProcessingTimer) OnTime(t time.Time) {
 	timer.procMu.Lock()
 	defer timer.procMu.Unlock()
 	for timer.procHp.Len() > 0 {
-		if !timer.procHp.Top().t.After(t) {
+		// unaligned delay trigger
+		if timer.procHp.Top().t.Add(timer.delay).Before(t) {
 			item := heap.Pop(timer.procHp).(TimerHeapItem)
 			if _, ok := timer.procExists[item.wid]; ok {
 				delete(timer.procExists, item.wid)
