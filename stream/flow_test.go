@@ -342,7 +342,7 @@ func (tmf *testMapPlusOne) Map(r types.Record) (o types.Record) {
 
 type testWindowReduce struct{}
 
-func (trf *testWindowReduce) Accmulater(window windows.Window, a types.Record) types.Record {
+func (trf *testWindowReduce) Accumulator(window windows.Window, a types.Record) types.Record {
 	acc := types.NewMapRecord(
 		window.Start(),
 		map[string]interface{}{
@@ -360,7 +360,7 @@ func (trf *testWindowReduce) Reduce(a, b types.Record) types.Record {
 
 type testReduce struct{}
 
-func (trf *testReduce) Accmulater(a types.Record) types.Record {
+func (trf *testReduce) Accumulator(a types.Record) types.Record {
 	return types.NewRawMapRecord(
 		map[string]interface{}{
 			"X": cast.ToInt(a.Get("X")),

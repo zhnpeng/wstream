@@ -9,8 +9,8 @@ import (
 WindowReduce run after a windowed datastream
 */
 type WindowReduce interface {
-	// Accmulater return initial accmulater for reduce
-	Accmulater(window windows.Window, record types.Record) (acc types.Record)
+	// Accumulator return initial accumulator for reduce
+	Accumulator(window windows.Window, record types.Record) (acc types.Record)
 	Reduce(a, b types.Record) (o types.Record)
 }
 
@@ -18,6 +18,6 @@ type WindowReduce interface {
 Reduce run after non-windowded datastream, it is a "rolling" reduce
 */
 type Reduce interface {
-	Accmulater(record types.Record) (acc types.Record)
+	Accumulator(record types.Record) (acc types.Record)
 	Reduce(a, b types.Record) (acc types.Record)
 }

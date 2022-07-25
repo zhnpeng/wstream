@@ -19,7 +19,7 @@ func (tmf *myMapFunc) Map(r types.Record) (o types.Record) {
 
 type myReduceFuncX struct{}
 
-func (trf *myReduceFuncX) Accmulater(a types.Record) types.Record {
+func (trf *myReduceFuncX) Accumulator(a types.Record) types.Record {
 	return types.NewRawMapRecord(
 		map[string]interface{}{
 			"X": cast.ToInt(a.Get("X")),
@@ -38,7 +38,7 @@ func (trf *myReduceFuncX) Reduce(a, b types.Record) types.Record {
 
 type myReduceFuncY struct{}
 
-func (trf *myReduceFuncY) Accmulater(a types.Record) types.Record {
+func (trf *myReduceFuncY) Accumulator(a types.Record) types.Record {
 	return types.NewRawMapRecord(
 		map[string]interface{}{
 			"Y": cast.ToInt(a.Get("X")),

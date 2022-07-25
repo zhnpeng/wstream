@@ -50,7 +50,7 @@ func (e *evictWindowTestEmitter) Dispose() {
 type evictWindowTestReduceFunc struct {
 }
 
-func (f *evictWindowTestReduceFunc) Accmulater(window windows.Window, x types.Record) types.Record {
+func (f *evictWindowTestReduceFunc) Accumulator(window windows.Window, x types.Record) types.Record {
 	var t time.Time
 	if window.Start().Equal(t) {
 		// for count window window's time is the first record's time

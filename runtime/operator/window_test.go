@@ -49,7 +49,7 @@ func (e *windowtestEmitter) Dispose() {
 type windowTestReduceFunc struct {
 }
 
-func (f *windowTestReduceFunc) Accmulater(window windows.Window, x types.Record) types.Record {
+func (f *windowTestReduceFunc) Accumulator(window windows.Window, x types.Record) types.Record {
 	var t time.Time
 	if window.Start().Equal(t) {
 		// for count window window's time is the first record's time

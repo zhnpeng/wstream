@@ -48,7 +48,7 @@ func (m *Reduce) handleRecord(record types.Record, out Emitter) {
 	if pacc, ok := m.keyedAccumulator[keys]; ok {
 		acc = m.function.Reduce(pacc, record)
 	} else {
-		acc = m.function.Accmulater(record)
+		acc = m.function.Accumulator(record)
 	}
 	m.keyedAccumulator[keys] = acc.Inherit(record)
 	out.Emit(m.keyedAccumulator[keys])

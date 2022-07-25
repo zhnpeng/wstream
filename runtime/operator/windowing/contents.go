@@ -63,7 +63,7 @@ func (c *WindowContents) Append(record types.Record) {
 	} else {
 		element := c.elements.Front()
 		if element == nil {
-			acc := c.reduceFunc.Accmulater(c.Window(), record)
+			acc := c.reduceFunc.Accumulator(c.Window(), record)
 			c.PushBack(acc)
 		} else {
 			acc := element.Value.(types.Record)

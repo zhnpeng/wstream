@@ -22,7 +22,7 @@ func (tmf *myMapFunc) Map(r types.Record) (o types.Record) {
 
 type myReduceFunc struct{}
 
-func (trf *myReduceFunc) Accmulater(window windows.Window, a types.Record) types.Record {
+func (trf *myReduceFunc) Accumulator(window windows.Window, a types.Record) types.Record {
 	acc := types.NewMapRecord(
 		window.Start(),
 		map[string]interface{}{
